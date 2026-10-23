@@ -59,4 +59,37 @@ owns the result.
 
 ## Lessons learned
 
-*(Updated after each delegation round. Phase 0 pilot results are recorded below.)*
+*(Updated after each delegation round.)*
+
+### Phase 0 pilot (2026-10-23): tasks 0001–0003, all merged
+
+| Task | Size | Time to PR | Result |
+|---|---|---|---|
+| 0001 CI Tier 1 matrix | +16/−1 | ~3 min | Merged as-is; all 7 jobs green |
+| 0002 `xtask spec-check` | +330/−2 | ~6 min | Merged; reviewer removed one duplicated helper afterwards |
+| 0003 issue forms | +142 | ~3 min | Merged as-is; maintainer created the two missing labels |
+
+What we learned:
+
+1. **Precise task specs work.** With exact allowed paths, numbered requirements and
+   acceptance commands, Jules changed no forbidden file, added no dependency, and met
+   every requirement on the first attempt. Keep the template strict.
+2. **Don't trust the PR description; reproduce.** All three PRs ticked every checklist
+   box (including docs and STATUS updates that were not made) and claimed CI results
+   before CI had run. Review must rest on the diff, a local `cargo xtask ci`, and observed
+   CI. This is now AGENTS.md learned rule 1.
+3. **Run negative tests for checkers.** For 0002, we removed a reference and injected a bogus
+   section locally to confirm that the failure messages matched the spec. Do this for every
+   delegated linter or checker.
+4. **Small reviewer fixes beat round trips.** The one duplication nit was cheaper to fix in
+   the wrap-up PR than to send back. Recurring issues still become AGENTS.md rules (rule 2).
+5. **Mind shared files.** Dependabot opened an `actions/checkout` bump on `ci.yml` while
+   task 0001 was editing the same file. Hold bot PRs that touch a file an agent is working on,
+   then `@dependabot rebase`.
+6. **Strict branch protection serializes merges.** Each merge needs `gh pr update-branch`
+   and a fresh CI run (~5–8 min with the full Tier 1 matrix). Acceptable at 3–5 parallel
+   tasks. Use `gh pr merge --squash --auto` with a maintainer-written subject and body
+   rather than the agent's PR body.
+7. **Tool facts:** Jules PRs come from the `google-labs-stitch` app on `stitch/…` branches,
+   with DCO-signed commits by `google-labs-jules[bot]`. `jules tasks get` needs
+   `-w <workspace>`.

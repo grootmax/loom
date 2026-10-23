@@ -1,7 +1,8 @@
 //! Specification check for Loom grammar section references.
 
 use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+
+use crate::workspace_root;
 
 /// Runs the `spec-check` command.
 ///
@@ -37,14 +38,6 @@ pub fn run() -> Result<(), String> {
             Err("spec-check failed".to_string())
         }
     }
-}
-
-/// The repository root: the parent of this crate's manifest directory.
-fn workspace_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .expect("xtask lives one directory below the workspace root")
-        .to_path_buf()
 }
 
 /// Extracts valid section numbers from `loom-spec.md`.
