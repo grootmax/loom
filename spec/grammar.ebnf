@@ -1,0 +1,458 @@
+(*
+  The Loom grammar — edition `preview` (draft).
+
+  Normative companion to spec/loom-spec.md. Every rule is preceded by a comment
+  `(* §N.M *)` naming the spec section that defines its meaning; `cargo xtask spec-check`
+  verifies those references.
+
+  Notation (ISO/IEC 14977 style, simplified):
+    rule = definition ;          rule definition, terminated by ";"
+    "text"                       terminal string
+    UPPER_CASE                   token produced by the lexer (spec §2)
+    a , b                        sequence (commas are written as whitespace here)
+    a | b                        choice
+    [ a ]                        optional
+    { a }                        zero or more
+    ( a )                        grouping
+    (* ... *)                    comment
+
+  NEWLINE handling: the parser ignores NEWLINE tokens inside bracketed contexts
+  (spec §2.3 rule 2). `nl` below marks places where one or more NEWLINEs are required
+  in statement context; `[ nl ]` where they are optional.
+*)
+
+(* ===================================================================== *)
+(* Lexical grammar                                                         *)
+(* ===================================================================== *)
+
+(* §2.2 *)
+newline_char = "\n" | "\r\n" ;
+
+(* §2.2 *)
+whitespace = " " | "\t" ;
+
+(* §2.4 *)
+comment = "#" , { any_char_except_newline } ;
+
+(* §2.4 *)
+doc_comment = "##" , { any_char_except_newline } ;
+
+(* §2.4 *)
+inner_doc_comment = "##!" , { any_char_except_newline } ;
+
+(* §2.5 *)
+IDENT = ( xid_start | "_" ) , { xid_continue } ;
+
+(* §2.5 *)
+AT_IDENT = "@" , IDENT ;
+
+(* §2.7.1 *)
+INT_LIT = dec_lit | hex_lit | oct_lit | bin_lit ;
+
+(* §2.7.1 *)
+dec_lit = "0" | nonzero_digit , { [ "_" ] , digit } ;
+
+(* §2.7.1 *)
+hex_lit = "0x" , hex_digit , { [ "_" ] , hex_digit } ;
+
+(* §2.7.1 *)
+oct_lit = "0o" , oct_digit , { [ "_" ] , oct_digit } ;
+
+(* §2.7.1 *)
+bin_lit = "0b" , bin_digit , { [ "_" ] , bin_digit } ;
+
+(* §2.7.2 *)
+FLOAT_LIT = dec_digits , "." , dec_digits , [ exponent ]
+          | dec_digits , exponent ;
+
+(* §2.7.2 *)
+dec_digits = digit , { [ "_" ] , digit } ;
+
+(* §2.7.2 *)
+exponent = ( "e" | "E" ) , [ "+" | "-" ] , dec_digits ;
+
+(* §2.7.3 *)
+CHAR_LIT = "'" , ( char_except_quote_backslash_newline | escape ) , "'" ;
+
+(* §2.7.5 *)
+escape = "\\" , ( "n" | "r" | "t" | "0" | "\\" | "\"" | "'" | "#"
+                | "x" , hex_digit , hex_digit
+                | "u{" , hex_digit , { hex_digit } , "}"
+                | newline_char ) ;
+
+(* §2.7.4 *)
+string_lit = "\"" , { string_char | escape | interpolation } , "\""
+           | "\"\"\"" , newline_char , { string_char | escape | interpolation } , "\"\"\"" ;
+
+(* §2.7.4 *)
+interpolation = "#{" , expr , "}" ;
+
+(* §2.7.4 *)
+RAW_STRING_LIT = "r" , { "#" } , "\"" , { any_char } , "\"" , { "#" } ;   (* hash counts match *)
+
+(* §2.7.4 *)
+BYTE_STRING_LIT = "b\"" , { ascii_char | escape } , "\""
+                | "br" , { "#" } , "\"" , { ascii_char } , "\"" , { "#" } ;
+
+(* §2.7.6 *)
+bool_lit = "true" | "false" ;
+
+(* ===================================================================== *)
+(* Source files and items                                                  *)
+(* ===================================================================== *)
+
+(* §12.1 *)
+source_file = [ nl ] , { item , nl } , EOF ;
+
+(* §3.10 *)
+attribute = "@[" , attr_entry , { "," , attr_entry } , "]" , [ nl ] ;
+
+(* §3.10 *)
+attr_entry = IDENT , [ "(" , [ attr_arg , { "," , attr_arg } ] , ")" ] ;
+
+(* §3.10 *)
+attr_arg = path | literal | IDENT , ":" , literal ;
+
+(* §3.11 *)
+visibility = "pub" , [ "(" , "package" , ")" ] ;
+
+(* §3 *)
+item = { attribute } , [ visibility ] ,
+       ( fn_def | struct_def | enum_def | trait_def | impl_def
+       | module_def | use_decl | const_def | type_alias | extern_block ) ;
+
+(* §3.1 *)
+fn_def = "def" , [ receiver_mode ] , fn_name , [ generic_params ] , [ param_list ] ,
+         [ "->" , type ] , [ where_clause ] , fn_body ;
+
+(* §3.1 *)
+fn_name = IDENT | "self" , "." , IDENT ;     (* `def self.new` = associated function *)
+
+(* §8.2 *)
+receiver_mode = "mut" | "own" ;
+
+(* §3.1 *)
+param_list = "(" , [ param , { "," , param } , [ "," ] ] , ")" ;
+
+(* §8.2 *)
+param = [ "mut" | "own" ] , IDENT , ":" , type , [ "=" , expr ] ;
+
+(* §3.1 *)
+fn_body = "=" , expr                     (* single-expression form *)
+        | nl , block_body , "end" ;
+
+(* §3.4 *)
+fn_signature = "def" , [ receiver_mode ] , IDENT , [ generic_params ] , [ param_list ] ,
+               [ "->" , type ] , [ where_clause ] ;
+
+(* §3.2 *)
+struct_def = "struct" , IDENT , [ generic_params ] , [ where_clause ] , nl ,
+             { struct_member , nl } , "end" ;
+
+(* §3.2 *)
+struct_member = { attribute } , [ visibility ] , ( field_def | fn_def ) ;
+
+(* §3.2 *)
+field_def = IDENT , ":" , type ;
+
+(* §3.3 *)
+enum_def = "enum" , IDENT , [ generic_params ] , [ where_clause ] , nl ,
+           { enum_member , nl } , "end" ;
+
+(* §3.3 *)
+enum_member = { attribute } , ( variant_def | [ visibility ] , fn_def ) ;
+
+(* §3.3 *)
+variant_def = IDENT , [ "(" , variant_fields , ")" ] ;
+
+(* §3.3 *)
+variant_fields = type , { "," , type }
+               | field_def , { "," , field_def } ;
+
+(* §3.4 *)
+trait_def = "trait" , IDENT , [ generic_params ] , [ ":" , bounds ] , [ where_clause ] , nl ,
+            { trait_member , nl } , "end" ;
+
+(* §3.4 *)
+trait_member = { attribute } ,
+               ( fn_signature                        (* required method *)
+               | "default" , fn_def                  (* provided method *)
+               | "type" , IDENT , [ ":" , bounds ]   (* associated type *)
+               | const_def ) ;
+
+(* §3.5 *)
+impl_def = "impl" , [ generic_params ] , path_type , "for" , type , [ where_clause ] , nl ,
+           { impl_member , nl } , "end" ;
+
+(* §3.5 *)
+impl_member = { attribute } , ( fn_def | "type" , IDENT , "=" , type | const_def ) ;
+
+(* §3.6 *)
+module_def = "module" , IDENT , nl , { item , nl } , "end" ;
+
+(* §3.7 *)
+use_decl = "use" , use_tree ;
+
+(* §3.7 *)
+use_tree = path , [ "as" , IDENT ]
+         | path , "." , "{" , use_tree , { "," , use_tree } , [ "," ] , "}" ;
+
+(* §3.8 *)
+const_def = "const" , IDENT , ":" , type , "=" , expr ;
+
+(* §3.9 *)
+type_alias = "type" , IDENT , [ generic_params ] , "=" , type ;
+
+(* §13 *)
+extern_block = "extern" , string_lit , nl , { fn_signature , nl } , "end" ;
+
+(* §6 *)
+generic_params = "[" , generic_param , { "," , generic_param } , [ "," ] , "]" ;
+
+(* §6 *)
+generic_param = IDENT , [ ":" , bounds ] ;
+
+(* §6 *)
+bounds = path_type , { "+" , path_type } ;
+
+(* §6 *)
+where_clause = "where" , where_pred , { "," , where_pred } ;
+
+(* §6 *)
+where_pred = type , ":" , bounds ;
+
+(* ===================================================================== *)
+(* Types                                                                   *)
+(* ===================================================================== *)
+
+(* §5 *)
+type = path_type
+     | tuple_type
+     | fn_type
+     | "dyn" , bounds
+     | ref_type
+     | "Self" ;
+
+(* §5.2 *)
+path_type = path , [ generic_args ] ;
+
+(* §5.2 *)
+generic_args = "[" , type , { "," , type } , [ "," ] , "]" ;
+
+(* §5.3 *)
+tuple_type = "(" , ")" | "(" , type , "," , [ type , { "," , type } , [ "," ] ] , ")" ;
+
+(* §5.4 *)
+fn_type = ( "Fn" | "FnMut" | "FnOnce" ) , "(" , [ type , { "," , type } ] , ")" ,
+          [ "->" , type ] ;
+
+(* §5.6 *)
+ref_type = [ "mut" ] , "ref" , type ;
+
+(* §7.2 *)
+path = path_segment , { "." , path_segment } ;
+
+(* §7.2 *)
+path_segment = IDENT | "self" | "Self" | "super" | "package" ;
+
+(* ===================================================================== *)
+(* Statements and blocks                                                   *)
+(* ===================================================================== *)
+
+(* §4 *)
+block_body = [ nl ] , { stmt , nl } ;
+
+(* §4 *)
+stmt = binding | simple_stmt ;
+
+(* §4 *)
+simple_stmt = assignment | command_call | expr ;     (* allowed after `then` *)
+
+(* §4.1 *)
+binding = [ "var" ] , IDENT , [ ":" , type ] , "=" , expr ;
+
+(* §4.2 *)
+assignment = place , assign_op , expr ;
+
+(* §4.2 *)
+assign_op = "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "|=" | "^=" | "<<=" | ">>=" ;
+
+(* §4.2 *)
+place = ( IDENT | AT_IDENT | "self" ) , { "." , ( IDENT | INT_LIT ) | "[" , expr , "]" } ;
+
+(* §4.4 *)
+command_call = IDENT , command_arg , { "," , command_arg } , [ block ] ;
+
+(* §4.4 *)
+command_arg = expr | IDENT , ":" , expr ;     (* first arg restricted, see §4.4 *)
+
+(* ===================================================================== *)
+(* Expressions (precedence: spec §7.5, lowest first)                        *)
+(* ===================================================================== *)
+
+(* §7 *)
+expr = or_expr ;
+
+(* §7.5 *)
+or_expr = and_expr , { "or" , and_expr } ;
+
+(* §7.5 *)
+and_expr = not_expr , { "and" , not_expr } ;
+
+(* §7.5 *)
+not_expr = "not" , not_expr | cmp_expr ;
+
+(* §7.5 *)
+cmp_expr = range_expr , [ cmp_op , range_expr | "in" , pattern ] ;
+
+(* §7.5 *)
+cmp_op = "==" | "!=" | "<" | "<=" | ">" | ">=" ;
+
+(* §7.10 *)
+range_expr = bitor_expr , [ ( ".." | "..=" ) , bitor_expr ] ;
+
+(* §7.5 *)
+bitor_expr = bitxor_expr , { "|" , bitxor_expr } ;
+
+(* §7.5 *)
+bitxor_expr = bitand_expr , { "^" , bitand_expr } ;
+
+(* §7.5 *)
+bitand_expr = shift_expr , { "&" , shift_expr } ;
+
+(* §7.5 *)
+shift_expr = add_expr , { ( "<<" | ">>" ) , add_expr } ;
+
+(* §7.5 *)
+add_expr = mul_expr , { ( "+" | "-" ) , mul_expr } ;
+
+(* §7.5 *)
+mul_expr = unary_expr , { ( "*" | "/" | "%" ) , unary_expr } ;
+
+(* §7.5 *)
+unary_expr = ( "-" | "~" ) , unary_expr | postfix_expr ;
+
+(* §7.4 *)
+postfix_expr = primary_expr , { postfix_op } ;
+
+(* §7.4 *)
+postfix_op = "." , ( IDENT | INT_LIT ) , [ call_args ] , [ block ]
+           | call_args , [ block ]
+           | block                                   (* f { ... } *)
+           | "[" , expr , { "," , expr } , "]"        (* index or generic args, §7.2 *)
+           | "?" ;                                   (* §10.3 *)
+
+(* §7.3 *)
+call_args = "(" , [ arg , { "," , arg } , [ "," ] ] , ")" ;
+
+(* §7.3 *)
+arg = expr | IDENT , ":" , [ expr ] ;        (* `name:` alone = shorthand for `name: name` *)
+
+(* §7.9 *)
+block = "{" , [ block_params ] , block_body , "}"
+      | "do" , [ block_params ] , block_body , "end" ;
+
+(* §7.9 *)
+closure_expr = "{" , block_params , block_body , "}" ;   (* standalone closure value *)
+
+(* §7.9 *)
+block_params = "|" , [ block_param , { "," , block_param } ] , "|" ;
+
+(* §7.9 *)
+block_param = [ "mut" | "own" ] , pattern , [ ":" , type ] ;
+
+(* §7 *)
+primary_expr = literal
+             | path
+             | AT_IDENT
+             | "(" , expr , ")"
+             | tuple_expr
+             | array_expr
+             | map_expr
+             | closure_expr
+             | if_expr
+             | case_expr
+             | loop_expr
+             | while_expr
+             | for_expr
+             | select_expr
+             | unsafe_block
+             | "return" , [ expr ]
+             | "break" , [ expr ]
+             | "next" ;
+
+(* §7.1 *)
+literal = INT_LIT | FLOAT_LIT | CHAR_LIT | string_lit | RAW_STRING_LIT
+        | BYTE_STRING_LIT | bool_lit ;
+
+(* §7.13 *)
+tuple_expr = "(" , ")" | "(" , expr , "," , [ expr , { "," , expr } , [ "," ] ] , ")" ;
+
+(* §7.13 *)
+array_expr = "[" , [ expr , { "," , expr } , [ "," ] ] , "]" ;
+
+(* §7.13 *)
+map_expr = "{" , [ map_entry , { "," , map_entry } , [ "," ] ] , "}" ;
+
+(* §7.13 *)
+map_entry = expr , "=>" , expr ;
+
+(* §7.6 *)
+if_expr = "if" , expr , ( "then" , simple_stmt | nl , block_body ) ,
+          { "elsif" , expr , ( "then" , simple_stmt | nl , block_body ) } ,
+          [ "else" , ( simple_stmt | nl , block_body ) ] , "end" ;
+
+(* §7.7 *)
+case_expr = "case" , expr , nl , { case_arm } , [ "else" , block_body ] , "end" ;
+
+(* §7.7 *)
+case_arm = "in" , pattern , [ "if" , expr ] , ( "then" , simple_stmt , nl | nl , block_body ) ;
+
+(* §7.8 *)
+loop_expr = "loop" , "do" , block_body , "end" ;
+
+(* §7.8 *)
+while_expr = "while" , expr , nl , block_body , "end" ;
+
+(* §7.8 *)
+for_expr = "for" , pattern , "in" , expr , nl , block_body , "end" ;
+
+(* §11.3 *)
+select_expr = "select" , nl , { select_arm } , [ "else" , block_body ] , "end" ;
+
+(* §11.3 *)
+select_arm = "when" , [ pattern , "=" ] , expr , ( "then" , simple_stmt , nl | nl , block_body ) ;
+
+(* §13 *)
+unsafe_block = "unsafe" , "do" , block_body , "end" ;
+
+(* ===================================================================== *)
+(* Patterns                                                                *)
+(* ===================================================================== *)
+
+(* §9 *)
+pattern = pattern_atom , { "|" , pattern_atom } ;
+
+(* §9 *)
+pattern_atom = "_"
+             | literal_pattern
+             | IDENT                                           (* binding *)
+             | path , [ "(" , [ field_pattern , { "," , field_pattern } , [ "," ] ] , ")" ]
+             | "(" , [ pattern , { "," , pattern } , [ "," ] ] , ")"
+             | range_pattern ;
+
+(* §9 *)
+literal_pattern = [ "-" ] , ( INT_LIT | FLOAT_LIT ) | CHAR_LIT | string_lit | bool_lit ;
+
+(* §9 *)
+field_pattern = pattern | IDENT , ":" , [ pattern ] | ".." ;
+
+(* §9 *)
+range_pattern = literal_pattern , ( ".." | "..=" ) , literal_pattern ;
+
+(* ===================================================================== *)
+(* Helpers                                                                 *)
+(* ===================================================================== *)
+
+(* §2.3 *)
+nl = NEWLINE , { NEWLINE } ;
