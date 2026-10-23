@@ -1,0 +1,12 @@
+[package]
+name = "loom_check"
+description = "Type inference and checking over HIR."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[lints]
+workspace = true

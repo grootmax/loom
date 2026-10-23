@@ -1,0 +1,12 @@
+[package]
+name = "loom_ast"
+description = "Typed abstract syntax tree views over the CST."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[lints]
+workspace = true

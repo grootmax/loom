@@ -1,0 +1,22 @@
+[package]
+name = "loom_runtime"
+description = "Loom runtime: scheduler, tasks, channels, memory, I/O reactor and platform layer."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+# The runtime is one of the two places `unsafe` may appear (the other is FFI shims).
+# It is `deny`, not `forbid`, so a block can be allowed locally; every such block
+# must carry a `// SAFETY:` comment. Keep the rest in sync with [workspace.lints].
+[lints.rust]
+unsafe_code = "deny"
+unsafe_op_in_unsafe_fn = "deny"
+missing_docs = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+undocumented_unsafe_blocks = "deny"

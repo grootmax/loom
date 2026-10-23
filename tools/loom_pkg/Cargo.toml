@@ -1,0 +1,12 @@
+[package]
+name = "loom_pkg"
+description = "Package management: loom.toml, loom.lock and minimal version selection."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[lints]
+workspace = true

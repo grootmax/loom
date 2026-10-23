@@ -1,0 +1,2 @@
+# Default rustfmt style. Do not add options without an ADR: one canonical style.
+edition = "2024"

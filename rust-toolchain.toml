@@ -1,0 +1,5 @@
+# Pinned toolchain. MSRV == this version; bump by PR per ADR 0002.
+[toolchain]
+channel = "1.99.1"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

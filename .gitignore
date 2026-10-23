@@ -1,0 +1,7 @@
+/target
+**/*.rs.bk
+/docs/book/book
+.DS_Store
+.jules.json
+*.code-workspace
+/tools/editors/vscode/*.vsix

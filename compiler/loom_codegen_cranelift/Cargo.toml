@@ -1,0 +1,12 @@
+[package]
+name = "loom_codegen_cranelift"
+description = "Cranelift native backend for fast debug builds."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[lints]
+workspace = true

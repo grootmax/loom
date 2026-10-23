@@ -1,0 +1,12 @@
+[package]
+name = "loom_span"
+description = "Source files, byte spans and line/column mapping."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[lints]
+workspace = true
