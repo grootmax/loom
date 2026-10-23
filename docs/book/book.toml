@@ -1,0 +1,8 @@
+[book]
+title = "The Loom Book"
+authors = ["The Loom Project Developers"]
+language = "en"
+src = "src"
+
+[output.html]
+git-repository-url = "https://github.com/grootmax/loom"
