@@ -1,0 +1,24 @@
+# phase: 5
+# run: run
+# args: --name Asha --times 2 --shout
+# A command-line tool with flags.
+
+use std.cli
+use std.env
+
+def main -> Result[Unit, AnyError]
+  args = cli.Parser.new("greet", about: "Greets someone")
+    .flag("name", help: "who to greet", default: "world")
+    .flag("times", help: "how many times", default: "1")
+    .switch("shout", help: "use capital letters")
+    .parse(env.args)?
+
+  var greeting = "Hello, #{args.string("name")}!"
+  if args.switch("shout")
+    greeting = greeting.to_uppercase
+  end
+  for _ in 0..args.int("times")?
+    puts greeting
+  end
+  Ok(())
+end

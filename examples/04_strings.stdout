@@ -1,0 +1,8 @@
+Welcome to Loom 1.0!
+Math works too: 6 * 7 = 42
+Nested: inner LOOM
+Escaped: #{not interpolated}
+Roses are red,
+  Loom is new.
+raw: \n stays as-is
+characters: 4

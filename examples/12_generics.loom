@@ -1,0 +1,39 @@
+# phase: 2
+# run: run
+# Generic types and functions with trait bounds. Methods may return borrows
+# (`ref T`) of `self` without any lifetime annotations.
+
+## A last-in, first-out stack.
+struct Stack[T]
+  items: Array[T]
+
+  def self.new -> Stack[T] = Stack(items: [])
+
+  def mut push(own item: T)
+    @items.push(item)
+  end
+
+  def mut pop -> Option[T] = @items.pop
+
+  def peek -> Option[ref T] = @items.last
+
+  def length -> Int = @items.length
+end
+
+def largest[T: Ord](items: Array[T]) -> Option[ref T] = items.max
+
+def main
+  var stack = Stack[String].new
+  stack.push("a")
+  stack.push("b")
+  stack.push("c")
+  puts "size: #{stack.length}"
+  if stack.peek in Some(top)
+    puts "top: #{top}"
+  end
+  while stack.pop in Some(item)
+    puts "popped #{item}"
+  end
+  puts "largest: #{largest([3, 9, 4]).unwrap}"
+  puts "largest word: #{largest(["pear", "apple", "zebra"]).unwrap}"
+end

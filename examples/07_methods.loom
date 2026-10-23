@@ -1,0 +1,27 @@
+# phase: 2
+# run: run
+# Methods live inside the type. `def mut` mutates `self`; `own` takes ownership;
+# `@field` means `self.field`; `def self.new` is an associated function.
+
+struct Counter
+  pub name: String
+  count: Int
+
+  def self.new(own name: String) -> Counter = Counter(name:, count: 0)
+
+  def mut increment(by: Int = 1)
+    @count += by
+  end
+
+  def value -> Int = @count
+
+  def summary -> String = "#{@name}: #{@count}"
+end
+
+def main
+  var clicks = Counter.new("clicks")
+  clicks.increment
+  clicks.increment(by: 5)
+  puts clicks.summary
+  puts clicks.value
+end

@@ -1,0 +1,38 @@
+# phase: 4
+# run: run
+# Shared state. Scoped tasks may borrow; values with several owners use `Shared`.
+
+use std.sync.Mutex
+
+struct Service
+  hits: Shared[Mutex[Int]]
+
+  def handle
+    @hits.lock { |mut count| count += 1 }
+  end
+end
+
+def main
+  # 1. Tasks spawned in a scope cannot outlive it, so they may borrow `counter`.
+  counter = Mutex.new(0)
+  scope do |s|
+    for _ in 1..=10
+      s.spawn do
+        for _ in 1..=100
+          counter.lock { |mut value| value += 1 }
+        end
+      end
+    end
+  end
+  puts "counter = #{counter.lock { |value| value }}"
+
+  # 2. A value stored in several owners is shared explicitly.
+  hits = Shared.new(Mutex.new(0))
+  api = Service(hits: hits.clone)
+  web = Service(hits: hits.clone)
+  api.handle
+  web.handle
+  web.handle
+  puts "total hits = #{hits.lock { |value| value }}"
+  puts "owners of hits: #{Shared.count(hits)}"
+end

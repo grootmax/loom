@@ -1,0 +1,4 @@
+demo on port 8080
+tags: web, api
+{"name":"demo","port":9090,"debug":false,"tags":["web","api"]}
+round trip equal? true

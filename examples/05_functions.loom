@@ -1,0 +1,25 @@
+# phase: 2
+# run: run
+# Keyword arguments, default values, early return and single-expression functions.
+
+def area(width: Float, height: Float) -> Float = width * height
+
+def greet(name: String, greeting: String = "Hello") -> String
+  "#{greeting}, #{name}!"
+end
+
+def clamp(value: Int, low: Int, high: Int) -> Int
+  if value < low
+    return low
+  end
+  if value > high then high else value end
+end
+
+def main
+  puts area(2.0, 3.5)
+  puts area(width: 1.5, height: 4.0)
+  puts greet("Asha")
+  puts greet("Ravi", greeting: "Welcome")
+  puts clamp(15, low: 0, high: 10)
+  puts clamp(-3, low: 0, high: 10)
+end

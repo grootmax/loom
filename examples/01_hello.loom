@@ -1,0 +1,7 @@
+# phase: 2
+# run: run
+# The smallest Loom program.
+
+def main
+  puts "Hello, world!"
+end

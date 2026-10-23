@@ -1,0 +1,36 @@
+# phase: 4
+# run: run
+# A worker pool: a job channel shared by four tasks, results collected on another.
+
+def fetch(id: Int) -> Int
+  # Stand-in for real work such as an HTTP request.
+  id * id
+end
+
+def main
+  jobs = Chan[Int].new(capacity: 100)
+  results = Chan[(Int, Int)].new(capacity: 100)
+
+  scope do |s|
+    for _ in 1..=4
+      s.spawn do
+        while jobs.recv in Some(id)
+          results.send((id, fetch(id)))
+        end
+      end
+    end
+
+    for id in 1..=10
+      jobs.send(id)
+    end
+    jobs.close
+  end            # waits for every worker
+
+  results.close
+  var collected = results.to_array
+  collected.sort
+  for (id, value) in collected
+    puts "job #{id} -> #{value}"
+  end
+  puts "total = #{collected.map { |(_, value)| value }.sum}"
+end

@@ -1,0 +1,42 @@
+# phase: 2
+# run: run
+# Traits: required methods, provided (`default def`) methods, and static dispatch.
+
+trait Describe
+  def describe -> String
+
+  default def shout -> String = self.describe.to_uppercase
+end
+
+struct User
+  name: String
+  age: Int
+end
+
+struct Book
+  title: String
+end
+
+impl Describe for User
+  def describe -> String = "#{@name} (#{@age})"
+end
+
+impl Describe for Book
+  def describe -> String = "\"#{@title}\""
+  def shout -> String = "BOOK: #{@title}"
+end
+
+def print_all[T: Describe](items: Array[T])
+  for item in items
+    puts item.describe
+  end
+end
+
+def main
+  users = [User(name: "Asha", age: 31), User(name: "Ravi", age: 17)]
+  print_all(users)
+  book = Book(title: "The Loom Book")
+  puts book.describe
+  puts users[0].shout
+  puts book.shout
+end

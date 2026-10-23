@@ -1,0 +1,21 @@
+# phase: 2
+# run: run
+# FizzBuzz: if/elsif/else is an expression, and ranges are half-open (`..`) or inclusive (`..=`).
+
+def fizzbuzz(n: Int) -> String
+  if n % 15 == 0
+    "FizzBuzz"
+  elsif n % 3 == 0
+    "Fizz"
+  elsif n % 5 == 0
+    "Buzz"
+  else
+    n.to_string
+  end
+end
+
+def main
+  for i in 1..=15
+    puts fizzbuzz(i)
+  end
+end

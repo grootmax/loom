@@ -1,0 +1,36 @@
+# phase: 2
+# run: run
+# Algebraic data types and exhaustive `case`.
+
+enum Shape
+  Circle(radius: Float)
+  Rect(width: Float, height: Float)
+  Triangle(base: Float, height: Float)
+
+  def name -> String
+    case self
+    in Circle(..) then "circle"
+    in Rect(..) then "rect"
+    in Triangle(..) then "triangle"
+    end
+  end
+end
+
+def area(shape: Shape) -> Float
+  case shape
+  in Circle(radius:) then Float.PI * radius * radius
+  in Rect(width:, height:) then width * height
+  in Triangle(base:, height:) then 0.5 * base * height
+  end
+end
+
+def main
+  shapes = [
+    Shape.Circle(radius: 1.0),
+    Shape.Rect(width: 2.0, height: 3.0),
+    Shape.Triangle(base: 4.0, height: 5.0),
+  ]
+  for shape in shapes
+    puts "#{shape.name}: #{area(shape).round(2)}"
+  end
+end

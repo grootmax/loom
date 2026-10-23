@@ -1,0 +1,7 @@
+ok: 42
+ok: 7
+error: input is empty
+error: 'abc' is not a number
+error: -5 is negative
+sum: 42
+error: 'x' is not a number

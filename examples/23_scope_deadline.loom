@@ -1,0 +1,27 @@
+# phase: 4
+# run: run
+# Structured concurrency: a scope with a deadline cancels unfinished children.
+
+use std.time.{Time, DurationLiterals, Cancelled}
+
+def slow_square(n: Int) -> Result[Int, Cancelled]
+  Time.sleep((n * 100).milliseconds)?      # returns Err(Cancelled) if the scope is cancelled
+  Ok(n * n)
+end
+
+def describe(result: Result[Int, Cancelled]) -> String
+  case result
+  in Ok(value) then "finished with #{value}"
+  in Err(Cancelled) then "cancelled by deadline"
+  end
+end
+
+def main
+  outcome = scope(deadline: 250.milliseconds) do |s|
+    fast = s.spawn { slow_square(1) }
+    slow = s.spawn { slow_square(5) }
+    (fast.join, slow.join)
+  end
+  puts "fast: #{describe(outcome.0)}"
+  puts "slow: #{describe(outcome.1)}"
+end

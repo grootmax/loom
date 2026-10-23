@@ -1,0 +1,31 @@
+# phase: 5
+# run: run
+# JSON encoding and decoding with a derived implementation.
+
+use std.json
+
+@[derive(Json, Clone, Eq)]
+struct Config
+  name: String
+  port: Int
+  debug: Bool
+  tags: Array[String]
+end
+
+def main -> Result[Unit, AnyError]
+  text = """
+    {"name": "demo", "port": 8080, "debug": false, "tags": ["web", "api"]}
+    """
+  config: Config = json.decode(text)?
+  puts "#{config.name} on port #{config.port}"
+  puts "tags: #{config.tags.join(", ")}"
+
+  var updated = config.clone
+  updated.port = 9090
+  encoded = json.encode(updated)
+  puts encoded
+
+  round_trip: Config = json.decode(encoded)?
+  puts "round trip equal? #{round_trip == updated}"
+  Ok(())
+end

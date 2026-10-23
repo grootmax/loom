@@ -1,0 +1,20 @@
+# phase: 2
+# run: run
+# Lazy iterator chains over ranges and collections.
+
+def main
+  squares = (1..=5).map { |n| n * n }.to_array
+  puts squares.map { |n| n.to_string }.join(" ")
+
+  puts "sum 1..=100 = #{(1..=100).sum}"
+  puts "evens below 10: #{(1..10).filter { |n| n % 2 == 0 }.count}"
+
+  words = ["loom", "weaves", "threads", "together"]
+  puts "longest: #{words.max_by { |word| word.length }.unwrap}"
+  puts words.take(2).join(" ")
+  puts words.map { |word| word.chars.first.unwrap.to_string }.join("")
+
+  for (index, word) in words.enumerate.skip(2)
+    puts "#{index}: #{word}"
+  end
+end

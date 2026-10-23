@@ -1,0 +1,30 @@
+# phase: 2
+# run: run
+# Closures: `{ |x| ... }` for one line, `do |x| ... end` for several.
+# A trailing block is passed as the last argument.
+
+def apply_twice(value: Int, f: Fn(Int) -> Int) -> Int = f(f(value))
+
+def make_multiplier(factor: Int) -> Fn(Int) -> Int
+  { |x| x * factor }
+end
+
+def main
+  puts apply_twice(3) { |x| x + 10 }
+
+  triple = make_multiplier(3)
+  puts triple(5)
+
+  numbers = [1, 2, 3, 4, 5]
+  evens = numbers.filter { |n| n % 2 == 0 }
+  puts evens.map { |n| n.to_string }.join(", ")
+
+  numbers.take(2).each do |n|
+    square = n * n
+    puts "#{n} squared is #{square}"
+  end
+
+  var log = []
+  ["a", "b"].each { |letter| log.push(letter.to_uppercase) }
+  puts log.join("")
+end

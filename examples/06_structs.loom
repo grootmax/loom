@@ -1,0 +1,31 @@
+# phase: 2
+# run: run
+# Structs, derived traits and field shorthand.
+
+## A point in 2D space.
+@[derive(Copy, Eq)]
+struct Point
+  x: Int
+  y: Int
+end
+
+## A user of the system.
+@[derive(Clone)]
+struct User
+  name: String
+  age: Int
+end
+
+def main
+  origin = Point(x: 0, y: 0)
+  p = Point(x: 3, y: 4)
+  puts "p = (#{p.x}, #{p.y})"
+  puts "same? #{p == origin}"
+
+  name = "Asha"
+  user = User(name:, age: 31)       # `name:` is shorthand for `name: name`
+  puts "#{user.name} is #{user.age}"
+
+  older = User(name: user.name.clone, age: user.age + 1)
+  puts "next year: #{older.age}"
+end

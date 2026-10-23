@@ -1,0 +1,17 @@
+# phase: 2
+# run: run
+# Bindings are immutable unless declared with `var`.
+
+def main
+  name = "Loom"           # immutable binding
+  var count = 0           # reassignable binding
+  count += 1
+  count += 1
+  puts "#{name}: #{count}"
+
+  # name = "Other"        # error: `name` is immutable; declare it with `var name = ...`
+
+  var total = 0
+  [1, 2, 3, 4].each { |n| total += n }
+  puts "total = #{total}"
+end

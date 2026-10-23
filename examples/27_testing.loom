@@ -1,0 +1,24 @@
+# phase: 2
+# run: test
+# Built-in tests. Run with `loom test`.
+
+def add(a: Int, b: Int) -> Int = a + b
+
+def divide(a: Int, b: Int) -> Result[Int, String]
+  if b == 0 then Err("division by zero") else Ok(a / b) end
+end
+
+@[test]
+def adds_numbers
+  assert_eq(add(2, 3), 5)
+end
+
+@[test]
+def divides_numbers
+  assert_eq(divide(10, 2), Ok(5))
+end
+
+@[test]
+def rejects_division_by_zero
+  assert(divide(1, 0).is_err)
+end

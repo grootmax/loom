@@ -1,0 +1,52 @@
+# phase: 2
+# run: run
+# Errors are values. `?` returns early on `Err`.
+
+enum ParseError
+  Empty
+  NotANumber(text: String)
+  Negative(value: Int)
+
+  def message -> String
+    case self
+    in Empty then "input is empty"
+    in NotANumber(text:) then "'#{text}' is not a number"
+    in Negative(value:) then "#{value} is negative"
+    end
+  end
+end
+
+def parse_age(text: String) -> Result[Int, ParseError]
+  trimmed = text.trim
+  if trimmed.is_empty
+    return Err(ParseError.Empty)
+  end
+  value = Int.parse(trimmed).map_err { |_| ParseError.NotANumber(text: trimmed.to_string) }?
+  if value < 0
+    return Err(ParseError.Negative(value:))
+  end
+  Ok(value)
+end
+
+def total_age(inputs: Array[String]) -> Result[Int, ParseError]
+  var total = 0
+  for input in inputs
+    total += parse_age(input)?
+  end
+  Ok(total)
+end
+
+def report(result: Result[Int, ParseError], label: String)
+  case result
+  in Ok(value) then puts "#{label}: #{value}"
+  in Err(error) then puts "error: #{error.message}"
+  end
+end
+
+def main
+  for input in ["42", "  7 ", "", "abc", "-5"]
+    report(parse_age(input), label: "ok")
+  end
+  report(total_age(["30", "12"]), label: "sum")
+  report(total_age(["30", "x"]), label: "sum")
+end

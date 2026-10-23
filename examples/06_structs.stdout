@@ -1,0 +1,4 @@
+p = (3, 4)
+same? false
+Asha is 31
+next year: 32

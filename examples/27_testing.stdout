@@ -1,0 +1,6 @@
+running 3 tests
+test adds_numbers ... ok
+test divides_numbers ... ok
+test rejects_division_by_zero ... ok
+
+test result: ok. 3 passed; 0 failed

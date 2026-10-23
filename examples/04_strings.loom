@@ -1,0 +1,20 @@
+# phase: 2
+# run: run
+# Strings: interpolation, escapes, triple-quoted and raw strings.
+
+def main
+  language = "Loom"
+  version = 1
+  puts "Welcome to #{language} #{version}.0!"
+  puts "Math works too: 6 * 7 = #{6 * 7}"
+  puts "Nested: #{"inner #{language.to_uppercase}"}"
+  puts "Escaped: \#{not interpolated}"
+
+  poem = """
+    Roses are red,
+      #{language} is new.
+    """
+  puts poem
+  puts r"raw: \n stays as-is"
+  puts "characters: #{language.length}"
+end

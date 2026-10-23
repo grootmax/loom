@@ -1,0 +1,34 @@
+# phase: 2
+# run: run
+# Opt-in dynamic dispatch with `dyn Trait`. The compiler decides boxing.
+
+trait Plugin
+  def name -> String
+  def run(input: Int) -> Int
+end
+
+struct Doubler
+end
+
+struct Adder
+  amount: Int
+end
+
+impl Plugin for Doubler
+  def name -> String = "doubler"
+  def run(input: Int) -> Int = input * 2
+end
+
+impl Plugin for Adder
+  def name -> String = "add #{@amount}"
+  def run(input: Int) -> Int = input + @amount
+end
+
+def main
+  plugins: Array[dyn Plugin] = [Doubler(), Adder(amount: 3), Doubler()]
+  var value = 1
+  for plugin in plugins
+    value = plugin.run(value)
+    puts "#{plugin.name} -> #{value}"
+  end
+end

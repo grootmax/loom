@@ -1,0 +1,32 @@
+# phase: 3
+# run: run
+# Ownership: parameters borrow by default, `mut` borrows exclusively, `own` moves.
+# No `&`, no lifetimes.
+
+@[derive(Clone)]
+struct Document
+  title: String
+  body: String
+end
+
+def word_count(doc: Document) -> Int = doc.body.split_whitespace.count
+
+def append(mut doc: Document, text: String)
+  doc.body.append(text)
+end
+
+def publish(own doc: Document) -> String
+  "published: #{doc.title}"
+end
+
+def main
+  var draft = Document(title: "Notes", body: "loom is")
+  append(draft, " safe and fast")
+  puts "words: #{word_count(draft)}"
+
+  backup = draft.clone
+  message = publish(draft)          # `draft` moves into `publish`
+  puts message
+  # puts draft.title                # error: `draft` was moved on the line above
+  puts "backup still usable: #{backup.title}"
+end

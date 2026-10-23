@@ -1,0 +1,30 @@
+# phase: 4
+# run: run
+# `select` waits on several channel operations or timers at once.
+# Duration helpers such as `10.milliseconds` come from a trait, not from reopening `Int`.
+
+use std.time.{Time, DurationLiterals}
+
+def producer(out: Chan[String])
+  for i in 1..=3
+    Time.sleep(10.milliseconds)
+    out.send("message #{i}")
+  end
+  # ...then goes quiet without closing the channel.
+end
+
+def main
+  inbox = Chan[String].new
+  scope do |s|
+    s.spawn { producer(inbox) }
+    var running = true
+    while running
+      select
+      when Some(message) = inbox.recv then puts "got #{message}"
+      when Time.after(200.milliseconds)
+        puts "idle for 200ms, stopping"
+        running = false
+      end
+    end
+  end
+end

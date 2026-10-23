@@ -1,0 +1,30 @@
+# phase: 2
+# run: run
+# There is no null: absence is `Option[T]`.
+
+def find_user(id: Int) -> Option[String]
+  case id
+  in 1 then Some("Asha")
+  in 2 then Some("Ravi")
+  else None
+  end
+end
+
+def main
+  for id in 1..=3
+    case find_user(id)
+    in Some(name) then puts "#{id}: #{name}"
+    in None then puts "#{id}: not found"
+    end
+  end
+
+  name = find_user(3).unwrap_or("guest")
+  puts "Hello, #{name}"
+
+  if find_user(1) in Some(first)
+    puts "first user is #{first}"
+  end
+
+  found = [1, 2, 3].filter_map { |id| find_user(id) }.count
+  puts "found #{found} users"
+end

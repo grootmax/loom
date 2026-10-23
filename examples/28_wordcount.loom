@@ -1,0 +1,29 @@
+# phase: 2
+# run: run
+# Word frequency: string processing, maps and sorting.
+
+def word_counts(text: String) -> Map[String, Int]
+  var counts = Map[String, Int].new
+  for word in text.split_whitespace
+    key = word.trim_matches { |c| not c.is_alphanumeric }.to_lowercase
+    if key.is_empty
+      next
+    end
+    counts.update(key, default: 0) { |mut count| count += 1 }
+  end
+  counts
+end
+
+def main
+  text = """
+    The loom weaves threads. The threads
+    hold; the loom moves on.
+    """
+  counts = word_counts(text)
+  var entries = counts.to_array
+  entries.sort_by { |(word, count)| (-count, word) }
+  for (word, count) in entries.take(3)
+    puts "#{word}: #{count}"
+  end
+  puts "distinct words: #{counts.length}"
+end

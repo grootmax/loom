@@ -1,0 +1,29 @@
+# phase: 2
+# run: run
+# Modules and visibility. Items are private unless marked `pub`.
+# (Usually one file is one module; an inline `module` keeps this example in one file.)
+
+module geometry
+  pub struct Point
+    pub x: Float
+    pub y: Float
+
+    pub def distance_to(other: Point) -> Float
+      dx = @x - other.x
+      dy = @y - other.y
+      (square(dx) + square(dy)).sqrt
+    end
+  end
+
+  pub def origin -> Point = Point(x: 0.0, y: 0.0)
+
+  def square(value: Float) -> Float = value * value
+end
+
+use geometry.{Point, origin}
+
+def main
+  p = Point(x: 3.0, y: 4.0)
+  puts "distance: #{p.distance_to(origin())}"
+  # geometry.square(2.0)     # error: `square` is private to module `geometry`
+end

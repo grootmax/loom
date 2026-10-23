@@ -1,0 +1,28 @@
+# phase: 2
+# run: run
+# Array, Map and Set. `Map` preserves insertion order, so output is deterministic.
+
+def main
+  var fruits = ["apple", "banana"]
+  fruits.push("cherry")
+  puts "#{fruits.length} fruits, first is #{fruits[0]}"
+
+  var stock = {"apple" => 3, "banana" => 0}
+  stock["cherry"] = 7
+  for (name, count) in stock
+    status = if count > 0 then "in stock" else "sold out" end
+    puts "#{name}: #{status}"
+  end
+
+  if stock.get("banana") in Some(count)
+    puts "banana count: #{count}"
+  end
+  puts "has kiwi? #{stock.has_key("kiwi")}"
+
+  var seen = Set[String].new
+  for word in ["a", "b", "a", "c", "b"]
+    seen.insert(word.clone)
+  end
+  puts "unique words: #{seen.length}"
+  puts "contains b? #{seen.contains("b")}"
+end

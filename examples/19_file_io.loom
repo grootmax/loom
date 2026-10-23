@@ -1,0 +1,23 @@
+# phase: 5
+# run: run
+# File I/O with `Result` and `?`. `main` may return a `Result`.
+
+use std.env
+use std.fs.File
+
+def main -> Result[Unit, AnyError]
+  path = env.temp_dir.join("loom-example-19.txt")
+  File.write(path, "first line\nsecond line\n")?
+
+  text = File.read(path)?
+  for (index, line) in text.lines.enumerate
+    puts "#{index + 1}: #{line}"
+  end
+
+  File.append(path, "third line\n")?
+  puts "lines now: #{File.read(path)?.lines.count}"
+
+  File.remove(path)?
+  puts "exists after remove? #{path.exists}"
+  Ok(())
+end

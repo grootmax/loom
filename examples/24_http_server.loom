@@ -1,0 +1,21 @@
+# phase: 5
+# run: build-only
+# An HTTP server sketch. Each request is handled in its own task.
+
+use std.http.{Server, Request, Response, Method, Status}
+use std.log
+
+def handle(request: Request) -> Response
+  case (request.method, request.path)
+  in (Method.Get, "/") then Response.text("Hello from Loom!")
+  in (Method.Get, "/health") then Response.json("{\"status\":\"ok\"}")
+  else Response.status(Status.NotFound)
+  end
+end
+
+def main -> Result[Unit, AnyError]
+  server = Server.bind("127.0.0.1:8080")?
+  log.info("listening on http://127.0.0.1:8080")
+  server.serve { |request| handle(request) }?
+  Ok(())
+end
