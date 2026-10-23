@@ -1,0 +1,67 @@
+name: Bug report
+description: Create a report to help us improve Loom
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Before submitting, please search existing issues to see if this has already been reported.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of the bug.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: What you expected to happen instead.
+    validations:
+      required: true
+  - type: textarea
+    id: minimal-reproduction
+    attributes:
+      label: Minimal reproduction
+      description: A minimal Loom code example that reproduces the issue.
+      render: loom
+    validations:
+      required: true
+  - type: input
+    id: loom-version
+    attributes:
+      label: loom --version output
+      description: The output of running `loom --version`.
+      placeholder: e.g., loom 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: os-arch
+    attributes:
+      label: OS and architecture
+      description: Your operating system and hardware architecture.
+      options:
+        - Linux x86_64
+        - Linux aarch64
+        - macOS aarch64
+        - macOS x86_64
+        - Windows x86_64
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: The component of Loom related to this bug.
+      options:
+        - lexer/parser
+        - type checker
+        - interpreter
+        - code generation
+        - runtime
+        - std
+        - tooling
+        - docs
+        - other
