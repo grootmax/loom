@@ -67,11 +67,13 @@ benchmark harnesses, editor syntax files.
    `grootmax/loom`), with the title and the full task file as the description. Equivalent CLI:
    `jules tasks create -w <id> --json '{"title": …, "description": …}'`.
 3. Record the task ID in `tasks/LEDGER.md`. Run at most 3–5 at once, on **disjoint paths**.
-4. Check progress with MCP `get_task_result` / `read_task_activity_log`, or `jules tasks get <id>`.
+4. Check progress with MCP `get_task_result` / `read_task_activity_log`, or `jules tasks get <id> -w <workspace>`.
 5. **Review as if from an untrusted contributor:** `gh pr diff <n>`; `gh pr checkout <n>` →
    `cargo xtask ci`; check every acceptance item; confirm no forbidden paths, new
-   dependencies, or weakened or deleted tests; confirm CI is green. Then
-   `gh pr merge <n> --squash`, or reject with a follow-up task.
+   dependencies, or weakened or deleted tests; confirm CI is green. **Ignore the PR's own
+   checklist** (see ADR 0015 lessons). For checkers, run a negative test. Then
+   `gh pr update-branch <n>` and `gh pr merge <n> --squash --auto --subject … --body …`
+   (maintainer-written body), or reject with a follow-up task.
 6. Turn recurring mistakes into rules in AGENTS.md "Learned rules", and record lessons in ADR 0015.
 
 ## Owner decisions (ask; don't decide alone)

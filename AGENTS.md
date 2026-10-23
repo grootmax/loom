@@ -53,4 +53,14 @@ cargo xtask ci                        # must pass before you finish
 
 Rules added after reviewing agent work. Each one cites the task where the problem appeared.
 
-*(none yet)*
+1. **PR checklists are claims, not decoration.** Tick only items you actually did. Mark
+   items that don't apply as `N/A` with a reason. Never write that CI passed before you
+   have seen it pass; write "verified locally: …; CI pending". *(Tasks 0001–0003: every
+   box was ticked, including doc and STATUS updates that were neither made nor needed,
+   and "all CI jobs green" was claimed before CI ran.)*
+2. **Reuse existing helpers; don't copy them.** If a function you need already exists in
+   the crate (e.g. `workspace_root()` in `xtask/src/main.rs`), make it `pub(crate)` or call
+   it, instead of duplicating it. *(Task 0002.)*
+3. **Name outside dependencies.** If your change relies on something you cannot change
+   (labels, secrets, repository settings), list it in the PR description under
+   "Needs maintainer action". *(Task 0003 used labels that did not exist.)*

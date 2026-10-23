@@ -10,7 +10,11 @@ _Last updated: 2026-10-23_
 - Cargo workspace with stub crates for every pipeline stage; `cargo xtask ci` passes
   (fmt, clippy pedantic, tests, docs, cargo-deny).
 - `loom --version` and `loom help`. Every other command reports which phase implements it.
-- CI on Ubuntu, macOS and Windows.
+- CI on every Tier 1 host: Linux x86_64/aarch64 (glibc), Linux x86_64 musl, macOS
+  aarch64/x86_64, Windows x86_64. `main` is protected: all CI jobs required, squash-only.
+- `cargo xtask spec-check`: every grammar rule cites an existing spec section (run in CI).
+- GitHub issue forms (bug, RFC idea, docs) and a private security-report link.
+- Delegation workflow piloted: 3 Jules tasks dispatched, reviewed and merged (`tasks/LEDGER.md`).
 - VS Code syntax highlighting for `.loom` files (`tools/editors/vscode`).
 
 ## Written down (design, not implementation)
