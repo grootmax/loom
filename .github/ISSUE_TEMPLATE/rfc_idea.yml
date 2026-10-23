@@ -1,0 +1,42 @@
+name: RFC idea
+description: Propose a language change idea before writing an RFC (see https://github.com/grootmax/loom/blob/main/docs/rfcs/README.md)
+labels: ["rfc-idea"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing an RFC idea! Before submitting, please search existing issues to see if this idea has already been proposed or discussed. Language changes go through the RFC process described in [docs/rfcs/README.md](https://github.com/grootmax/loom/blob/main/docs/rfcs/README.md).
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What problem or limitation does this proposal solve?
+    validations:
+      required: true
+  - type: textarea
+    id: loom-code-example
+    attributes:
+      label: Proposed Loom code example
+      description: Show an example of how this feature would look in Loom code.
+      render: loom
+    validations:
+      required: true
+  - type: textarea
+    id: rust-comparison
+    attributes:
+      label: What does Rust do here?
+      description: How does Rust approach or solve this concept?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives-considered
+    attributes:
+      label: Alternatives considered
+      description: What other designs or workarounds have you considered?
+  - type: textarea
+    id: cost-of-carrying
+    attributes:
+      label: Cost of carrying this forever
+      description: What are the maintenance costs, complexity, or trade-offs of this change?
+    validations:
+      required: true

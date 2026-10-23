@@ -1,0 +1,28 @@
+name: Documentation
+description: Report an issue or suggestion for Loom documentation
+labels: ["docs"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve our documentation! Before submitting, please search existing issues to see if this documentation problem has already been reported.
+  - type: input
+    id: page-or-file
+    attributes:
+      label: The page or file
+      description: The path or URL of the documentation page or file.
+      placeholder: e.g., spec/loom-spec.md or docs/rfcs/README.md
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What is incorrect, missing, or unclear in the documentation?
+    validations:
+      required: true
+  - type: textarea
+    id: suggested-fix
+    attributes:
+      label: A suggested fix
+      description: How would you like the documentation to be updated or improved?
