@@ -1,0 +1,36 @@
+{
+  "comments": {
+    "lineComment": "#"
+  },
+  "brackets": [
+    ["{", "}"],
+    ["[", "]"],
+    ["(", ")"]
+  ],
+  "autoClosingPairs": [
+    { "open": "{", "close": "}" },
+    { "open": "[", "close": "]" },
+    { "open": "(", "close": ")" },
+    { "open": "\"", "close": "\"", "notIn": ["string", "comment"] },
+    { "open": "'", "close": "'", "notIn": ["string", "comment"] },
+    { "open": "|", "close": "|", "notIn": ["string", "comment"] }
+  ],
+  "surroundingPairs": [
+    ["{", "}"],
+    ["[", "]"],
+    ["(", ")"],
+    ["\"", "\""],
+    ["'", "'"]
+  ],
+  "indentationRules": {
+    "increaseIndentPattern": "^\\s*((pub(\\(package\\))?\\s+)?(def|struct|enum|trait|impl|module|if|elsif|else|case|in|while|for|loop|select|when|unsafe)\\b(?!.*\\bend\\s*$)|.*\\bdo(\\s*\\|[^|]*\\|)?\\s*(#.*)?$)",
+    "decreaseIndentPattern": "^\\s*(end|elsif|else|in|when)\\b"
+  },
+  "folding": {
+    "markers": {
+      "start": "^\\s*((pub\\s+)?(def|struct|enum|trait|impl|module)\\b|.*\\bdo(\\s*\\|[^|]*\\|)?\\s*$)",
+      "end": "^\\s*end\\b"
+    }
+  },
+  "wordPattern": "@?[A-Za-z_][A-Za-z0-9_]*"
+}

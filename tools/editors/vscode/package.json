@@ -1,0 +1,34 @@
+{
+  "name": "loom-language",
+  "displayName": "Loom",
+  "description": "Syntax highlighting for the Loom programming language (pre-alpha).",
+  "version": "0.0.1",
+  "publisher": "loom-lang",
+  "license": "MIT OR Apache-2.0",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/grootmax/loom"
+  },
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "loom",
+        "aliases": ["Loom", "loom"],
+        "extensions": [".loom"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "loom",
+        "scopeName": "source.loom",
+        "path": "./syntaxes/loom.tmLanguage.json"
+      }
+    ]
+  }
+}
