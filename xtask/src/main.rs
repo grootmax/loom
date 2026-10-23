@@ -3,6 +3,8 @@
 //! This crate uses only the Rust standard library, so it builds anywhere the
 //! pinned toolchain does. See `CONTRIBUTING.md` for when to run each command.
 
+mod spec_check;
+
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode};
 
@@ -10,14 +12,16 @@ const HELP: &str = "\
 cargo xtask <command>
 
 COMMANDS:
-  ci     Run every check CI runs: fmt, clippy, test, doc, deny
-  help   Print this help
+  ci          Run every check CI runs: fmt, clippy, test, doc, deny
+  spec-check  Check that grammar rules cite existing spec sections
+  help        Print this help
 ";
 
 fn main() -> ExitCode {
     let command = std::env::args().nth(1);
     let result = match command.as_deref() {
         Some("ci") => ci(),
+        Some("spec-check") => spec_check::run(),
         None | Some("help" | "-h" | "--help") => {
             print!("{HELP}");
             Ok(())
@@ -35,6 +39,7 @@ fn main() -> ExitCode {
 
 /// Runs every check that CI runs, stopping at the first failure.
 fn ci() -> Result<(), String> {
+    spec_check::run()?;
     let root = workspace_root();
     run(&root, "cargo", &["fmt", "--all", "--check"], &[])?;
     run(
