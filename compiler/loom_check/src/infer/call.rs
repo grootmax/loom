@@ -429,6 +429,7 @@ impl InferCtxt<'_> {
     ) -> Vec<ArgSource> {
         let mut slots: Vec<Option<usize>> = vec![None; params.len()];
         let mut extra = Vec::new();
+        let mut misnamed = Vec::new();
         let mut positional = 0;
         for (i, arg) in args.iter().enumerate() {
             if arg.trailing {
@@ -448,7 +449,7 @@ impl InferCtxt<'_> {
                             )
                             .with_label("repeated argument"),
                         );
-                        extra.push(i);
+                        misnamed.push(i);
                     }
                     None => {
                         self.error(
@@ -459,7 +460,7 @@ impl InferCtxt<'_> {
                             )
                             .with_label("unknown parameter"),
                         );
-                        extra.push(i);
+                        misnamed.push(i);
                     }
                 }
             } else {
@@ -492,13 +493,17 @@ impl InferCtxt<'_> {
                 self.infer(args[i].value);
             }
         }
+        for &i in &misnamed {
+            self.infer(args[i].value);
+        }
         let mut missing = Vec::new();
         for (p, slot) in slots.iter().enumerate() {
             if slot.is_none() && !params[p].3 {
                 missing.push(format!("`{}`", params[p].1));
             }
         }
-        if !missing.is_empty() {
+        // A misspelled name usually stands for the missing parameter: report it once.
+        if !missing.is_empty() && misnamed.is_empty() {
             self.error(
                 Diagnostic::error(
                     codes::WRONG_ARGUMENT_COUNT,

@@ -4,6 +4,7 @@
 //! pinned toolchain does. See `CONTRIBUTING.md` for when to run each command.
 
 mod conformance;
+mod examples;
 mod spec_check;
 
 use std::path::{Path, PathBuf};
@@ -13,8 +14,9 @@ const HELP: &str = "\
 cargo xtask <command>
 
 COMMANDS:
-  ci          Run every check CI runs: fmt, clippy, test, doc, deny, conformance
+  ci          Run every check CI runs: fmt, clippy, test, doc, conformance, examples, deny
   conformance Run spec/conformance against the implementation
+  examples    Run the examples whose phase has been reached
   spec-check  Check that grammar rules cite existing spec sections
   help        Print this help
 ";
@@ -24,6 +26,7 @@ fn main() -> ExitCode {
     let result = match command.as_deref() {
         Some("ci") => ci(),
         Some("conformance") => conformance::run(),
+        Some("examples") => examples::run(),
         Some("spec-check") => spec_check::run(),
         None | Some("help" | "-h" | "--help") => {
             print!("{HELP}");
@@ -67,6 +70,7 @@ fn ci() -> Result<(), String> {
         &[("RUSTDOCFLAGS", "-D warnings")],
     )?;
     conformance::run()?;
+    examples::run()?;
     if has_cargo_subcommand("deny") {
         run(&root, "cargo", &["deny", "--locked", "check"], &[])?;
     } else if std::env::var_os("CI").is_some() {

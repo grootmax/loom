@@ -29,11 +29,15 @@ spec/conformance/
 ## Running
 
 `cargo xtask conformance` runs the suite against this repository's implementation.
-In Phase 1 only the front end exists, so the runner checks:
+In Phase 2 it checks:
 
-- **reject cases** (`.diag`) whose codes are all lexical or syntax codes (E0001–E0199):
-  the reported codes and positions must equal the file exactly;
-- **accept cases** (`.stdout`): the program must produce no lexical or syntax
-  diagnostics. Its output is checked from Phase 2, when the interpreter exists.
+- **reject cases** (`.diag`) whose codes are all implemented (E0001–E0499): the reported
+  codes and positions must equal the file exactly;
+- **accept cases** (`.stdout`): the program must check without errors, and `loom run`
+  must write exactly the `.stdout` file to standard output and exit with status 0, or
+  with the status in `<name>.exit` (for example `101` for a case that panics).
 
-Cases with codes from later phases are skipped until their phase.
+A case whose **second line** is `# phase: N`, with `N` later than the current phase, is
+skipped, as is a reject case listing codes of a later phase (E0500 and above). Front-end
+cases that are not complete programs (no `main`) belong in reject cases or must declare
+the phase in which they become runnable.
