@@ -1,0 +1,7 @@
+# spec: §3.9
+type Meter = Int
+
+def main
+  var distance: Meter = 50
+  puts distance
+end

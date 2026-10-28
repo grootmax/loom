@@ -1,0 +1,16 @@
+# spec: §4.2
+struct Point
+  var x: Int
+  var y: Int
+
+  def mut set_x(new_x: Int)
+    @x = new_x
+  end
+end
+
+def main
+  var p = Point(x: 1, y: 2)
+  p.set_x(10)
+  p.y = 20
+  puts p.x + p.y
+end

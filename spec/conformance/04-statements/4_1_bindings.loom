@@ -1,0 +1,10 @@
+# spec: §4.1
+def main
+  a = 10
+  var b = 20
+  c: Int = 30
+  var d: Int = 40
+  b = 25
+  d = 45
+  puts a + b + c + d
+end

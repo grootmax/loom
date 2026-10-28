@@ -1,0 +1,12 @@
+# spec: §7.14
+def early_return(x: Int) -> Int
+  if x > 5
+    return 100
+  end
+  x
+end
+
+def main
+  puts early_return(10)
+  puts early_return(3)
+end

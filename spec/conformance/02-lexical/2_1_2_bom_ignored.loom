@@ -1,0 +1,4 @@
+﻿# spec: §2.1.2 rule 2
+def main
+  puts 42
+end

@@ -1,0 +1,4 @@
+# spec: §3.2
+struct
+  x: Int
+end

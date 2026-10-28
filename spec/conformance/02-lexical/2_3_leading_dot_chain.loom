@@ -1,0 +1,16 @@
+# spec: §2.3 rule 1
+struct Builder
+  val: Int
+
+  def add(x: Int) -> Builder = Builder(val: @val + x)
+  def double -> Builder = Builder(val: @val * 2)
+end
+
+def main
+  b = Builder(val: 5)
+    .add(3)
+
+    # comment line inside chain
+    .double
+  puts b.val
+end

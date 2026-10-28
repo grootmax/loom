@@ -1,0 +1,23 @@
+# spec: §7.7
+enum Item
+  Num(Int)
+  Pair(Int, Int)
+end
+
+def test_case(i: Item) -> Int
+  case i
+  in Item.Num(x) if x > 100 then 1
+  in Item.Num(1 | 2 | 3) then 2
+  in Item.Num(10..20) then 3
+  in Item.Pair(a, b) then a + b
+  else 0
+  end
+end
+
+def main
+  puts test_case(Item.Num(150))
+  puts test_case(Item.Num(2))
+  puts test_case(Item.Num(15))
+  puts test_case(Item.Pair(3, 4))
+  puts test_case(Item.Num(50))
+end

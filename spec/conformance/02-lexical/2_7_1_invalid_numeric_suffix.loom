@@ -1,0 +1,4 @@
+# spec: §2.7.1 rule 4
+def main
+  x = 10u8
+end

@@ -1,0 +1,7 @@
+# spec: §7.6
+def main
+  x = 5
+  if x in 1..10
+    puts "in range"
+  end
+end

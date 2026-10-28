@@ -1,0 +1,15 @@
+# spec: §7.3
+def run_with(x: Int, f: Fn(Int) -> Int) -> Int
+  f(x)
+end
+
+def run_unit(f: Fn() -> Int) -> Int
+  f()
+end
+
+def main
+  res1 = run_with(10) { |n| n + 5 }
+  puts res1
+  res2 = run_unit { 42 }
+  puts res2
+end
