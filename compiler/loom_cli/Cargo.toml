@@ -20,5 +20,8 @@ loom_hir = { path = "../loom_hir" }
 loom_interp = { path = "../loom_interp" }
 loom_fmt = { path = "../../tools/loom_fmt" }
 
+[dev-dependencies]
+loom_parser = { path = "../loom_parser" }
+
 [lints]
 workspace = true

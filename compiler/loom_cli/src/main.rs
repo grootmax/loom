@@ -9,6 +9,8 @@ use std::process::ExitCode;
 
 use loom_driver::Session;
 
+mod explain;
+
 /// A `loom` subcommand and the roadmap phase that delivers it.
 struct Command {
     name: &'static str,
@@ -337,15 +339,13 @@ fn explain(args: &[String]) -> ExitCode {
     let [code] = args else {
         return usage_error("explain: expected one error code, such as `loom explain E0007`");
     };
-    let normalized = code.to_ascii_uppercase();
-    let Some(entry) = loom_diagnostics::codes::lookup(&normalized) else {
+    if let Some(text) = explain::explanation(code) {
+        print!("{text}");
+        ExitCode::SUCCESS
+    } else {
         eprintln!("loom explain: `{code}` is not a Loom error code");
-        return ExitCode::FAILURE;
-    };
-    println!("{}: {}", entry.id, entry.title);
-    println!();
-    println!("See spec Appendix C (spec/loom-spec.md) for the rule this code belongs to.");
-    ExitCode::SUCCESS
+        ExitCode::FAILURE
+    }
 }
 
 #[cfg(test)]

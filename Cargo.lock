@@ -31,6 +31,7 @@ dependencies = [
  "loom_fmt",
  "loom_hir",
  "loom_interp",
+ "loom_parser",
  "loom_span",
 ]
 
