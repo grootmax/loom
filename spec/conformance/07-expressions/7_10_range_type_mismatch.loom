@@ -1,0 +1,4 @@
+# spec: §7.10 rule 1
+def main
+  r = 1..'a'
+end

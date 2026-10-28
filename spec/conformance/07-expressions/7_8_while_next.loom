@@ -1,0 +1,11 @@
+# spec: §7.8 rule 2
+def main
+  var i = 0
+  while i < 6
+    i += 1
+    if i % 2 == 0
+      next
+    end
+    puts i
+  end
+end

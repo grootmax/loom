@@ -1,0 +1,4 @@
+# spec: §7.4 rule 1
+def main
+  puts @field
+end

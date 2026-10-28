@@ -1,0 +1,11 @@
+# spec: §7.8 rule 1
+def main
+  var counter = 0
+  val = loop do
+    counter += 1
+    if counter == 5 then
+      break counter * 10
+    end
+  end
+  puts val
+end

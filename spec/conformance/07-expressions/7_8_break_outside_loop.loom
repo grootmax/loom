@@ -1,0 +1,4 @@
+# spec: §7.8 rule 4
+def main
+  break
+end

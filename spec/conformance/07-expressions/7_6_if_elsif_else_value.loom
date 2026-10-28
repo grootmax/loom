@@ -1,0 +1,15 @@
+# spec: §7.6 rule 1
+def eval_score(score: Int) -> String
+  if score >= 90 then "A"
+  elsif score >= 80 then "B"
+  elsif score >= 70 then "C"
+  else "F"
+  end
+end
+
+def main
+  puts eval_score(95)
+  puts eval_score(85)
+  puts eval_score(75)
+  puts eval_score(50)
+end

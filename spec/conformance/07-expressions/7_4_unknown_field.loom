@@ -1,0 +1,9 @@
+# spec: §7.4 rule 1
+struct Point
+  x: Int
+end
+
+def main
+  p = Point(x: 1)
+  puts p.unknown_field
+end

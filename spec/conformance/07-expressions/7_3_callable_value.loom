@@ -1,0 +1,5 @@
+# spec: §7.3 rule 1
+def main
+  f = { |x: Int| x * 3 }
+  puts f(4)
+end

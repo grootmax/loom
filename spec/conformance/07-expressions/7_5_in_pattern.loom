@@ -1,0 +1,6 @@
+# spec: §7.5 rule 5
+def main
+  x = 5
+  puts x in 1..10
+  puts x in 10..20
+end

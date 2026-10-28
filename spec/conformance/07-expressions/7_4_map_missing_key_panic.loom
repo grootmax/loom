@@ -1,0 +1,5 @@
+# spec: §7.4 rule 5
+def main
+  m = {"a" => 1}
+  puts m["missing"]
+end

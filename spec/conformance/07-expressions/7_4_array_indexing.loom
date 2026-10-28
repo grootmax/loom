@@ -1,0 +1,7 @@
+# spec: §7.4 rule 5
+def main
+  var arr = [10, 20, 30]
+  puts arr[0]
+  arr[1] = 25
+  puts arr[1]
+end

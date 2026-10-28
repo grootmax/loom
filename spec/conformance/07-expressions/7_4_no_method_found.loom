@@ -1,0 +1,5 @@
+# spec: §7.4 rule 3
+def main
+  x = 42
+  x.nonexistent_method()
+end

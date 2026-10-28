@@ -1,0 +1,10 @@
+# spec: §7.5 rule 4
+def side_effect(val: Bool) -> Bool
+  puts "evaluated"
+  val
+end
+
+def main
+  puts false and side_effect(true)
+  puts true or side_effect(false)
+end

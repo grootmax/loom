@@ -1,0 +1,5 @@
+# spec: §7.9 rule 1
+def main
+  add = { |x: Int, y: Int| x + y }
+  puts add(10, 20)
+end

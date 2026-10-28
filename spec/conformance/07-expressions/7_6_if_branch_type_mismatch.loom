@@ -1,0 +1,4 @@
+# spec: §7.6 rule 2
+def main
+  x = if true then 10 else "hello" end
+end

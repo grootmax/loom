@@ -1,0 +1,9 @@
+# spec: §7.6 rule 1
+def main
+  x: Int = 42
+  if x then
+    puts "yes"
+  else
+    puts "no"
+  end
+end

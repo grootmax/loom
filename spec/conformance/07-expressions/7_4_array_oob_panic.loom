@@ -1,0 +1,5 @@
+# spec: §7.4 rule 5
+def main
+  arr = [1, 2]
+  puts arr[5]
+end
