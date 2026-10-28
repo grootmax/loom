@@ -1,0 +1,15 @@
+# spec: §4.2
+def main
+  var a = 10
+  a += 5
+  a -= 2
+  a *= 3
+  a /= 2
+  a %= 10
+  a &= 7
+  a |= 8
+  a ^= 3
+  a <<= 2
+  a >>= 1
+  puts a
+end

@@ -1,0 +1,7 @@
+# spec: §2.4 rule 3
+def foo
+end
+
+##! Inner doc comment after item
+def main
+end

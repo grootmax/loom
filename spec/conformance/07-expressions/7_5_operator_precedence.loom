@@ -1,0 +1,7 @@
+# spec: §7.5
+def main
+  puts -2 * 3
+  puts 1 + 2 * 3
+  puts 1 << 2 + 1
+  puts true or false and false
+end

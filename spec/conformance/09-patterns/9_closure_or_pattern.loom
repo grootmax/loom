@@ -1,0 +1,9 @@
+# spec: §7.9
+def apply_pattern(v: Int, f: Fn(Int) -> Int) -> Int
+  f(v)
+end
+
+def main
+  res = apply_pattern(2) { |(1 | 2)| 100 }
+  puts res
+end

@@ -1,0 +1,11 @@
+# spec: §3.5
+struct Point
+  x: Int
+end
+
+impl Point
+  def foo -> Int = 1
+end
+
+def main
+end

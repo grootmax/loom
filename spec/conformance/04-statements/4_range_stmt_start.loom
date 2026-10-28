@@ -1,0 +1,4 @@
+# spec: §2.3 rule 1b
+def main
+  ..10
+end
