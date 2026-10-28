@@ -91,5 +91,9 @@ name = "loom_types"
 version = "0.0.0"
 
 [[package]]
+name = "loom_unicode"
+version = "0.0.0"
+
+[[package]]
 name = "xtask"
 version = "0.0.0"
