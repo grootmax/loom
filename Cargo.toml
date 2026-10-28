@@ -6,6 +6,7 @@ members = [
     "compiler/loom_diagnostics",
     "compiler/loom_lexer",
     "compiler/loom_syntax",
+    "compiler/loom_unicode",
     "compiler/loom_parser",
     "compiler/loom_ast",
     "compiler/loom_resolve",
