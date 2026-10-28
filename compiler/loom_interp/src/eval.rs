@@ -58,6 +58,14 @@ enum Resolved {
 }
 
 impl Interp<'_> {
+    #[allow(
+        clippy::unused_self,
+        reason = "a method for uniformity with its siblings"
+    )]
+    #[allow(
+        clippy::unnecessary_wraps,
+        reason = "mirrors the fallible signatures around it"
+    )]
     fn span(&self, frame: &Frame<'_>, expr: ExprId) -> Option<Span> {
         Some(frame.body.expr_span(expr))
     }
@@ -143,6 +151,10 @@ impl Interp<'_> {
         result
     }
 
+    #[allow(
+        clippy::match_same_arms,
+        reason = "arms listed per case for readability"
+    )]
     fn run_body(
         &self,
         def: DefId,
@@ -531,6 +543,10 @@ impl Interp<'_> {
         }
     }
 
+    #[allow(
+        clippy::match_same_arms,
+        reason = "arms listed per case for readability"
+    )]
     fn call_closure(
         &self,
         closure: &Closure,
@@ -599,6 +615,10 @@ impl Interp<'_> {
 
     // ----- places ----------------------------------------------------------------------------
 
+    #[allow(
+        clippy::unused_self,
+        reason = "a method for uniformity with its siblings"
+    )]
     fn slot(&self, frame: &Frame<'_>, binding: loom_hir::BindingId) -> Place {
         let binding = frame.typed.canonical(binding);
         frame.slots[binding.index()]
@@ -653,6 +673,10 @@ impl Interp<'_> {
         Ok(Place::new(self.eval(frame, expr)?))
     }
 
+    #[allow(
+        clippy::unused_self,
+        reason = "a method for uniformity with its siblings"
+    )]
     pub(crate) fn check_index(
         &self,
         key: &Value,
@@ -991,6 +1015,10 @@ impl Interp<'_> {
         }
     }
 
+    #[allow(
+        clippy::cast_possible_truncation,
+        reason = "F32 values are stored as F64"
+    )]
     fn literal(&self, frame: &Frame<'_>, id: ExprId, lit: &Literal, negative: bool) -> Value {
         match lit {
             Literal::Int(v) => {
@@ -1247,6 +1275,10 @@ impl Interp<'_> {
 
     // ----- patterns --------------------------------------------------------------------------
 
+    #[allow(
+        clippy::unused_self,
+        reason = "a method for uniformity with its siblings"
+    )]
     fn bind(&self, frame: &mut Frame<'_>, binding: loom_hir::BindingId, value: Value) {
         let canonical = frame.typed.canonical(binding);
         frame.slots[canonical.index()] = Some(Place::new(value));
@@ -1313,6 +1345,7 @@ impl Interp<'_> {
         }
     }
 
+    #[allow(clippy::similar_names, reason = "names mirror the spec terms")]
     fn match_path_pat(&self, frame: &mut Frame<'_>, pat: PatId, value: &Value) -> Eval<bool> {
         let body = frame.body;
         let fields: &[Value] = match (frame.typed.pats.get(&pat).cloned(), value) {

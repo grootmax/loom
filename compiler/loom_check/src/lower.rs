@@ -46,6 +46,7 @@ impl<'a> TyLowerer<'a> {
     }
 
     /// The type `Self` stands for in the scope, if any.
+    #[must_use]
     pub fn self_ty(&self) -> Option<Ty> {
         let mut current = Some(self.scope);
         while let Some(def) = current {

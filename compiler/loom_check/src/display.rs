@@ -6,6 +6,10 @@ use loom_types::{Interner, SELF_INDEX, Ty, TyKind, VarKind};
 
 /// Renders `ty` in Loom syntax (`Array[Int]`, `(Int, String)`, `Fn(Int) -> Bool`).
 #[must_use]
+#[allow(
+    clippy::only_used_in_recursion,
+    reason = "context threaded through recursion"
+)]
 pub fn ty_to_string(hir: &Hir, items: &Items, interner: &Interner, ty: Ty) -> String {
     let show = |t: Ty| ty_to_string(hir, items, interner, t);
     let list = |ts: &[Ty]| ts.iter().map(|&t| show(t)).collect::<Vec<_>>().join(", ");

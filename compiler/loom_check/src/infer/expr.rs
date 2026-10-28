@@ -9,6 +9,7 @@ use loom_hir::{
 };
 use loom_resolve::Res;
 use loom_types::{FloatTy, Subst, Ty, TyKind, VarKind};
+use std::collections::HashSet;
 
 impl InferCtxt<'_> {
     /// Checks `expr`, using `expected` as a hint, and records its type.
@@ -275,14 +276,11 @@ impl InferCtxt<'_> {
                     .last()
                     .copied()
                     .unwrap_or_else(|| interner.unit());
-                match value {
-                    Some(v) => {
-                        self.check(v, ret);
-                    }
-                    None => {
-                        let unit = interner.unit();
-                        self.unify_at(id, unit, ret);
-                    }
+                if let Some(v) = value {
+                    self.check(v, ret);
+                } else {
+                    let unit = interner.unit();
+                    self.unify_at(id, unit, ret);
                 }
                 interner.never()
             }
@@ -908,7 +906,7 @@ impl InferCtxt<'_> {
             param_tys = (0..count).map(|_| self.new_var()).collect();
         }
         self.closures.push(ClosureFrame {
-            declared: Default::default(),
+            declared: HashSet::default(),
             mutates_capture: false,
         });
         for (i, param) in params.unwrap_or(&[]).iter().enumerate() {
@@ -929,7 +927,7 @@ impl InferCtxt<'_> {
         self.loops = saved_loops;
         self.return_tys.pop();
         let frame = self.closures.pop().unwrap_or(ClosureFrame {
-            declared: Default::default(),
+            declared: HashSet::default(),
             mutates_capture: false,
         });
         let own_kind = Self::closure_kind_of_frame(&frame);

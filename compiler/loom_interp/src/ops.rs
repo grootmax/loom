@@ -65,6 +65,7 @@ fn float_text_32(v: f32) -> String {
     format!("{v:?}")
 }
 
+#[allow(clippy::float_cmp, reason = "IEEE equality is the specified semantics")]
 pub(crate) fn literal_matches(value: &Value, lit: &Literal, negative: bool) -> bool {
     match (value, lit) {
         (Value::Int(v, _), Literal::Int(l)) => {
@@ -109,6 +110,10 @@ pub(crate) fn range_matches(
 }
 
 impl Interp<'_> {
+    #[allow(
+        clippy::unused_self,
+        reason = "a method for uniformity with its siblings"
+    )]
     pub(crate) fn int_result(
         &self,
         value: Option<i128>,
@@ -126,6 +131,10 @@ impl Interp<'_> {
     }
 
     /// Integer, float and boolean operators (spec §7.5 rules 1–2).
+    #[allow(
+        clippy::many_single_char_names,
+        reason = "short operand names in arithmetic"
+    )]
     pub(crate) fn arith(
         &self,
         op: BinaryOp,
@@ -216,14 +225,18 @@ impl Interp<'_> {
                 Ok(Value::Float(r, *t))
             }
             (Value::Bool(x), Value::Bool(y)) => Ok(Value::Bool(match op {
-                BinaryOp::BitAnd => *x & *y,
-                BinaryOp::BitOr => *x | *y,
+                BinaryOp::BitAnd => *x && *y,
+                BinaryOp::BitOr => *x || *y,
                 _ => *x ^ *y,
             })),
             _ => Err(Flow::Panic("internal error: bad operands".to_owned(), span)),
         }
     }
 
+    #[allow(
+        clippy::unused_self,
+        reason = "a method for uniformity with its siblings"
+    )]
     fn arith_u128(&self, op: BinaryOp, x: u128, y: u128, span: Option<Span>) -> Eval<Value> {
         let overflow = |what: &str| Flow::Panic(format!("attempt to {what} with overflow"), span);
         let r = match op {
@@ -292,6 +305,10 @@ impl Interp<'_> {
     }
 
     /// `a == b` (spec §7.5 rule 3).
+    #[allow(
+        clippy::many_single_char_names,
+        reason = "short operand names in arithmetic"
+    )]
     pub(crate) fn value_eq(&self, a: &Value, b: &Value) -> Eval<bool> {
         Ok(match (a, b) {
             (Value::Unit, Value::Unit) => true,
@@ -365,6 +382,10 @@ impl Interp<'_> {
     }
 
     /// The ordering of `a` and `b` (spec §7.5 rule 3; floats use IEEE 754 totalOrder).
+    #[allow(
+        clippy::many_single_char_names,
+        reason = "short operand names in arithmetic"
+    )]
     pub(crate) fn value_cmp(&self, a: &Value, b: &Value) -> Eval<Ordering> {
         Ok(match (a, b) {
             (Value::Bool(x), Value::Bool(y)) => x.cmp(y),
@@ -441,6 +462,10 @@ impl Interp<'_> {
     }
 
     /// A hash consistent with `value_eq` for the types that implement `Hash`.
+    #[allow(
+        clippy::self_only_used_in_recursion,
+        reason = "recursive helper kept as a method"
+    )]
     pub(crate) fn value_hash(&self, value: &Value, hasher: &mut DefaultHasher) {
         match value {
             Value::Unit => 0u8.hash(hasher),

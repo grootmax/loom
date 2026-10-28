@@ -10,6 +10,8 @@ use loom_types::{FloatTy, Subst, Ty, TyKind, VarKind};
 
 impl InferCtxt<'_> {
     /// Checks `pat` against the type of the matched value.
+    #[allow(clippy::too_many_lines, reason = "one case per language construct")]
+    #[allow(clippy::similar_names, reason = "names mirror the spec terms")]
     pub(super) fn check_pat(&mut self, pat: PatId, expected: Ty) {
         self.pat_tys[pat.index()] = Some(expected);
         let interner = self.cx.interner;
@@ -176,32 +178,31 @@ impl InferCtxt<'_> {
                 .segments
                 .first()
                 .map_or_else(|| Name::new("_"), |s| s.name.clone());
-            match self.variant_from_expected(&name, Some(expected)) {
-                Some((variant, _, _)) => Some(variant),
-                None => {
-                    let e = self.structurally(expected);
-                    let message = match interner.kind(e) {
-                        TyKind::Adt(def, _) if matches!(self.def_kind(def), DefKind::Enum(_)) => {
-                            format!(
-                                "no variant `{name}` in enum `{}`",
-                                self.cx.hir.def(def).name
-                            )
-                        }
-                        TyKind::Error => {
-                            self.bind_payload_errors(payload);
-                            return;
-                        }
-                        _ => format!(
-                            "cannot find `{name}`: the matched value is not an enum with such a variant"
-                        ),
-                    };
-                    self.error(
-                        Diagnostic::error(codes::UNKNOWN_VARIANT, self.body.pat_span(pat), message)
-                            .with_label("unknown variant"),
-                    );
-                    self.bind_payload_errors(payload);
-                    return;
-                }
+            if let Some((variant, _, _)) = self.variant_from_expected(&name, Some(expected)) {
+                Some(variant)
+            } else {
+                let e = self.structurally(expected);
+                let message = match interner.kind(e) {
+                    TyKind::Adt(def, _) if matches!(self.def_kind(def), DefKind::Enum(_)) => {
+                        format!(
+                            "no variant `{name}` in enum `{}`",
+                            self.cx.hir.def(def).name
+                        )
+                    }
+                    TyKind::Error => {
+                        self.bind_payload_errors(payload);
+                        return;
+                    }
+                    _ => format!(
+                        "cannot find `{name}`: the matched value is not an enum with such a variant"
+                    ),
+                };
+                self.error(
+                    Diagnostic::error(codes::UNKNOWN_VARIANT, self.body.pat_span(pat), message)
+                        .with_label("unknown variant"),
+                );
+                self.bind_payload_errors(payload);
+                return;
             }
         } else {
             match self.res.pats.get(&pat) {
@@ -305,11 +306,9 @@ impl InferCtxt<'_> {
         let interner = self.cx.interner;
         let name = self.cx.hir.def(def).name.clone();
         match (fields, payload) {
-            (VariantTy::Unit, PayloadPat::None) => {}
-            (
-                VariantTy::Named(_) | VariantTy::Positional(_),
-                PayloadPat::Positional(pats, true),
-            ) if pats.is_empty() => {}
+            (VariantTy::Unit, PayloadPat::None)
+            | (VariantTy::Named(_) | VariantTy::Positional(_), PayloadPat::Positional([], true)) => {
+            }
             (VariantTy::Positional(types), PayloadPat::Positional(pats, rest)) => {
                 if pats.len() > types.len() || (!rest && pats.len() != types.len()) {
                     self.shape_error(
@@ -333,17 +332,14 @@ impl InferCtxt<'_> {
             (VariantTy::Named(named), PayloadPat::Named(fields, rest)) => {
                 let mut seen = Vec::new();
                 for &(ref field, range, p) in fields {
-                    match named.iter().find(|f| f.name == *field) {
-                        Some(f) => {
-                            let t = interner.subst(f.ty, subst);
-                            let t = self.normalize(t);
-                            self.check_pat(p, t);
-                            seen.push(field.clone());
-                        }
-                        None => {
-                            self.unknown_pat_field(range, &name, field);
-                            self.check_pat(p, interner.error());
-                        }
+                    if let Some(f) = named.iter().find(|f| f.name == *field) {
+                        let t = interner.subst(f.ty, subst);
+                        let t = self.normalize(t);
+                        self.check_pat(p, t);
+                        seen.push(field.clone());
+                    } else {
+                        self.unknown_pat_field(range, &name, field);
+                        self.check_pat(p, interner.error());
                     }
                 }
                 if !rest {
@@ -370,7 +366,7 @@ impl InferCtxt<'_> {
                 &format!("`{name}` has fields; write `{name}(..)` to ignore them"),
             ),
             (VariantTy::Positional(_), PayloadPat::Named(..)) => {
-                self.shape_error(pat, &format!("`{name}` has positional fields"))
+                self.shape_error(pat, &format!("`{name}` has positional fields"));
             }
             (VariantTy::Named(_), PayloadPat::Positional(..)) => self.shape_error(
                 pat,

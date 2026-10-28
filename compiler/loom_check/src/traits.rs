@@ -60,6 +60,7 @@ impl Solver<'_> {
     }
 
     /// Builds the environment for `predicates`.
+    #[must_use]
     pub fn elaborate(&self, predicates: &[Predicate]) -> Env {
         let mut out: Vec<Predicate> = Vec::new();
         let mut stack: Vec<Predicate> = predicates.to_vec();
@@ -113,6 +114,7 @@ impl Solver<'_> {
     }
 
     /// The substitution of a trait's `Self` and parameters for `pred`.
+    #[must_use]
     pub fn trait_subst(&self, pred: &Predicate) -> Subst {
         let trait_ = pred.trait_ref.trait_;
         let mut subst = Subst::new();
@@ -200,10 +202,8 @@ impl Solver<'_> {
                 // A projection of a concrete type may still have impls; a parameter only
                 // through blanket impls.
             }
-            TyKind::Dyn(dyn_trait, args) => {
-                if self.trait_implies(*dyn_trait, args, ty, trait_ref) {
-                    return Ok(Selection::Dyn);
-                }
+            TyKind::Dyn(dyn_trait, args) if self.trait_implies(*dyn_trait, args, ty, trait_ref) => {
+                return Ok(Selection::Dyn);
             }
             _ => {}
         }
@@ -324,6 +324,10 @@ impl Solver<'_> {
     }
 
     /// Implementations provided by the language for primitive and tuple types.
+    #[allow(
+        clippy::match_same_arms,
+        reason = "arms listed per case for readability"
+    )]
     fn builtin(
         &mut self,
         kind: &TyKind,

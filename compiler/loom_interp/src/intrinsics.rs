@@ -19,6 +19,14 @@ impl Interp<'_> {
     }
 
     #[allow(clippy::too_many_lines, reason = "one arm per intrinsic")]
+    #[allow(
+        clippy::needless_pass_by_value,
+        reason = "the value is moved into the callee in most callers"
+    )]
+    #[allow(
+        clippy::match_same_arms,
+        reason = "arms listed per case for readability"
+    )]
     pub(crate) fn intrinsic(
         &self,
         def: DefId,
@@ -556,7 +564,7 @@ impl Interp<'_> {
                 let mut fields = range.fields.clone();
                 match next {
                     Some(n) if self.value_cmp(&start, &end)? == std::cmp::Ordering::Less => {
-                        fields[0] = n
+                        fields[0] = n;
                     }
                     _ => fields[2] = Value::Bool(false),
                 }

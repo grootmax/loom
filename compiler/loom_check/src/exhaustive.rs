@@ -101,6 +101,7 @@ impl View<'_> {
         }
     }
 
+    #[allow(clippy::similar_names, reason = "names mirror the spec terms")]
     fn lower(&self, pat: PatId) -> Vec<DPat> {
         let ty = self.pat_tys[pat.index()];
         let one = |ctor: Option<Ctor>, fields: Vec<DPat>| vec![DPat { ctor, fields, ty }];
@@ -266,6 +267,10 @@ impl View<'_> {
         }
     }
 
+    #[allow(
+        clippy::unused_self,
+        reason = "a method for uniformity with its siblings"
+    )]
     fn column_complete(&self, matrix: &[Vec<DPat>], ctors: &[Ctor]) -> bool {
         ctors.iter().all(|c| {
             matrix

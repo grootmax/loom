@@ -230,12 +230,11 @@ fn run(args: &[String], tests: bool) -> ExitCode {
     let worker = std::thread::Builder::new()
         .stack_size(1 << 30)
         .spawn(move || run_on_this_thread(&path, tests));
-    match worker.map(std::thread::JoinHandle::join) {
-        Ok(Ok(code)) => ExitCode::from(code),
-        _ => {
-            eprintln!("loom: internal error while running the program");
-            ExitCode::from(USAGE)
-        }
+    if let Ok(Ok(code)) = worker.map(std::thread::JoinHandle::join) {
+        ExitCode::from(code)
+    } else {
+        eprintln!("loom: internal error while running the program");
+        ExitCode::from(USAGE)
     }
 }
 
@@ -280,7 +279,7 @@ fn run_on_this_thread(path: &std::path::Path, tests: bool) -> u8 {
     interp.flush();
     match &outcome {
         loom_interp::Outcome::Error(message) | loom_interp::Outcome::Panicked(message) => {
-            eprintln!("{message}")
+            eprintln!("{message}");
         }
         loom_interp::Outcome::Finished => {}
     }

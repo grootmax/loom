@@ -1,7 +1,7 @@
 //! Type inference and checking (ADR 0019 §3–§7, spec §5–§10).
 //!
 //! [`check`] lowers every signature ([`items`]), checks item-level rules (impls, derives,
-//! coherence), then infers each body one at a time ([`infer`]). The result, [`Checked`],
+//! coherence), then infers each body one at a time. The result, [`Checked`],
 //! gives for each body the type of every expression, pattern and binding and the meaning
 //! of every call, field access and path, which is all the interpreter needs.
 
@@ -210,7 +210,6 @@ pub fn check(hir: &Hir, resolution: &Resolution) -> Checked {
         let typed = infer::infer_body(&cx, id, &mut diagnostics);
         bodies.insert(id, typed);
     }
-    drop(cx);
     Checked {
         interner,
         items,

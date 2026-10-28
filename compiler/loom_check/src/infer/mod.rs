@@ -138,44 +138,41 @@ impl<'a> InferCtxt<'a> {
     }
 
     fn run(&mut self, sig: Option<crate::FnSig>) {
-        match sig {
-            Some(sig) => {
-                let ret = self.normalize(sig.ret);
-                for (i, &binding) in self.body.params.iter().enumerate() {
-                    let ty = sig
-                        .params
-                        .get(i)
-                        .map_or_else(|| self.interner().error(), |p| p.2);
-                    let ty = self.normalize(ty);
-                    self.binding_tys[binding.index()] = Some(ty);
-                }
-                for (i, default) in self.body.defaults.clone().into_iter().enumerate() {
-                    if let Some(default) = default {
-                        let ty = self.binding_tys[self.body.params[i].index()]
-                            .unwrap_or_else(|| self.interner().error());
-                        self.check(default, ty);
-                    }
-                }
-                if let Some(root) = self.body.root {
-                    self.return_tys.push(ret);
-                    self.check_block_value(root, ret);
-                    self.return_tys.pop();
+        if let Some(sig) = sig {
+            let ret = self.normalize(sig.ret);
+            for (i, &binding) in self.body.params.iter().enumerate() {
+                let ty = sig
+                    .params
+                    .get(i)
+                    .map_or_else(|| self.interner().error(), |p| p.2);
+                let ty = self.normalize(ty);
+                self.binding_tys[binding.index()] = Some(ty);
+            }
+            for (i, default) in self.body.defaults.clone().into_iter().enumerate() {
+                if let Some(default) = default {
+                    let ty = self.binding_tys[self.body.params[i].index()]
+                        .unwrap_or_else(|| self.interner().error());
+                    self.check(default, ty);
                 }
             }
-            None => {
-                // A constant.
-                let ty = self
-                    .cx
-                    .items
-                    .consts
-                    .get(&self.owner)
-                    .copied()
-                    .unwrap_or_else(|| self.interner().error());
-                if let Some(root) = self.body.root {
-                    self.return_tys.push(ty);
-                    self.check(root, ty);
-                    self.return_tys.pop();
-                }
+            if let Some(root) = self.body.root {
+                self.return_tys.push(ret);
+                self.check_block_value(root, ret);
+                self.return_tys.pop();
+            }
+        } else {
+            // A constant.
+            let ty = self
+                .cx
+                .items
+                .consts
+                .get(&self.owner)
+                .copied()
+                .unwrap_or_else(|| self.interner().error());
+            if let Some(root) = self.body.root {
+                self.return_tys.push(ty);
+                self.check(root, ty);
+                self.return_tys.pop();
             }
         }
     }
@@ -399,13 +396,12 @@ impl<'a> InferCtxt<'a> {
 
     fn binding_ty(&mut self, binding: BindingId) -> Ty {
         let binding = self.res.canonical(binding);
-        match self.binding_tys[binding.index()] {
-            Some(ty) => ty,
-            None => {
-                let var = self.new_var();
-                self.binding_tys[binding.index()] = Some(var);
-                var
-            }
+        if let Some(ty) = self.binding_tys[binding.index()] {
+            ty
+        } else {
+            let var = self.new_var();
+            self.binding_tys[binding.index()] = Some(var);
+            var
         }
     }
 
@@ -492,6 +488,7 @@ impl<'a> InferCtxt<'a> {
 
     // ----- finishing -----------------------------------------------------------------------
 
+    #[allow(clippy::too_many_lines, reason = "one case per language construct")]
     fn finish(mut self) -> (TypedBody, Vec<Diagnostic>) {
         let interner = self.cx.interner;
         // Default numeric variables (spec §6.2 rule 2).

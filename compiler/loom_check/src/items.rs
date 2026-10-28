@@ -518,6 +518,7 @@ fn collect_traits(
     }
 }
 
+#[allow(clippy::too_many_lines, reason = "one case per language construct")]
 fn collect_impls(
     hir: &Hir,
     def_map: &DefMap,

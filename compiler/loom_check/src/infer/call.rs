@@ -261,6 +261,7 @@ impl InferCtxt<'_> {
 
     // ----- calls ---------------------------------------------------------------------------
 
+    #[allow(clippy::too_many_lines, reason = "one case per language construct")]
     pub(super) fn call(
         &mut self,
         id: ExprId,
@@ -290,14 +291,13 @@ impl InferCtxt<'_> {
             self.error(diagnostic);
             return interner.error();
         }
-        if matches!(self.body.expr(callee), Expr::SelfType) {
-            if let Some(self_ty) = self.self_ty
-                && let TyKind::Adt(def, _) = interner.kind(self_ty)
-                && matches!(self.def_kind(def), DefKind::Struct(_))
-            {
-                self.record(callee, self_ty);
-                return self.construct_struct(id, def, args, Some(self_ty));
-            }
+        if matches!(self.body.expr(callee), Expr::SelfType)
+            && let Some(self_ty) = self.self_ty
+            && let TyKind::Adt(def, _) = interner.kind(self_ty)
+            && matches!(self.def_kind(def), DefKind::Struct(_))
+        {
+            self.record(callee, self_ty);
+            return self.construct_struct(id, def, args, Some(self_ty));
         }
         if let Expr::Field {
             base,
@@ -420,6 +420,7 @@ impl InferCtxt<'_> {
     }
 
     /// Binds `args` to `params` (spec §3.1 rule 4) and checks them, non-closures first.
+    #[allow(clippy::too_many_lines, reason = "one case per language construct")]
     fn check_args(
         &mut self,
         call: ExprId,
@@ -595,6 +596,10 @@ impl InferCtxt<'_> {
         ty
     }
 
+    #[allow(
+        clippy::needless_pass_by_value,
+        reason = "the value is moved into the callee in most callers"
+    )]
     pub(super) fn construct_variant(
         &mut self,
         id: ExprId,
@@ -762,29 +767,26 @@ impl InferCtxt<'_> {
         }
         if let Some(def) = self.type_def(ty)
             && let Some(&member) = self.cx.items.inherent.get(&def).and_then(|m| m.get(name))
+            && let DefKind::Const(_) = self.def_kind(member)
         {
-            match self.def_kind(member) {
-                DefKind::Const(_) => {
-                    self.exprs.insert(id, ExprInfo::Const { def: member });
-                    let ty = self
-                        .cx
-                        .items
-                        .consts
-                        .get(&member)
-                        .copied()
-                        .unwrap_or_else(|| interner.error());
-                    return self.normalize(ty);
-                }
-                // `Type.name` calls an associated function without arguments (uniform
-                // access, spec §7.4 rule 1).
-                _ => {}
-            }
+            self.exprs.insert(id, ExprInfo::Const { def: member });
+            let ty = self
+                .cx
+                .items
+                .consts
+                .get(&member)
+                .copied()
+                .unwrap_or_else(|| interner.error());
+            return self.normalize(ty);
         }
+        // `Type.name` calls an associated function without arguments (uniform
+        // access, spec §7.4 rule 1).
         // `Integer.parse` written without a call is a zero-argument associated call.
         self.assoc_call(id, type_expr, name, name_range, &[], expected)
     }
 
     /// `Type.name(args)`: a variant constructor or an associated function.
+    #[allow(clippy::too_many_lines, reason = "one case per language construct")]
     pub(super) fn assoc_call(
         &mut self,
         id: ExprId,
@@ -1218,27 +1220,26 @@ impl InferCtxt<'_> {
                 return interner.error();
             }
         }
-        match self.lookup_method(base_ty, name, span) {
-            Some(pick) => self.finish_method_call(id, base, base_ty, pick, &[], span),
-            None => {
-                let _ = expected;
-                let text = self.show(base_ty);
-                let is_struct = matches!(interner.kind(base_ty), TyKind::Adt(def, _) if self.cx.items.fields.get(&def).is_some_and(|f| !f.is_empty()));
-                let code = if is_struct {
-                    codes::UNKNOWN_FIELD
-                } else {
-                    codes::NO_SUCH_METHOD
-                };
-                self.error(
-                    Diagnostic::error(
-                        code,
-                        span,
-                        format!("no field or method named `{name}` on `{text}`"),
-                    )
-                    .with_label("unknown field or method"),
-                );
-                interner.error()
-            }
+        if let Some(pick) = self.lookup_method(base_ty, name, span) {
+            self.finish_method_call(id, base, base_ty, pick, &[], span)
+        } else {
+            let _ = expected;
+            let text = self.show(base_ty);
+            let is_struct = matches!(interner.kind(base_ty), TyKind::Adt(def, _) if self.cx.items.fields.get(&def).is_some_and(|f| !f.is_empty()));
+            let code = if is_struct {
+                codes::UNKNOWN_FIELD
+            } else {
+                codes::NO_SUCH_METHOD
+            };
+            self.error(
+                Diagnostic::error(
+                    code,
+                    span,
+                    format!("no field or method named `{name}` on `{text}`"),
+                )
+                .with_label("unknown field or method"),
+            );
+            interner.error()
         }
     }
 }
