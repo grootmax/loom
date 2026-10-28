@@ -7,7 +7,16 @@ All notable changes to the Loom toolchain are recorded here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- `loom fmt`: a line break inside brackets after which a `.` is followed by a space no
+  longer changes indentation on the second run (found by fuzzing).
+
 ### Added
+- Phase 2: ADR 0019 (semantic analysis and the interpreter) and normative spec text for
+  §3–§7, §9, §10, §12 and §14; HIR, name resolution, type inference and checking, the
+  core library in Loom (`std/core/`), and the reference interpreter.
+- `loom run` and `loom test`; `loom check` reports name and type errors and accepts
+  `--dump=hir`; `cargo xtask examples`; conformance accept cases now run.
 - Phase 1 begins: ADR 0018 (front-end design), spec Appendix C (diagnostic codes) and
   disambiguation rules, `loom_span` (spans, line/column mapping, source map), and the
   `loom_diagnostics` data model and code registry.

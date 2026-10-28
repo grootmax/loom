@@ -1,4 +1,5 @@
 # spec: §11.3
+# phase: 4
 def main
   ch = Ok(42)
   res = select

@@ -1,0 +1,85 @@
+# loom-snapshot: newlines/newlines_in_brackets
+
+SOURCE_FILE@0..89
+  FN_DEF@0..88
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..85
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      BIND_STMT@8..31
+        NAME@8..9
+          IDENT@8..9 "x"
+        WHITESPACE@9..10 " "
+        EQ@10..11 "="
+        WHITESPACE@11..12 " "
+        ARRAY_EXPR@12..31
+          L_BRACKET@12..13 "["
+          LITERAL@13..19
+            NEWLINE@13..14 "\n"
+            WHITESPACE@14..18 "    "
+            INT_LIT@18..19 "1"
+          COMMA@19..20 ","
+          LINE_BREAK@20..21 "\n"
+          WHITESPACE@21..25 "    "
+          LITERAL@25..26
+            INT_LIT@25..26 "2"
+          COMMA@26..27 ","
+          LINE_BREAK@27..28 "\n"
+          WHITESPACE@28..30 "  "
+          R_BRACKET@30..31 "]"
+      NEWLINE@31..32 "\n"
+      WHITESPACE@32..34 "  "
+      BIND_STMT@34..57
+        NAME@34..35
+          IDENT@34..35 "y"
+        WHITESPACE@35..36 " "
+        EQ@36..37 "="
+        WHITESPACE@37..38 " "
+        PAREN_EXPR@38..57
+          L_PAREN@38..39 "("
+          BINARY_EXPR@39..53
+            LITERAL@39..45
+              NEWLINE@39..40 "\n"
+              WHITESPACE@40..44 "    "
+              INT_LIT@44..45 "3"
+            WHITESPACE@45..46 " "
+            PLUS@46..47 "+"
+            LINE_BREAK@47..48 "\n"
+            WHITESPACE@48..52 "    "
+            LITERAL@52..53
+              INT_LIT@52..53 "4"
+          NEWLINE@53..54 "\n"
+          WHITESPACE@54..56 "  "
+          R_PAREN@56..57 ")"
+      NEWLINE@57..58 "\n"
+      WHITESPACE@58..60 "  "
+      BIND_STMT@60..84
+        NAME@60..61
+          IDENT@60..61 "z"
+        WHITESPACE@61..62 " "
+        EQ@62..63 "="
+        WHITESPACE@63..64 " "
+        MAP_EXPR@64..84
+          L_BRACE@64..65 "{"
+          MAP_ENTRY@65..80
+            PATH_EXPR@65..71
+              NAME_REF@65..71
+                NEWLINE@65..66 "\n"
+                WHITESPACE@66..70 "    "
+                IDENT@70..71 "a"
+            WHITESPACE@71..72 " "
+            FAT_ARROW@72..74 "=>"
+            LINE_BREAK@74..75 "\n"
+            WHITESPACE@75..79 "    "
+            PATH_EXPR@79..80
+              NAME_REF@79..80
+                IDENT@79..80 "b"
+          NEWLINE@80..81 "\n"
+          WHITESPACE@81..83 "  "
+          R_BRACE@83..84 "}"
+      NEWLINE@84..85 "\n"
+    END_KW@85..88 "end"
+  NEWLINE@88..89 "\n"

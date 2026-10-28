@@ -8,5 +8,15 @@ license.workspace = true
 repository.workspace = true
 publish = false
 
+[dependencies]
+loom_check = { path = "../loom_check" }
+loom_hir = { path = "../loom_hir" }
+loom_resolve = { path = "../loom_resolve" }
+loom_span = { path = "../loom_span" }
+loom_types = { path = "../loom_types" }
+
+[dev-dependencies]
+loom_driver = { path = "../loom_driver" }
+
 [lints]
 workspace = true

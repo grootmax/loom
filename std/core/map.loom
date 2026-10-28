@@ -1,0 +1,136 @@
+##! `Map[K, V]` and `Set[T]`: hash tables that iterate in insertion order.
+
+extern "intrinsic"
+  def map_new[K, V] -> Map[K, V]
+  def map_length[K, V](map: Map[K, V]) -> Int
+  def map_insert[K, V](mut map: Map[K, V], own key: K, own value: V) -> Option[V]
+  def map_get[K, V](map: Map[K, V], key: K) -> Option[V]
+  def map_remove[K, V](mut map: Map[K, V], key: K) -> Option[V]
+  def map_entry_at[K, V](map: Map[K, V], index: Int) -> (K, V)
+  def map_update[K, V](mut map: Map[K, V], own key: K, own default: V, f: FnMut(V))
+end
+
+## A hash map from keys of type `K` to values of type `V`. Iteration follows the order in
+## which keys were first inserted, so output is deterministic.
+@[lang("Map"), derive(Clone, Eq)]
+pub struct Map[K, V]
+  ## A new empty map.
+  pub def self.new -> Map[K, V] where K: Eq + Hash = map_new()
+
+  ## The number of entries.
+  pub def length -> Int = map_length(self)
+
+  ## Whether the map has no entries.
+  pub def is_empty -> Bool = map_length(self) == 0
+
+  ## The value for `key`.
+  pub def get(key: K) -> Option[ref V] where K: Eq + Hash = map_get(self, key)
+
+  ## Whether the map has an entry for `key`.
+  pub def has_key(key: K) -> Bool where K: Eq + Hash = map_get(self, key).is_some
+
+  ## Sets the value for `key`, returning the previous value. A new key goes last in
+  ## iteration order; an existing key keeps its position.
+  pub def mut insert(own key: K, own value: V) -> Option[V] where K: Eq + Hash = map_insert(self, key, value)
+
+  ## Removes the entry for `key`, returning its value.
+  pub def mut remove(key: K) -> Option[V] where K: Eq + Hash = map_remove(self, key)
+
+  ## Calls `f` with the value for `key`, inserting `default` first if there is none.
+  pub def mut update(own key: K, own default: V, f: FnMut(V)) where K: Eq + Hash
+    map_update(self, key, default, f)
+  end
+
+  ## The keys, in iteration order.
+  pub def keys -> Array[K]
+    var result = Array.new
+    var index = 0
+    while index < map_length(self)
+      result.push(map_entry_at(self, index).0)
+      index += 1
+    end
+    result
+  end
+
+  ## The values, in iteration order.
+  pub def values -> Array[V]
+    var result = Array.new
+    var index = 0
+    while index < map_length(self)
+      result.push(map_entry_at(self, index).1)
+      index += 1
+    end
+    result
+  end
+
+  ## The entries as `(key, value)` pairs, in iteration order.
+  pub def to_array -> Array[(K, V)]
+    var result = Array.new
+    var index = 0
+    while index < map_length(self)
+      result.push(map_entry_at(self, index))
+      index += 1
+    end
+    result
+  end
+
+  ## An iterator over `(key, value)` pairs.
+  pub def iter -> MapIter[K, V] = MapIter(map: self, index: 0)
+end
+
+impl[K, V] Iterable for Map[K, V]
+  type Iter = MapIter[K, V]
+
+  def iter -> MapIter[K, V] = MapIter(map: self, index: 0)
+end
+
+## An iterator over the entries of a map.
+pub struct MapIter[K, V]
+  map: Map[K, V]
+  index: Int
+end
+
+impl[K, V] Iterator for MapIter[K, V]
+  type Item = (K, V)
+
+  def mut next_item -> Option[(K, V)]
+    if @index < map_length(@map)
+      entry = map_entry_at(@map, @index)
+      @index += 1
+      Some(entry)
+    else
+      None
+    end
+  end
+end
+
+## A hash set of values of type `T`. Iteration follows insertion order.
+@[lang("Set"), derive(Clone, Eq)]
+pub struct Set[T]
+  map: Map[T, Unit]
+
+  ## A new empty set.
+  pub def self.new -> Set[T] where T: Eq + Hash = Set(map: map_new())
+
+  ## The number of elements.
+  pub def length -> Int = map_length(@map)
+
+  ## Whether the set has no elements.
+  pub def is_empty -> Bool = map_length(@map) == 0
+
+  ## Adds `value`. Returns whether it was not already present.
+  pub def mut insert(own value: T) -> Bool where T: Eq + Hash = map_insert(@map, value, ()).is_none
+
+  ## Removes `value`. Returns whether it was present.
+  pub def mut remove(value: T) -> Bool where T: Eq + Hash = map_remove(@map, value).is_some
+
+  ## Whether `value` is in the set.
+  pub def contains(value: T) -> Bool where T: Eq + Hash = map_get(@map, value).is_some
+
+  ## The elements, in insertion order.
+  pub def to_array -> Array[T] = @map.keys
+end
+
+impl[K, V] Default for Map[K, V]
+  def self.default -> Map[K, V] = map_new()
+end

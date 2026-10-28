@@ -14,6 +14,13 @@ dependencies = [
 [[package]]
 name = "loom_check"
 version = "0.0.0"
+dependencies = [
+ "loom_diagnostics",
+ "loom_hir",
+ "loom_resolve",
+ "loom_span",
+ "loom_types",
+]
 
 [[package]]
 name = "loom_cli"
@@ -22,6 +29,9 @@ dependencies = [
  "loom_diagnostics",
  "loom_driver",
  "loom_fmt",
+ "loom_hir",
+ "loom_interp",
+ "loom_parser",
  "loom_span",
 ]
 
@@ -45,11 +55,15 @@ name = "loom_driver"
 version = "0.0.0"
 dependencies = [
  "loom_ast",
+ "loom_check",
  "loom_diagnostics",
+ "loom_hir",
  "loom_lexer",
  "loom_parser",
+ "loom_resolve",
  "loom_span",
  "loom_syntax",
+ "loom_types",
 ]
 
 [[package]]
@@ -58,6 +72,7 @@ version = "0.0.0"
 dependencies = [
  "loom_ast",
  "loom_diagnostics",
+ "loom_lexer",
  "loom_parser",
  "loom_span",
  "loom_syntax",
@@ -66,10 +81,24 @@ dependencies = [
 [[package]]
 name = "loom_hir"
 version = "0.0.0"
+dependencies = [
+ "loom_ast",
+ "loom_parser",
+ "loom_span",
+ "loom_syntax",
+]
 
 [[package]]
 name = "loom_interp"
 version = "0.0.0"
+dependencies = [
+ "loom_check",
+ "loom_driver",
+ "loom_hir",
+ "loom_resolve",
+ "loom_span",
+ "loom_types",
+]
 
 [[package]]
 name = "loom_lexer"
@@ -102,6 +131,7 @@ version = "0.0.0"
 dependencies = [
  "loom_diagnostics",
  "loom_lexer",
+ "loom_snapshot",
  "loom_span",
  "loom_syntax",
 ]
@@ -113,6 +143,11 @@ version = "0.0.0"
 [[package]]
 name = "loom_resolve"
 version = "0.0.0"
+dependencies = [
+ "loom_diagnostics",
+ "loom_hir",
+ "loom_span",
+]
 
 [[package]]
 name = "loom_runtime"
@@ -136,6 +171,10 @@ dependencies = [
 [[package]]
 name = "loom_types"
 version = "0.0.0"
+dependencies = [
+ "loom_hir",
+ "loom_resolve",
+]
 
 [[package]]
 name = "loom_unicode"

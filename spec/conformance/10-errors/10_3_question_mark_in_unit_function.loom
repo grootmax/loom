@@ -1,0 +1,5 @@
+# spec: §10.3 rule 3
+def main
+  value = Some(1)?
+  puts value
+end

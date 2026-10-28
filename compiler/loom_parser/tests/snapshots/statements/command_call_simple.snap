@@ -1,0 +1,42 @@
+# loom-snapshot: statements/command_call_simple
+
+SOURCE_FILE@0..44
+  FN_DEF@0..43
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..40
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      EXPR_STMT@8..39
+        CALL_EXPR@8..39
+          PATH_EXPR@8..12
+            NAME_REF@8..12
+              IDENT@8..12 "puts"
+          WHITESPACE@12..13 " "
+          ARG_LIST@13..39
+            ARG@13..20
+              STRING@13..20
+                STRING_START@13..14 "\""
+                STRING_FRAGMENT@14..19 "hello"
+                STRING_END@19..20 "\""
+            COMMA@20..21 ","
+            WHITESPACE@21..22 " "
+            ARG@22..25
+              LITERAL@22..25
+                INT_LIT@22..25 "123"
+            COMMA@25..26 ","
+            WHITESPACE@26..27 " "
+            NAMED_ARG@27..39
+              NAME_REF@27..31
+                IDENT@27..31 "name"
+              COLON@31..32 ":"
+              WHITESPACE@32..33 " "
+              STRING@33..39
+                STRING_START@33..34 "\""
+                STRING_FRAGMENT@34..38 "test"
+                STRING_END@38..39 "\""
+      NEWLINE@39..40 "\n"
+    END_KW@40..43 "end"
+  NEWLINE@43..44 "\n"

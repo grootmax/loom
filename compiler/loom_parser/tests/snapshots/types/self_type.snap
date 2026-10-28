@@ -1,0 +1,25 @@
+# loom-snapshot: types/self_type
+
+SOURCE_FILE@0..19
+  FN_DEF@0..18
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    PARAM_LIST@5..14
+      L_PAREN@5..6 "("
+      PARAM@6..13
+        NAME@6..7
+          IDENT@6..7 "x"
+        COLON@7..8 ":"
+        WHITESPACE@8..9 " "
+        PATH_TYPE@9..13
+          PATH@9..13
+            PATH_SEGMENT@9..13
+              NAME_REF@9..13
+                SELF_TYPE_KW@9..13 "Self"
+      R_PAREN@13..14 ")"
+    BLOCK@14..15
+      NEWLINE@14..15 "\n"
+    END_KW@15..18 "end"
+  NEWLINE@18..19 "\n"

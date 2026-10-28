@@ -1,0 +1,52 @@
+# loom-snapshot: errors/e0110_else_if
+
+SOURCE_FILE@0..57
+  FN_DEF@0..56
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..53
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      EXPR_STMT@8..52
+        IF_EXPR@8..52
+          IF_KW@8..10 "if"
+          WHITESPACE@10..11 " "
+          PATH_EXPR@11..12
+            NAME_REF@11..12
+              IDENT@11..12 "a"
+          WHITESPACE@12..13 " "
+          THEN_KW@13..17 "then"
+          BLOCK@17..24
+            NEWLINE@17..18 "\n"
+            WHITESPACE@18..22 "    "
+            EXPR_STMT@22..23
+              LITERAL@22..23
+                INT_LIT@22..23 "1"
+            NEWLINE@23..24 "\n"
+          WHITESPACE@24..26 "  "
+          ELSIF_BRANCH@26..47
+            ELSE_KW@26..30 "else"
+            WHITESPACE@30..31 " "
+            IF_KW@31..33 "if"
+            WHITESPACE@33..34 " "
+            PATH_EXPR@34..35
+              NAME_REF@34..35
+                IDENT@34..35 "b"
+            WHITESPACE@35..36 " "
+            THEN_KW@36..40 "then"
+            BLOCK@40..47
+              NEWLINE@40..41 "\n"
+              WHITESPACE@41..45 "    "
+              EXPR_STMT@45..46
+                LITERAL@45..46
+                  INT_LIT@45..46 "2"
+              NEWLINE@46..47 "\n"
+          WHITESPACE@47..49 "  "
+          END_KW@49..52 "end"
+      NEWLINE@52..53 "\n"
+    END_KW@53..56 "end"
+  NEWLINE@56..57 "\n"
+--- diagnostics ---
+E0110 31..33 `else if` is written `elsif`

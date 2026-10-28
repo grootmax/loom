@@ -1,0 +1,8 @@
+# spec: §4.2 rules 1-2
+def main
+  var total = 10
+  total += 5
+  total *= 2
+  total = total - 1
+  puts total
+end

@@ -1,4 +1,4 @@
-# spec: §7.9
+# spec: §9.2
 def apply_pattern(v: Int, f: Fn(Int) -> Int) -> Int
   f(v)
 end

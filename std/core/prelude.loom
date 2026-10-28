@@ -1,0 +1,14 @@
+##! The names every module sees without importing them (spec §12.4).
+
+pub use core.primitives.{I8, I16, I32, I64, I128, ISize, U8, U16, U32, U64, U128, USize}
+pub use core.primitives.{Int, F32, F64, Float, Bool, Char, Unit, Never}
+pub use core.primitives.{Integer, FloatMath, ParseNumberError}
+pub use core.string.String
+pub use core.array.Array
+pub use core.map.{Map, Set}
+pub use core.option.{Option, Result}
+pub use core.option.Option.{Some, None}
+pub use core.option.Result.{Ok, Err}
+pub use core.iter.{Iterator, Iterable, Range}
+pub use core.traits.{Eq, Ord, Ordering, Clone, Copy, Hash, Default, From, Display, Error, Sum}
+pub use core.io.{puts, print, panic, todo, assert, assert_eq}

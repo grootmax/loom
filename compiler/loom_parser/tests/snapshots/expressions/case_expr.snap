@@ -1,0 +1,71 @@
+# loom-snapshot: expressions/case_expr
+
+SOURCE_FILE@0..76
+  FN_DEF@0..75
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..72
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      EXPR_STMT@8..71
+        CASE_EXPR@8..71
+          CASE_KW@8..12 "case"
+          WHITESPACE@12..13 " "
+          PATH_EXPR@13..14
+            NAME_REF@13..14
+              IDENT@13..14 "x"
+          NEWLINE@14..15 "\n"
+          WHITESPACE@15..17 "  "
+          CASE_ARM@17..30
+            IN_KW@17..19 "in"
+            WHITESPACE@19..20 " "
+            LITERAL_PAT@20..21
+              INT_LIT@20..21 "1"
+            WHITESPACE@21..22 " "
+            THEN_KW@22..26 "then"
+            WHITESPACE@26..27 " "
+            BLOCK@27..30
+              EXPR_STMT@27..29
+                PATH_EXPR@27..29
+                  NAME_REF@27..29
+                    IDENT@27..29 "s1"
+              NEWLINE@29..30 "\n"
+          WHITESPACE@30..32 "  "
+          CASE_ARM@32..52
+            IN_KW@32..34 "in"
+            WHITESPACE@34..35 " "
+            LITERAL_PAT@35..36
+              INT_LIT@35..36 "2"
+            WHITESPACE@36..37 " "
+            GUARD@37..44
+              IF_KW@37..39 "if"
+              WHITESPACE@39..40 " "
+              PATH_EXPR@40..44
+                NAME_REF@40..44
+                  IDENT@40..44 "cond"
+            BLOCK@44..52
+              NEWLINE@44..45 "\n"
+              WHITESPACE@45..49 "    "
+              EXPR_STMT@49..51
+                PATH_EXPR@49..51
+                  NAME_REF@49..51
+                    IDENT@49..51 "s2"
+              NEWLINE@51..52 "\n"
+          WHITESPACE@52..54 "  "
+          ELSE_BRANCH@54..66
+            ELSE_KW@54..58 "else"
+            BLOCK@58..66
+              NEWLINE@58..59 "\n"
+              WHITESPACE@59..63 "    "
+              EXPR_STMT@63..65
+                PATH_EXPR@63..65
+                  NAME_REF@63..65
+                    IDENT@63..65 "s3"
+              NEWLINE@65..66 "\n"
+          WHITESPACE@66..68 "  "
+          END_KW@68..71 "end"
+      NEWLINE@71..72 "\n"
+    END_KW@72..75 "end"
+  NEWLINE@75..76 "\n"

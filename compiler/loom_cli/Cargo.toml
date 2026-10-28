@@ -16,7 +16,12 @@ path = "src/main.rs"
 loom_span = { path = "../loom_span" }
 loom_diagnostics = { path = "../loom_diagnostics" }
 loom_driver = { path = "../loom_driver" }
+loom_hir = { path = "../loom_hir" }
+loom_interp = { path = "../loom_interp" }
 loom_fmt = { path = "../../tools/loom_fmt" }
+
+[dev-dependencies]
+loom_parser = { path = "../loom_parser" }
 
 [lints]
 workspace = true

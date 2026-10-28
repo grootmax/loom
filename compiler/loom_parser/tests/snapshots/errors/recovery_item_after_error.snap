@@ -1,0 +1,41 @@
+# loom-snapshot: errors/recovery_item_after_error
+
+SOURCE_FILE@0..38
+  FN_DEF@0..15
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..7
+      IDENT@4..7 "bad"
+    PARAM_LIST@7..11
+      L_PAREN@7..8 "("
+      PARAM@8..10
+        NAME@8..9
+          IDENT@8..9 "a"
+        COLON@9..10 ":"
+      R_PAREN@10..11 ")"
+    BLOCK@11..12
+      NEWLINE@11..12 "\n"
+    END_KW@12..15 "end"
+  NEWLINE@15..16 "\n"
+  LINE_BREAK@16..17 "\n"
+  FN_DEF@17..37
+    DEF_KW@17..20 "def"
+    WHITESPACE@20..21 " "
+    NAME@21..25
+      IDENT@21..25 "good"
+    BLOCK@25..34
+      NEWLINE@25..26 "\n"
+      WHITESPACE@26..28 "  "
+      BIND_STMT@28..33
+        NAME@28..29
+          IDENT@28..29 "x"
+        WHITESPACE@29..30 " "
+        EQ@30..31 "="
+        WHITESPACE@31..32 " "
+        LITERAL@32..33
+          INT_LIT@32..33 "1"
+      NEWLINE@33..34 "\n"
+    END_KW@34..37 "end"
+  NEWLINE@37..38 "\n"
+--- diagnostics ---
+E0100 10..11 expected a type, found `)`

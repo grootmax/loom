@@ -1,14 +1,16 @@
 //! `cargo xtask conformance`: runs `spec/conformance/` against this implementation.
 //!
-//! The rules are in `spec/conformance/README.md`. In Phase 1 only the front end exists:
+//! The rules are in `spec/conformance/README.md`. In Phase 2:
 //!
-//! - a reject case (`.diag`) whose codes are all lexical or syntax codes (E0001–E0199)
-//!   must produce exactly those codes at exactly those positions;
-//! - an accept case (`.stdout`) must produce no lexical or syntax error;
-//! - other cases are skipped until their phase.
+//! - a reject case (`.diag`) whose codes are all implemented (E0001–E0499) must produce
+//!   exactly those codes at exactly those positions;
+//! - an accept case (`.stdout`) is run with `loom run`; its standard output must equal
+//!   the file, and its exit status must be 0 (or the number in `<name>.exit`);
+//! - a case whose second line is `# phase: N` with `N` greater than the current phase,
+//!   or whose codes belong to a later phase, is skipped.
 //!
-//! The runner stays std-only: it builds the `loom` binary and parses the one-line
-//! diagnostics of `loom check --message-format=short`.
+//! The runner stays std-only: it builds the `loom` binary, parses the one-line
+//! diagnostics of `loom check --message-format=short`, and runs accept cases.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -17,7 +19,10 @@ use std::process::Command;
 use crate::workspace_root;
 
 /// The highest error code the current phase implements.
-const IMPLEMENTED_UP_TO: u32 = 199;
+const IMPLEMENTED_UP_TO: u32 = 499;
+
+/// The current roadmap phase.
+pub const CURRENT_PHASE: u32 = 2;
 
 /// Runs the suite and fails if any case does not match.
 pub fn run() -> Result<(), String> {
@@ -28,6 +33,7 @@ pub fn run() -> Result<(), String> {
         return Ok(());
     }
     let binary = build_loom(&root)?;
+    let cases: Vec<PathBuf> = cases;
     let mut command = Command::new(&binary);
     command
         .arg("check")
@@ -40,6 +46,10 @@ pub fn run() -> Result<(), String> {
         .output()
         .map_err(|error| format!("could not run `{}`: {error}", binary.display()))?;
     let reported = parse_report(&String::from_utf8_lossy(&output.stderr));
+    let runner = Runner {
+        root: &root,
+        binary: &binary,
+    };
 
     let mut failures = Vec::new();
     let (mut passed, mut skipped) = (0, 0);
@@ -47,7 +57,7 @@ pub fn run() -> Result<(), String> {
         // Reported paths use `/`; so do the keys, on every platform.
         let key = case.display().to_string().replace('\\', "/");
         let got = reported.get(&key).cloned().unwrap_or_default();
-        match check_case(&root.join(case), &got)? {
+        match runner.check_case(case, &got)? {
             Outcome::Passed => passed += 1,
             Outcome::Skipped => skipped += 1,
             Outcome::Failed(message) => failures.push(format!("{key}: {message}")),
@@ -106,7 +116,7 @@ fn collect_into(directory: &Path, cases: &mut Vec<PathBuf>) -> Result<(), String
     Ok(())
 }
 
-fn build_loom(root: &Path) -> Result<PathBuf, String> {
+pub fn build_loom(root: &Path) -> Result<PathBuf, String> {
     crate::run(
         root,
         "cargo",
@@ -145,34 +155,75 @@ fn parse_report(stderr: &str) -> BTreeMap<String, Vec<String>> {
     reported
 }
 
-fn check_case(case: &Path, got: &[String]) -> Result<Outcome, String> {
-    let diag = case.with_extension("diag");
-    if diag.exists() {
-        let text = std::fs::read_to_string(&diag)
-            .map_err(|error| format!("could not read `{}`: {error}", diag.display()))?;
-        let expected: Vec<String> = text.lines().map(str::to_owned).collect();
-        if !expected
-            .iter()
-            .all(|line| code_number(line).is_some_and(|n| n <= IMPLEMENTED_UP_TO))
-        {
+struct Runner<'a> {
+    root: &'a Path,
+    binary: &'a Path,
+}
+
+/// The phase a case declares on its second line (`# phase: N`), if any.
+fn declared_phase(case: &Path) -> Option<u32> {
+    let text = std::fs::read_to_string(case).ok()?;
+    let line = text.lines().nth(1)?;
+    line.strip_prefix("# phase:")?.trim().parse().ok()
+}
+
+impl Runner<'_> {
+    fn check_case(&self, relative: &Path, got: &[String]) -> Result<Outcome, String> {
+        let case = &self.root.join(relative);
+        if declared_phase(case).is_some_and(|phase| phase > CURRENT_PHASE) {
             return Ok(Outcome::Skipped);
         }
-        return Ok(if expected == got {
-            Outcome::Passed
-        } else {
-            Outcome::Failed(format!("expected {expected:?}, got {got:?}"))
-        });
+        let diag = case.with_extension("diag");
+        if diag.exists() {
+            let text = std::fs::read_to_string(&diag)
+                .map_err(|error| format!("could not read `{}`: {error}", diag.display()))?;
+            let expected: Vec<String> = text.lines().map(str::to_owned).collect();
+            if !expected
+                .iter()
+                .all(|line| code_number(line).is_some_and(|n| n <= IMPLEMENTED_UP_TO))
+            {
+                return Ok(Outcome::Skipped);
+            }
+            return Ok(if expected == got {
+                Outcome::Passed
+            } else {
+                Outcome::Failed(format!("expected {expected:?}, got {got:?}"))
+            });
+        }
+        let stdout_file = case.with_extension("stdout");
+        if stdout_file.exists() {
+            if !got.is_empty() {
+                return Ok(Outcome::Failed(format!("accept case reported {got:?}")));
+            }
+            let expected = std::fs::read_to_string(&stdout_file)
+                .map_err(|error| format!("could not read `{}`: {error}", stdout_file.display()))?;
+            let expected_exit: i32 = std::fs::read_to_string(case.with_extension("exit"))
+                .ok()
+                .and_then(|t| t.trim().parse().ok())
+                .unwrap_or(0);
+            let output = Command::new(self.binary)
+                .arg("run")
+                .arg(relative)
+                .current_dir(self.root)
+                .output()
+                .map_err(|error| format!("could not run `{}`: {error}", self.binary.display()))?;
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            let exit = output.status.code().unwrap_or(-1);
+            return Ok(if stdout != expected {
+                Outcome::Failed(format!("expected output {expected:?}, got {stdout:?}"))
+            } else if exit != expected_exit {
+                Outcome::Failed(format!(
+                    "expected exit status {expected_exit}, got {exit}: {}",
+                    String::from_utf8_lossy(&output.stderr).trim()
+                ))
+            } else {
+                Outcome::Passed
+            });
+        }
+        Ok(Outcome::Failed(
+            "has neither a `.diag` nor a `.stdout` file".to_owned(),
+        ))
     }
-    if case.with_extension("stdout").exists() {
-        return Ok(if got.is_empty() {
-            Outcome::Passed
-        } else {
-            Outcome::Failed(format!("accept case reported {got:?}"))
-        });
-    }
-    Ok(Outcome::Failed(
-        "has neither a `.diag` nor a `.stdout` file".to_owned(),
-    ))
 }
 
 /// The number of the code in a `LINE:COL EXXXX` line.

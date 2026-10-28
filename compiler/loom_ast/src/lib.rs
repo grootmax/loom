@@ -11,11 +11,13 @@
 
 mod expressions;
 mod items;
+mod literals;
 mod patterns;
 mod types;
 
 pub use expressions::*;
 pub use items::*;
+pub use literals::*;
 pub use patterns::*;
 pub use types::*;
 

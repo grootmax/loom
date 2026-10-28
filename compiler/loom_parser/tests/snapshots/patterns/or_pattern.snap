@@ -1,0 +1,43 @@
+# loom-snapshot: patterns/or_pattern
+
+SOURCE_FILE@0..40
+  FN_DEF@0..39
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..36
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      EXPR_STMT@8..35
+        CASE_EXPR@8..35
+          CASE_KW@8..12 "case"
+          WHITESPACE@12..13 " "
+          PATH_EXPR@13..14
+            NAME_REF@13..14
+              IDENT@13..14 "x"
+          NEWLINE@14..15 "\n"
+          WHITESPACE@15..17 "  "
+          CASE_ARM@17..30
+            IN_KW@17..19 "in"
+            WHITESPACE@19..20 " "
+            OR_PAT@20..29
+              LITERAL_PAT@20..21
+                INT_LIT@20..21 "1"
+              WHITESPACE@21..22 " "
+              PIPE@22..23 "|"
+              WHITESPACE@23..24 " "
+              LITERAL_PAT@24..25
+                INT_LIT@24..25 "2"
+              WHITESPACE@25..26 " "
+              PIPE@26..27 "|"
+              WHITESPACE@27..28 " "
+              LITERAL_PAT@28..29
+                INT_LIT@28..29 "3"
+            BLOCK@29..30
+              NEWLINE@29..30 "\n"
+          WHITESPACE@30..32 "  "
+          END_KW@32..35 "end"
+      NEWLINE@35..36 "\n"
+    END_KW@36..39 "end"
+  NEWLINE@39..40 "\n"

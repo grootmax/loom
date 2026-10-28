@@ -1,0 +1,6 @@
+# spec: §10.4
+def main
+  puts "start"
+  empty: Option[Int] = None
+  puts empty.unwrap
+end

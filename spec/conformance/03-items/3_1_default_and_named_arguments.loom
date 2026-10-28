@@ -1,0 +1,10 @@
+# spec: §3.1 rules 3-4
+def greet(name: String, greeting: String = "Hello", punctuation: String = "!") -> String
+  "#{greeting}, #{name}#{punctuation}"
+end
+
+def main
+  puts greet("Ada")
+  puts greet("Ada", punctuation: "?")
+  puts greet(greeting: "Hi", name: "Bo")
+end

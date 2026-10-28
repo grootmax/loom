@@ -1,0 +1,58 @@
+# loom-snapshot: expressions/if_expr
+
+SOURCE_FILE@0..64
+  FN_DEF@0..63
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..60
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      EXPR_STMT@8..59
+        IF_EXPR@8..59
+          IF_KW@8..10 "if"
+          WHITESPACE@10..11 " "
+          PATH_EXPR@11..13
+            NAME_REF@11..13
+              IDENT@11..13 "c1"
+          WHITESPACE@13..14 " "
+          THEN_KW@14..18 "then"
+          WHITESPACE@18..19 " "
+          BLOCK@19..22
+            EXPR_STMT@19..21
+              PATH_EXPR@19..21
+                NAME_REF@19..21
+                  IDENT@19..21 "s1"
+            NEWLINE@21..22 "\n"
+          WHITESPACE@22..24 "  "
+          ELSIF_BRANCH@24..40
+            ELSIF_KW@24..29 "elsif"
+            WHITESPACE@29..30 " "
+            PATH_EXPR@30..32
+              NAME_REF@30..32
+                IDENT@30..32 "c2"
+            BLOCK@32..40
+              NEWLINE@32..33 "\n"
+              WHITESPACE@33..37 "    "
+              EXPR_STMT@37..39
+                PATH_EXPR@37..39
+                  NAME_REF@37..39
+                    IDENT@37..39 "s2"
+              NEWLINE@39..40 "\n"
+          WHITESPACE@40..42 "  "
+          ELSE_BRANCH@42..54
+            ELSE_KW@42..46 "else"
+            BLOCK@46..54
+              NEWLINE@46..47 "\n"
+              WHITESPACE@47..51 "    "
+              EXPR_STMT@51..53
+                PATH_EXPR@51..53
+                  NAME_REF@51..53
+                    IDENT@51..53 "s3"
+              NEWLINE@53..54 "\n"
+          WHITESPACE@54..56 "  "
+          END_KW@56..59 "end"
+      NEWLINE@59..60 "\n"
+    END_KW@60..63 "end"
+  NEWLINE@63..64 "\n"
