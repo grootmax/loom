@@ -1,0 +1,4 @@
+# spec: §2.7.1 rule 3
+def main
+  x = 0X1F
+end

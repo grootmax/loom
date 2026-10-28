@@ -1,0 +1,4 @@
+# spec: §2.8 rule 4
+def main
+  x = true && false
+end
