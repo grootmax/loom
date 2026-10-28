@@ -13,3 +13,4 @@ Status values: `dispatched`, `in review`, `merged`, `rejected`, `superseded`.
 | [0006](0006-conformance-lexical.md) | Jules | 4368b162-a38c-4521-9ba7-8d9a3e5dd480 | `spec/conformance/02-lexical/` | 2026-10-28 | in review | #6 | Phase 1 |
 | [0007](0007-error-explanations.md) | Jules | 828cf13c-1558-4b83-97e0-874445ea1acc | `compiler/loom_diagnostics/explanations/` | 2026-10-28 | in review | #8 | Phase 1 |
 | [0008](0008-conformance-syntax.md) | Jules | 443c3305-a541-422d-b371-3ee99209166e | `spec/conformance/{03,04,07,09}-*/` | 2026-10-28 | in review | #9 | Phase 1 |
+| [0013](0013-literal-values.md) | — | — | `compiler/loom_ast/src/literals.rs` | — | superseded | — | Implemented by the maintainer in Phase 2 (needed by HIR lowering before push access returned) |
