@@ -1,0 +1,122 @@
+# loom-snapshot: items/trait_def
+
+SOURCE_FILE@0..155
+  TRAIT_DEF@0..154
+    TRAIT_KW@0..5 "trait"
+    WHITESPACE@5..6 " "
+    NAME@6..15
+      IDENT@6..15 "Printable"
+    GENERIC_PARAM_LIST@15..18
+      L_BRACKET@15..16 "["
+      GENERIC_PARAM@16..17
+        NAME@16..17
+          IDENT@16..17 "T"
+      R_BRACKET@17..18 "]"
+    WHITESPACE@18..19 " "
+    COLON@19..20 ":"
+    WHITESPACE@20..21 " "
+    BOUND_LIST@21..25
+      PATH_TYPE@21..25
+        PATH@21..25
+          PATH_SEGMENT@21..25
+            NAME_REF@21..25
+              IDENT@21..25 "Base"
+    WHITESPACE@25..26 " "
+    WHERE_CLAUSE@26..42
+      WHERE_KW@26..31 "where"
+      WHITESPACE@31..32 " "
+      WHERE_PRED@32..42
+        PATH_TYPE@32..33
+          PATH@32..33
+            PATH_SEGMENT@32..33
+              NAME_REF@32..33
+                IDENT@32..33 "T"
+        COLON@33..34 ":"
+        WHITESPACE@34..35 " "
+        BOUND_LIST@35..42
+          PATH_TYPE@35..42
+            PATH@35..42
+              PATH_SEGMENT@35..42
+                NAME_REF@35..42
+                  IDENT@35..42 "Display"
+    NEWLINE@42..43 "\n"
+    WHITESPACE@43..45 "  "
+    FN_DEF@45..70
+      DEF_KW@45..48 "def"
+      WHITESPACE@48..49 " "
+      NAME@49..54
+        IDENT@49..54 "print"
+      PARAM_LIST@54..70
+        L_PAREN@54..55 "("
+        ERROR@55..69
+          SELF_KW@55..59 "self"
+          COLON@59..60 ":"
+          WHITESPACE@60..61 " "
+          REF_KW@61..64 "ref"
+          WHITESPACE@64..65 " "
+          SELF_TYPE_KW@65..69 "Self"
+        R_PAREN@69..70 ")"
+    NEWLINE@70..71 "\n"
+    WHITESPACE@71..73 "  "
+    FN_DEF@73..108
+      IDENT@73..80 "default"
+      WHITESPACE@80..81 " "
+      DEF_KW@81..84 "def"
+      WHITESPACE@84..85 " "
+      NAME@85..89
+        IDENT@85..89 "name"
+      WHITESPACE@89..90 " "
+      RET_TYPE@90..99
+        ARROW@90..92 "->"
+        WHITESPACE@92..93 " "
+        PATH_TYPE@93..99
+          PATH@93..99
+            PATH_SEGMENT@93..99
+              NAME_REF@93..99
+                IDENT@93..99 "String"
+      WHITESPACE@99..100 " "
+      EQ@100..101 "="
+      WHITESPACE@101..102 " "
+      STRING@102..108
+        STRING_START@102..103 "\""
+        STRING_FRAGMENT@103..107 "item"
+        STRING_END@107..108 "\""
+    NEWLINE@108..109 "\n"
+    WHITESPACE@109..111 "  "
+    ASSOC_TYPE@111..129
+      TYPE_KW@111..115 "type"
+      WHITESPACE@115..116 " "
+      NAME@116..121
+        IDENT@116..121 "Assoc"
+      COLON@121..122 ":"
+      WHITESPACE@122..123 " "
+      BOUND_LIST@123..129
+        PATH_TYPE@123..129
+          PATH@123..129
+            PATH_SEGMENT@123..129
+              NAME_REF@123..129
+                IDENT@123..129 "Bounds"
+    NEWLINE@129..130 "\n"
+    WHITESPACE@130..132 "  "
+    CONST_DEF@132..150
+      CONST_KW@132..137 "const"
+      WHITESPACE@137..138 " "
+      NAME@138..141
+        IDENT@138..141 "MIN"
+      COLON@141..142 ":"
+      WHITESPACE@142..143 " "
+      PATH_TYPE@143..146
+        PATH@143..146
+          PATH_SEGMENT@143..146
+            NAME_REF@143..146
+              IDENT@143..146 "Int"
+      WHITESPACE@146..147 " "
+      EQ@147..148 "="
+      WHITESPACE@148..149 " "
+      LITERAL@149..150
+        INT_LIT@149..150 "0"
+    NEWLINE@150..151 "\n"
+    END_KW@151..154 "end"
+  NEWLINE@154..155 "\n"
+--- diagnostics ---
+E0100 55..59 expected a parameter, found `self`

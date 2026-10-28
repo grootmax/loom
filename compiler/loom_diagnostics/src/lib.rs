@@ -7,6 +7,7 @@
 //! [ADR 0018]: https://github.com/grootmax/loom/blob/main/docs/adr/0018-front-end-design.md
 
 pub mod codes;
+pub mod render;
 
 use std::fmt::{self, Write as _};
 

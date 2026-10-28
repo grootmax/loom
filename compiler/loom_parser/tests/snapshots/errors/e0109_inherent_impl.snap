@@ -1,0 +1,27 @@
+# loom-snapshot: errors/e0109_inherent_impl
+
+SOURCE_FILE@0..29
+  IMPL_DEF@0..28
+    IMPL_KW@0..4 "impl"
+    WHITESPACE@4..5 " "
+    PATH_TYPE@5..8
+      PATH@5..8
+        PATH_SEGMENT@5..8
+          NAME_REF@5..8
+            IDENT@5..8 "Foo"
+    NEWLINE@8..9 "\n"
+    WHITESPACE@9..11 "  "
+    FN_DEF@11..24
+      DEF_KW@11..14 "def"
+      WHITESPACE@14..15 " "
+      NAME@15..18
+        IDENT@15..18 "bar"
+      BLOCK@18..19
+        NEWLINE@18..19 "\n"
+      WHITESPACE@19..21 "  "
+      END_KW@21..24 "end"
+    NEWLINE@24..25 "\n"
+    END_KW@25..28 "end"
+  NEWLINE@28..29 "\n"
+--- diagnostics ---
+E0109 0..4 `impl` without a trait

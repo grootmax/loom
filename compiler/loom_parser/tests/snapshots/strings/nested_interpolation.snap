@@ -1,0 +1,40 @@
+# loom-snapshot: strings/nested_interpolation
+
+SOURCE_FILE@0..36
+  FN_DEF@0..35
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..32
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      BIND_STMT@8..31
+        NAME@8..9
+          IDENT@8..9 "s"
+        WHITESPACE@9..10 " "
+        EQ@10..11 "="
+        WHITESPACE@11..12 " "
+        STRING@12..31
+          STRING_START@12..13 "\""
+          STRING_FRAGMENT@13..15 "a "
+          INTERPOLATION@15..28
+            INTERP_START@15..17 "#{"
+            WHITESPACE@17..18 " "
+            STRING@18..26
+              STRING_START@18..19 "\""
+              STRING_FRAGMENT@19..21 "b "
+              INTERPOLATION@21..25
+                INTERP_START@21..23 "#{"
+                PATH_EXPR@23..24
+                  NAME_REF@23..24
+                    IDENT@23..24 "c"
+                INTERP_END@24..25 "}"
+              STRING_END@25..26 "\""
+            WHITESPACE@26..27 " "
+            INTERP_END@27..28 "}"
+          STRING_FRAGMENT@28..30 " d"
+          STRING_END@30..31 "\""
+      NEWLINE@31..32 "\n"
+    END_KW@32..35 "end"
+  NEWLINE@35..36 "\n"

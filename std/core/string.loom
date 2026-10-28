@@ -1,0 +1,114 @@
+##! `String`: owned UTF-8 text.
+
+extern "intrinsic"
+  def string_length(text: String) -> Int
+  def string_byte_length(text: String) -> Int
+  def string_chars(text: String) -> Array[Char]
+  def string_from_chars(chars: Array[Char]) -> String
+  def string_push_str(mut text: String, other: String)
+  def string_push_char(mut text: String, c: Char)
+  def string_convert(text: String, operation: String) -> String
+  def string_split_whitespace(text: String) -> Array[String]
+  def string_split(text: String, separator: String) -> Array[String]
+  def string_find(text: String, pattern: String) -> Option[Int]
+  def string_substring(text: String, start: Int, stop: Int) -> String
+  def string_repeat(text: String, count: Int) -> String
+  def value_clone[T](value: T) -> T
+end
+
+## Owned, growable UTF-8 text.
+@[lang("String")]
+pub struct String
+  ## A new empty string.
+  pub def self.new -> String = ""
+
+  ## The number of characters (Unicode scalar values).
+  pub def length -> Int = string_length(self)
+
+  ## The number of bytes of the UTF-8 encoding.
+  pub def byte_length -> Int = string_byte_length(self)
+
+  ## Whether the string is empty.
+  pub def is_empty -> Bool = string_byte_length(self) == 0
+
+  ## The characters, in order.
+  pub def chars -> Array[Char] = string_chars(self)
+
+  ## Appends `other`.
+  pub def mut push_str(other: String)
+    string_push_str(self, other)
+  end
+
+  ## Appends one character.
+  pub def mut push(c: Char)
+    string_push_char(self, c)
+  end
+
+  ## The string with every character mapped to uppercase.
+  pub def to_uppercase -> String = string_convert(self, "upper")
+
+  ## The string with every character mapped to lowercase.
+  pub def to_lowercase -> String = string_convert(self, "lower")
+
+  ## The string without leading and trailing whitespace.
+  pub def trim -> String = string_convert(self, "trim")
+
+  ## The string without leading whitespace.
+  pub def trim_start -> String = string_convert(self, "trim_start")
+
+  ## The string without trailing whitespace.
+  pub def trim_end -> String = string_convert(self, "trim_end")
+
+  ## The string without the leading and trailing characters that satisfy `predicate`.
+  pub def trim_matches(predicate: Fn(Char) -> Bool) -> String
+    chars = string_chars(self)
+    var start = 0
+    var stop = chars.length
+    while start < stop and predicate(chars[start])
+      start += 1
+    end
+    while stop > start and predicate(chars[stop - 1])
+      stop -= 1
+    end
+    string_substring(self, start, stop)
+  end
+
+  ## The words of the string, split at runs of whitespace.
+  pub def split_whitespace -> Array[String] = string_split_whitespace(self)
+
+  ## The parts of the string between occurrences of `separator`.
+  pub def split(separator: String) -> Array[String] = string_split(self, separator)
+
+  ## Whether the string contains `pattern`.
+  pub def contains(pattern: String) -> Bool = string_find(self, pattern).is_some
+
+  ## The character index of the first occurrence of `pattern`.
+  pub def find(pattern: String) -> Option[Int] = string_find(self, pattern)
+
+  ## Whether the string starts with `prefix`.
+  pub def starts_with(prefix: String) -> Bool
+    string_length(prefix) <= string_length(self) and string_substring(self, 0, string_length(prefix)) == prefix
+  end
+
+  ## Whether the string ends with `suffix`.
+  pub def ends_with(suffix: String) -> Bool
+    length = string_length(self)
+    count = string_length(suffix)
+    count <= length and string_substring(self, length - count, length) == suffix
+  end
+
+  ## The characters from index `start` up to (not including) `stop`. Panics if the range
+  ## is out of bounds.
+  pub def substring(start: Int, stop: Int) -> String = string_substring(self, start, stop)
+
+  ## The string repeated `count` times.
+  pub def repeat(count: Int) -> String = string_repeat(self, count)
+end
+
+impl Clone for String
+  def clone -> String = value_clone(self)
+end
+
+impl Display for String
+  def to_string -> String = value_clone(self)
+end

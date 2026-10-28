@@ -41,3 +41,5 @@ source ─► loom_lexer ─► loom_parser ─► loom_syntax (lossless CST) �
 Each subsystem gets its own page here as it is implemented:
 
 - [The front end: lexer, CST, parser, AST, formatter](front-end.md)
+- [Semantic analysis and the interpreter](semantics.md)
+- [Core intrinsics](intrinsics.md)

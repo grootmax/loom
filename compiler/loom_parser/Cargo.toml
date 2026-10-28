@@ -14,5 +14,8 @@ loom_diagnostics = { path = "../loom_diagnostics" }
 loom_syntax = { path = "../loom_syntax" }
 loom_lexer = { path = "../loom_lexer" }
 
+[dev-dependencies]
+loom_snapshot = { path = "../loom_snapshot" }
+
 [lints]
 workspace = true

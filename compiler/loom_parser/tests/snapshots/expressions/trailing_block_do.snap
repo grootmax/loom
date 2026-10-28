@@ -1,0 +1,46 @@
+# loom-snapshot: expressions/trailing_block_do
+
+SOURCE_FILE@0..36
+  FN_DEF@0..35
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..32
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      EXPR_STMT@8..31
+        CALL_EXPR@8..31
+          PATH_EXPR@8..9
+            NAME_REF@8..9
+              IDENT@8..9 "f"
+          ARG_LIST@9..12
+            L_PAREN@9..10 "("
+            ARG@10..11
+              LITERAL@10..11
+                INT_LIT@10..11 "1"
+            R_PAREN@11..12 ")"
+          WHITESPACE@12..13 " "
+          TRAILING_BLOCK@13..31
+            DO_KW@13..15 "do"
+            WHITESPACE@15..16 " "
+            BLOCK_PARAM_LIST@16..19
+              PIPE@16..17 "|"
+              BLOCK_PARAM@17..18
+                IDENT_PAT@17..18
+                  NAME@17..18
+                    IDENT@17..18 "x"
+              PIPE@18..19 "|"
+            BLOCK@19..26
+              NEWLINE@19..20 "\n"
+              WHITESPACE@20..24 "    "
+              EXPR_STMT@24..25
+                PATH_EXPR@24..25
+                  NAME_REF@24..25
+                    IDENT@24..25 "x"
+              NEWLINE@25..26 "\n"
+            WHITESPACE@26..28 "  "
+            END_KW@28..31 "end"
+      NEWLINE@31..32 "\n"
+    END_KW@32..35 "end"
+  NEWLINE@35..36 "\n"

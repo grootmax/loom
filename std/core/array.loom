@@ -1,0 +1,318 @@
+##! `Array[T]`: a growable sequence.
+
+use core.iter.Enumerated
+
+extern "intrinsic"
+  def array_new[T] -> Array[T]
+  def array_length[T](array: Array[T]) -> Int
+  def array_get[T](array: Array[T], index: Int) -> T
+  def array_set[T](mut array: Array[T], index: Int, own value: T)
+  def array_push[T](mut array: Array[T], own value: T)
+  def array_pop[T](mut array: Array[T]) -> Option[T]
+  def array_insert[T](mut array: Array[T], index: Int, own value: T)
+  def array_remove[T](mut array: Array[T], index: Int) -> T
+  def array_slice[T](array: Array[T], start: Int, stop: Int) -> Array[T]
+  def array_sort_by[T](mut array: Array[T], compare: Fn(T, T) -> Ordering)
+  def array_reverse[T](mut array: Array[T])
+  def panic_with(message: String) -> Never
+end
+
+## A growable sequence of values of type `T`, indexed from 0.
+@[lang("Array"), derive(Clone, Eq, Ord, Hash)]
+pub struct Array[T]
+  ## A new empty array.
+  pub def self.new -> Array[T] = array_new()
+
+  ## The number of elements.
+  pub def length -> Int = array_length(self)
+
+  ## The number of elements (the same as `length`).
+  pub def count -> Int = array_length(self)
+
+  ## Whether the array has no elements.
+  pub def is_empty -> Bool = array_length(self) == 0
+
+  ## The element at `index`, if it exists.
+  pub def get(index: Int) -> Option[ref T]
+    if index >= 0 and index < array_length(self) then Some(array_get(self, index)) else None end
+  end
+
+  ## The first element.
+  pub def first -> Option[ref T] = self.get(0)
+
+  ## The last element.
+  pub def last -> Option[ref T] = self.get(array_length(self) - 1)
+
+  ## Appends `value`.
+  pub def mut push(own value: T)
+    array_push(self, value)
+  end
+
+  ## Removes and returns the last element.
+  pub def mut pop -> Option[T] = array_pop(self)
+
+  ## Inserts `value` at `index`, shifting later elements. Panics if `index > length`.
+  pub def mut insert(index: Int, own value: T)
+    array_insert(self, index, value)
+  end
+
+  ## Removes and returns the element at `index`. Panics if it does not exist.
+  pub def mut remove(index: Int) -> T = array_remove(self, index)
+
+  ## Reverses the order of the elements in place.
+  pub def mut reverse
+    array_reverse(self)
+  end
+
+  ## An iterator over the elements.
+  pub def iter -> ArrayIter[T] = ArrayIter(array: self, index: 0)
+
+  ## An iterator over `(index, element)` pairs.
+  pub def enumerate -> Enumerated[ArrayIter[T]] = self.iter.enumerate
+
+  ## Calls `f` on each element, in order.
+  pub def each(f: FnMut(T))
+    var index = 0
+    while index < array_length(self)
+      f(array_get(self, index))
+      index += 1
+    end
+  end
+
+  ## A new array with `f` applied to each element.
+  pub def map[U](f: FnMut(T) -> U) -> Array[U]
+    var result = array_new()
+    var index = 0
+    while index < array_length(self)
+      array_push(result, f(array_get(self, index)))
+      index += 1
+    end
+    result
+  end
+
+  ## A new array of the elements that satisfy `predicate`.
+  pub def filter(predicate: FnMut(T) -> Bool) -> Array[T] where T: Clone
+    var result = array_new()
+    var index = 0
+    while index < array_length(self)
+      element = array_get(self, index)
+      if predicate(element)
+        array_push(result, element.clone)
+      end
+      index += 1
+    end
+    result
+  end
+
+  ## A new array of the `Some` results of `f`.
+  pub def filter_map[U](f: FnMut(T) -> Option[U]) -> Array[U]
+    var result = array_new()
+    var index = 0
+    while index < array_length(self)
+      if f(array_get(self, index)) in Some(value)
+        array_push(result, value)
+      end
+      index += 1
+    end
+    result
+  end
+
+  ## Whether any element satisfies `predicate`.
+  pub def any(predicate: FnMut(T) -> Bool) -> Bool
+    var index = 0
+    while index < array_length(self)
+      if predicate(array_get(self, index))
+        return true
+      end
+      index += 1
+    end
+    false
+  end
+
+  ## Whether every element satisfies `predicate`.
+  pub def all(predicate: FnMut(T) -> Bool) -> Bool
+    var index = 0
+    while index < array_length(self)
+      if not predicate(array_get(self, index))
+        return false
+      end
+      index += 1
+    end
+    true
+  end
+
+  ## The first element that satisfies `predicate`.
+  pub def find(predicate: FnMut(T) -> Bool) -> Option[ref T]
+    var index = 0
+    while index < array_length(self)
+      element = array_get(self, index)
+      if predicate(element)
+        return Some(element)
+      end
+      index += 1
+    end
+    None
+  end
+
+  ## Whether the array contains `value`.
+  pub def contains(value: T) -> Bool where T: Eq
+    var index = 0
+    while index < array_length(self)
+      if array_get(self, index) == value
+        return true
+      end
+      index += 1
+    end
+    false
+  end
+
+  ## A new array of the first `count` elements (or all of them, if there are fewer).
+  pub def take(count: Int) -> Array[T]
+    length = array_length(self)
+    array_slice(self, 0, if count < length then count else length end)
+  end
+
+  ## A new array without the first `count` elements.
+  pub def skip(count: Int) -> Array[T]
+    length = array_length(self)
+    array_slice(self, if count < length then count else length end, length)
+  end
+
+  ## The largest element (the last of equal ones).
+  pub def max -> Option[ref T] where T: Ord
+    var best: Option[Int] = None
+    var index = 0
+    while index < array_length(self)
+      if best in Some(current)
+        if array_get(self, index) >= array_get(self, current)
+          best = Some(index)
+        end
+      else
+        best = Some(index)
+      end
+      index += 1
+    end
+    best.map { |i| array_get(self, i) }
+  end
+
+  ## The smallest element (the first of equal ones).
+  pub def min -> Option[ref T] where T: Ord
+    var best: Option[Int] = None
+    var index = 0
+    while index < array_length(self)
+      if best in Some(current)
+        if array_get(self, index) < array_get(self, current)
+          best = Some(index)
+        end
+      else
+        best = Some(index)
+      end
+      index += 1
+    end
+    best.map { |i| array_get(self, i) }
+  end
+
+  ## The element with the largest `key` (the last of equal ones).
+  pub def max_by[K: Ord](key: FnMut(T) -> K) -> Option[ref T]
+    var best: Option[Int] = None
+    var index = 0
+    while index < array_length(self)
+      if best in Some(current)
+        if key(array_get(self, index)) >= key(array_get(self, current))
+          best = Some(index)
+        end
+      else
+        best = Some(index)
+      end
+      index += 1
+    end
+    best.map { |i| array_get(self, i) }
+  end
+
+  ## The element with the smallest `key` (the first of equal ones).
+  pub def min_by[K: Ord](key: FnMut(T) -> K) -> Option[ref T]
+    var best: Option[Int] = None
+    var index = 0
+    while index < array_length(self)
+      if best in Some(current)
+        if key(array_get(self, index)) < key(array_get(self, current))
+          best = Some(index)
+        end
+      else
+        best = Some(index)
+      end
+      index += 1
+    end
+    best.map { |i| array_get(self, i) }
+  end
+
+  ## Sorts the elements in place in increasing order. The sort is stable.
+  pub def mut sort where T: Ord
+    array_sort_by(self) { |a, b| a.compare(b) }
+  end
+
+  ## Sorts the elements in place by `key`. The sort is stable.
+  pub def mut sort_by[K: Ord](key: Fn(T) -> K)
+    array_sort_by(self) { |a, b| key(a).compare(key(b)) }
+  end
+
+  ## Sorts the elements in place with `compare`. The sort is stable.
+  pub def mut sort_with(compare: Fn(T, T) -> Ordering)
+    array_sort_by(self, compare)
+  end
+
+  ## The elements' text representations joined by `separator`.
+  pub def join(separator: String) -> String where T: Display
+    var result = ""
+    var index = 0
+    while index < array_length(self)
+      if index > 0
+        result.push_str(separator)
+      end
+      result.push_str(array_get(self, index).to_string)
+      index += 1
+    end
+    result
+  end
+
+  ## The sum of the elements.
+  pub def sum -> T where T: Sum + Clone
+    var total: T = T.zero()
+    var index = 0
+    while index < array_length(self)
+      total = total.add(array_get(self, index).clone)
+      index += 1
+    end
+    total
+  end
+end
+
+impl[T] Iterable for Array[T]
+  type Iter = ArrayIter[T]
+
+  def iter -> ArrayIter[T] = ArrayIter(array: self, index: 0)
+end
+
+## An iterator over the elements of an array.
+pub struct ArrayIter[T]
+  array: Array[T]
+  index: Int
+end
+
+impl[T] Iterator for ArrayIter[T]
+  type Item = T
+
+  def mut next_item -> Option[T]
+    if @index < array_length(@array)
+      value = array_get(@array, @index)
+      @index += 1
+      Some(value)
+    else
+      None
+    end
+  end
+end
+
+impl[T] Default for Array[T]
+  def self.default -> Array[T] = array_new()
+end

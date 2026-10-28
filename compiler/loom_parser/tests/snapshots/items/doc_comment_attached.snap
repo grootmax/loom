@@ -1,0 +1,14 @@
+# loom-snapshot: items/doc_comment_attached
+
+SOURCE_FILE@0..37
+  FN_DEF@0..36
+    DOC_COMMENT@0..26 "## Outer doc comment for f"
+    LINE_BREAK@26..27 "\n"
+    DEF_KW@27..30 "def"
+    WHITESPACE@30..31 " "
+    NAME@31..32
+      IDENT@31..32 "f"
+    BLOCK@32..33
+      NEWLINE@32..33 "\n"
+    END_KW@33..36 "end"
+  NEWLINE@36..37 "\n"

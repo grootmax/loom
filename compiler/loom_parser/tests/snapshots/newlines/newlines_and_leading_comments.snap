@@ -1,0 +1,16 @@
+# loom-snapshot: newlines/newlines_and_leading_comments
+
+SOURCE_FILE@0..30
+  LINE_BREAK@0..1 "\n"
+  COMMENT@1..18 "# leading comment"
+  LINE_BREAK@18..19 "\n"
+  LINE_BREAK@19..20 "\n"
+  FN_DEF@20..29
+    DEF_KW@20..23 "def"
+    WHITESPACE@23..24 " "
+    NAME@24..25
+      IDENT@24..25 "f"
+    BLOCK@25..26
+      NEWLINE@25..26 "\n"
+    END_KW@26..29 "end"
+  NEWLINE@29..30 "\n"

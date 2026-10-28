@@ -1,0 +1,14 @@
+# spec: §3.5 rule 1
+trait Shape
+  def area -> Float
+end
+
+struct Square
+  side: Float
+end
+
+impl Shape for Square
+end
+
+def main
+end

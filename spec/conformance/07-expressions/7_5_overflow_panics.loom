@@ -1,0 +1,6 @@
+# spec: §7.5 rule 1
+def main
+  big: I8 = 127
+  puts "before"
+  puts big + 1
+end

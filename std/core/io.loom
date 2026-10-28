@@ -1,0 +1,38 @@
+##! Program output, panics and assertions (spec §10.4, §14.3).
+
+extern "intrinsic"
+  def write_stdout(text: String)
+  def panic_with(message: String) -> Never
+  def debug_string[T](value: T) -> String
+end
+
+## Writes the text representation of `value` and a line break to standard output.
+pub def puts[T: Display](value: T)
+  write_stdout(value.to_string)
+  write_stdout("\n")
+end
+
+## Writes the text representation of `value` to standard output.
+pub def print[T: Display](value: T)
+  write_stdout(value.to_string)
+end
+
+## Stops the program (the current task) with `message` (spec §10.4).
+pub def panic(message: String) -> Never = panic_with(message.clone)
+
+## Marks code that is not written yet. Panics when reached.
+pub def todo -> Never = panic_with("not yet implemented")
+
+## Panics with `message` unless `condition` is true.
+pub def assert(condition: Bool, message: String = "assertion failed")
+  if not condition
+    panic_with(message.clone)
+  end
+end
+
+## Panics unless `left == right`, showing both values.
+pub def assert_eq[T: Eq](left: T, right: T)
+  if left != right
+    panic_with("assertion failed: left == right\n  left: #{debug_string(left)}\n right: #{debug_string(right)}")
+  end
+end

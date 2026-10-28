@@ -116,7 +116,42 @@ pub fn format_tree(root: &SyntaxNode) -> String {
         out.push('\n');
         previous_indent = Some(indent);
     }
+    // A `#!` comment that was indented would become a shebang at the start of the file;
+    // a leading blank line keeps it a comment (found by fuzzing).
+    if out.starts_with("#!") && !root.tokens().any(|t| t.kind() == SHEBANG) {
+        out.insert(0, '\n');
+    }
     out
+}
+
+/// Whether writing `next` directly after `previous` would lex differently, as `..` then
+/// `=` would become `..=` (found by fuzzing). Such tokens keep a space between them.
+fn would_merge(previous: &SyntaxToken, next: &SyntaxToken) -> bool {
+    let string_part = |kind| {
+        matches!(
+            kind,
+            STRING_START | STRING_FRAGMENT | STRING_END | INTERP_START | INTERP_END
+        )
+    };
+    if string_part(previous.kind()) || string_part(next.kind()) {
+        return false;
+    }
+    // `{||` is an empty parameter list: the lexer splits `||` after `{` and `do`.
+    if previous.kind() == PIPE
+        && next.kind() == PIPE
+        && previous.parent().kind() == BLOCK_PARAM_LIST
+    {
+        return false;
+    }
+    let joined = format!("{}{}", previous.text(), next.text());
+    let lexed = loom_lexer::lex(&joined, loom_span::FileId::DETACHED);
+    let kinds: Vec<SyntaxKind> = lexed
+        .tokens
+        .iter()
+        .map(|t| t.kind)
+        .filter(|&k| k != SyntaxKind::EOF)
+        .collect();
+    kinds != [previous.kind(), next.kind()]
 }
 
 fn is_comment(kind: SyntaxKind) -> bool {
@@ -130,7 +165,7 @@ fn emit_line(line: &[(String, SyntaxToken)], out: &mut String) {
             if is_comment(token.kind()) {
                 // Keep the author's alignment before a trailing comment.
                 out.push_str(if space.is_empty() { " " } else { space });
-            } else if space_between(previous, token) {
+            } else if space_between(previous, token) || would_merge(previous, token) {
                 out.push(' ');
             }
         }
@@ -230,6 +265,29 @@ fn code_indent(
     levels.len() + usize::from(is_continuation(first, innermost_bracket.as_ref()))
 }
 
+/// Whether `token` is nested in a bracket container more closely than in a block.
+fn inside_brackets(token: &SyntaxToken) -> bool {
+    for ancestor in token.parent().ancestors() {
+        if is_bracket_container(ancestor.kind()) {
+            return true;
+        }
+        if matches!(
+            ancestor.kind(),
+            SyntaxKind::BLOCK
+                | SyntaxKind::SOURCE_FILE
+                | SyntaxKind::STRUCT_DEF
+                | SyntaxKind::ENUM_DEF
+                | SyntaxKind::TRAIT_DEF
+                | SyntaxKind::IMPL_DEF
+                | SyntaxKind::MODULE_DEF
+                | SyntaxKind::EXTERN_BLOCK
+        ) {
+            return false;
+        }
+    }
+    false
+}
+
 /// Whether `first` continues a statement from an earlier line (spec §2.3 rule 1).
 fn is_continuation(first: &SyntaxToken, innermost_bracket: Option<&SyntaxNode>) -> bool {
     if is_closer(first.kind()) {
@@ -242,6 +300,9 @@ fn is_continuation(first: &SyntaxToken, innermost_bracket: Option<&SyntaxNode>) 
             | ERROR_TOKEN => {
                 cursor = token.prev_token();
             }
+            // A `NEWLINE` inside brackets is ignored by the parser, so it is not a
+            // statement boundary.
+            NEWLINE if inside_brackets(&token) => cursor = token.prev_token(),
             NEWLINE | L_PAREN | L_BRACKET | L_BRACE | AT_BRACKET | INTERP_START | DO_KW => {
                 return false;
             }

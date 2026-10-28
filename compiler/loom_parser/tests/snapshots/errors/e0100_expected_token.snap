@@ -1,0 +1,8 @@
+# loom-snapshot: errors/e0100_expected_token
+
+SOURCE_FILE@0..4
+  FN_DEF@0..3
+    DEF_KW@0..3 "def"
+  NEWLINE@3..4 "\n"
+--- diagnostics ---
+E0100 3..4 expected a name, found line break

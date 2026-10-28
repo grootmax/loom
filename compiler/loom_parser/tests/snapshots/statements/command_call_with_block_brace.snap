@@ -1,0 +1,59 @@
+# loom-snapshot: statements/command_call_with_block_brace
+
+SOURCE_FILE@0..56
+  FN_DEF@0..55
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..52
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      EXPR_STMT@8..51
+        CALL_EXPR@8..51
+          PATH_EXPR@8..13
+            NAME_REF@8..13
+              IDENT@8..13 "route"
+          WHITESPACE@13..14 " "
+          ARG_LIST@14..28
+            ARG@14..19
+              STRING@14..19
+                STRING_START@14..15 "\""
+                STRING_FRAGMENT@15..18 "GET"
+                STRING_END@18..19 "\""
+            COMMA@19..20 ","
+            WHITESPACE@20..21 " "
+            ARG@21..28
+              STRING@21..28
+                STRING_START@21..22 "\""
+                STRING_FRAGMENT@22..27 "/path"
+                STRING_END@27..28 "\""
+          WHITESPACE@28..29 " "
+          TRAILING_BLOCK@29..51
+            L_BRACE@29..30 "{"
+            WHITESPACE@30..31 " "
+            BLOCK_PARAM_LIST@31..36
+              PIPE@31..32 "|"
+              BLOCK_PARAM@32..35
+                IDENT_PAT@32..35
+                  NAME@32..35
+                    IDENT@32..35 "req"
+              PIPE@35..36 "|"
+            WHITESPACE@36..37 " "
+            BLOCK@37..49
+              EXPR_STMT@37..49
+                METHOD_CALL_EXPR@37..49
+                  PATH_EXPR@37..40
+                    NAME_REF@37..40
+                      IDENT@37..40 "req"
+                  DOT@40..41 "."
+                  NAME_REF@41..47
+                    IDENT@41..47 "handle"
+                  ARG_LIST@47..49
+                    L_PAREN@47..48 "("
+                    R_PAREN@48..49 ")"
+            WHITESPACE@49..50 " "
+            R_BRACE@50..51 "}"
+      NEWLINE@51..52 "\n"
+    END_KW@52..55 "end"
+  NEWLINE@55..56 "\n"
