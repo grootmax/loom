@@ -1,0 +1,8 @@
+# spec: §7.12 rule 2
+def main
+  puts 7.0
+  puts 0.25
+  puts 1.0e16
+  puts 1.5e-7
+  puts "#{2.5} and #{3}"
+end

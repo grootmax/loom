@@ -1,0 +1,6 @@
+# spec: §9.3
+def main
+  value = Some(3)
+  found = value in Some(x)
+  puts found
+end

@@ -1,0 +1,207 @@
+##! Iterators, ranges and `for` loops (spec §7.8, §7.10).
+
+extern "intrinsic"
+  def range_next[T](mut range: Range[T]) -> Option[T]
+end
+
+## A source of values, consumed one at a time with `next`. Adapters such as `map` and
+## `filter` are lazy: they do nothing until the iterator is consumed.
+@[lang("Iterator")]
+pub trait Iterator
+  ## The type of the values produced.
+  type Item
+
+  ## The next value, or `None` when the iterator is exhausted.
+  def mut next_item -> Option[Self.Item]
+
+  ## An iterator that applies `f` to each value.
+  default def own map[B](own f: FnMut(Self.Item) -> B) -> Mapped[Self, B] = Mapped(inner: self, f:)
+
+  ## An iterator over the values that satisfy `predicate`.
+  default def own filter(own predicate: FnMut(Self.Item) -> Bool) -> Filtered[Self] = Filtered(inner: self, predicate:)
+
+  ## An iterator over `(index, value)` pairs, counting from 0.
+  default def own enumerate -> Enumerated[Self] = Enumerated(inner: self, index: 0)
+
+  ## An iterator without the first `count` values.
+  default def own skip(count: Int) -> Skipped[Self] = Skipped(inner: self, remaining: count)
+
+  ## An iterator over at most the first `count` values.
+  default def own take(count: Int) -> Taken[Self] = Taken(inner: self, remaining: count)
+
+  ## Collects the remaining values into an array.
+  default def own to_array -> Array[Self.Item]
+    var iter = self
+    var result = Array.new
+    while iter.next_item in Some(value)
+      result.push(value)
+    end
+    result
+  end
+
+  ## Counts the remaining values.
+  default def own count -> Int
+    var iter = self
+    var total = 0
+    while iter.next_item in Some(_)
+      total += 1
+    end
+    total
+  end
+
+  ## Adds up the remaining values.
+  default def own sum -> Self.Item where Self.Item: Sum
+    var iter = self
+    var total: Self.Item = Sum.zero()
+    while iter.next_item in Some(value)
+      total = total.add(value)
+    end
+    total
+  end
+
+  ## Calls `f` on each remaining value.
+  default def own each(f: FnMut(Self.Item))
+    var iter = self
+    while iter.next_item in Some(value)
+      f(value)
+    end
+  end
+
+  ## The first remaining value that satisfies `predicate`.
+  default def mut find(predicate: FnMut(Self.Item) -> Bool) -> Option[Self.Item]
+    while self.next_item in Some(value)
+      if predicate(value)
+        return Some(value)
+      end
+    end
+    None
+  end
+
+  ## The last remaining value.
+  default def own last -> Option[Self.Item]
+    var iter = self
+    var result = None
+    while iter.next_item in Some(value)
+      result = Some(value)
+    end
+    result
+  end
+end
+
+## Types that can be iterated by a `for` loop (spec §7.8).
+@[lang("Iterable")]
+pub trait Iterable
+  ## The iterator type.
+  type Iter: Iterator
+
+  ## An iterator over the values.
+  def iter -> Self.Iter
+end
+
+## A range of integers or characters (spec §7.10).
+@[lang("Range"), derive(Clone, Eq)]
+pub struct Range[T]
+  pub start: T
+  pub end_value: T
+  pub inclusive: Bool
+end
+
+impl[T: Copy] Iterator for Range[T]
+  type Item = T
+
+  def mut next_item -> Option[T] = range_next(self)
+end
+
+## The iterator returned by `Iterator.map`.
+pub struct Mapped[I: Iterator, B]
+  inner: I
+  f: FnMut(I.Item) -> B
+end
+
+impl[I: Iterator, B] Iterator for Mapped[I, B]
+  type Item = B
+
+  def mut next_item -> Option[B]
+    case @inner.next_item
+    in Some(value) then Some((@f)(value))
+    in None then None
+    end
+  end
+end
+
+## The iterator returned by `Iterator.filter`.
+pub struct Filtered[I: Iterator]
+  inner: I
+  predicate: FnMut(I.Item) -> Bool
+end
+
+impl[I: Iterator] Iterator for Filtered[I]
+  type Item = I.Item
+
+  def mut next_item -> Option[I.Item]
+    while @inner.next_item in Some(value)
+      if (@predicate)(value)
+        return Some(value)
+      end
+    end
+    None
+  end
+end
+
+## The iterator returned by `Iterator.enumerate`.
+pub struct Enumerated[I: Iterator]
+  inner: I
+  index: Int
+end
+
+impl[I: Iterator] Iterator for Enumerated[I]
+  type Item = (Int, I.Item)
+
+  def mut next_item -> Option[(Int, I.Item)]
+    case @inner.next_item
+    in Some(value)
+      index = @index
+      @index += 1
+      Some((index, value))
+    in None then None
+    end
+  end
+end
+
+## The iterator returned by `Iterator.skip`.
+pub struct Skipped[I: Iterator]
+  inner: I
+  remaining: Int
+end
+
+impl[I: Iterator] Iterator for Skipped[I]
+  type Item = I.Item
+
+  def mut next_item -> Option[I.Item]
+    while @remaining > 0
+      @remaining -= 1
+      if @inner.next_item in None
+        return None
+      end
+    end
+    @inner.next_item
+  end
+end
+
+## The iterator returned by `Iterator.take`.
+pub struct Taken[I: Iterator]
+  inner: I
+  remaining: Int
+end
+
+impl[I: Iterator] Iterator for Taken[I]
+  type Item = I.Item
+
+  def mut next_item -> Option[I.Item]
+    if @remaining <= 0
+      return None
+    end
+    @remaining -= 1
+    @inner.next_item
+  end
+end

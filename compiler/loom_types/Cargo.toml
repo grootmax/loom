@@ -8,5 +8,9 @@ license.workspace = true
 repository.workspace = true
 publish = false
 
+[dependencies]
+loom_hir = { path = "../loom_hir" }
+loom_resolve = { path = "../loom_resolve" }
+
 [lints]
 workspace = true
