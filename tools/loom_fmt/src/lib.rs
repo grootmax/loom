@@ -13,12 +13,12 @@ use loom_syntax::SyntaxKind::{
     self, ARG_LIST, ARRAY_EXPR, AT_BRACKET, ATTR_ARG_LIST, ATTRIBUTE, BANG, BLOCK,
     BLOCK_PARAM_LIST, COLON, COMMA, COMMENT, DO_KW, DOC_COMMENT, DOT, DOT2, DOT2_EQ, END_KW,
     ENUM_DEF, ERROR_TOKEN, EXTERN_BLOCK, FN_TYPE, GENERIC_ARG_LIST, GENERIC_PARAM_LIST, IMPL_DEF,
-    INDEX_EXPR, INNER_DOC_COMMENT, INTERP_END, INTERP_START, INTERPOLATION, L_BRACE, L_BRACKET,
-    L_PAREN, LINE_BREAK, LITERAL_PAT, MAP_EXPR, MINUS, MODULE_DEF, NEWLINE, PARAM_LIST, PAREN_EXPR,
-    PAREN_PAT, PIPE, PREFIX_EXPR, QUESTION, R_BRACE, R_BRACKET, R_PAREN, RANGE_EXPR, RANGE_PAT,
-    SEMICOLON, SHEBANG, STRING_END, STRING_FRAGMENT, STRING_START, STRUCT_DEF, TILDE, TRAIT_DEF,
-    TUPLE_EXPR, TUPLE_PAT, TUPLE_STRUCT_PAT, TUPLE_TYPE, USE_TREE_LIST, VARIANT_FIELD_LIST,
-    VISIBILITY, WHITESPACE,
+    INDEX_EXPR, INNER_DOC_COMMENT, INT_LIT, INTERP_END, INTERP_START, INTERPOLATION, L_BRACE,
+    L_BRACKET, L_PAREN, LINE_BREAK, LITERAL_PAT, MAP_EXPR, MINUS, MODULE_DEF, NEWLINE, PARAM_LIST,
+    PAREN_EXPR, PAREN_PAT, PIPE, PREFIX_EXPR, QUESTION, R_BRACE, R_BRACKET, R_PAREN, RANGE_EXPR,
+    RANGE_PAT, SEMICOLON, SHEBANG, STRING_END, STRING_FRAGMENT, STRING_START, STRUCT_DEF, TILDE,
+    TRAIT_DEF, TUPLE_EXPR, TUPLE_PAT, TUPLE_STRUCT_PAT, TUPLE_TYPE, USE_TREE_LIST,
+    VARIANT_FIELD_LIST, VISIBILITY, WHITESPACE,
 };
 use loom_syntax::{SyntaxNode, SyntaxToken};
 
@@ -81,8 +81,13 @@ pub fn format_tree(root: &SyntaxNode) -> String {
                 matches!(token.kind(), END_KW | R_BRACE | R_PAREN | R_BRACKET)
             });
             next_code = Some((indent, closes));
-        } else if !lines[index].is_empty() {
-            let indent = next_code.map_or(0, |(indent, closes)| indent + usize::from(closes));
+        } else if let Some((_, first)) = lines[index].first() {
+            let indent = if first.kind() == SHEBANG {
+                // Indenting a shebang would turn it into a comment.
+                0
+            } else {
+                next_code.map_or(0, |(indent, closes)| indent + usize::from(closes))
+            };
             indents[index] = Some(indent);
         }
     }
@@ -264,6 +269,11 @@ fn space_between(previous: &SyntaxToken, next: &SyntaxToken) -> bool {
     {
         return false;
     }
+    // `2 .0` is the integer 2 and field `0`; joining it into `2.0` would make a float
+    // (spec §2.7.2 rule 3), so keep that space.
+    if separates_number_from_field(previous, next) {
+        return true;
+    }
     if matches!(
         right,
         COMMA | R_PAREN | R_BRACKET | QUESTION | DOT | COLON | SEMICOLON
@@ -316,6 +326,30 @@ fn space_between(previous: &SyntaxToken, next: &SyntaxToken) -> bool {
         return false;
     }
     true
+}
+
+/// Whether joining `previous` and `next` would turn `INT . INT` into a float literal.
+fn separates_number_from_field(previous: &SyntaxToken, next: &SyntaxToken) -> bool {
+    let neighbor = |token: &SyntaxToken, forward: bool| {
+        let step = |t: &SyntaxToken| {
+            if forward {
+                t.next_token()
+            } else {
+                t.prev_token()
+            }
+        };
+        let mut cursor = step(token);
+        while let Some(candidate) = cursor {
+            if candidate.kind() != WHITESPACE {
+                return Some(candidate);
+            }
+            cursor = step(&candidate);
+        }
+        None
+    };
+    let is_int = |token: Option<SyntaxToken>| token.is_some_and(|t| t.kind() == INT_LIT);
+    (previous.kind() == INT_LIT && next.kind() == DOT && is_int(neighbor(next, true)))
+        || (previous.kind() == DOT && next.kind() == INT_LIT && is_int(neighbor(previous, false)))
 }
 
 fn is_first_pipe(pipe: &SyntaxToken) -> bool {

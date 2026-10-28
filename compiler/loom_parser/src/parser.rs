@@ -45,6 +45,9 @@ pub(crate) struct Parser<'t> {
     newline_modes: Vec<bool>,
     pub(crate) depth: u32,
     reported_depth: bool,
+    /// The lexer reported a literal that runs to the end of the file; errors about
+    /// constructs left open at the end are consequences of it and are not reported.
+    unterminated_literal: bool,
 }
 
 impl<'t> Parser<'t> {
@@ -79,6 +82,11 @@ impl<'t> Parser<'t> {
             newline_modes: vec![true],
             depth: 0,
             reported_depth: false,
+            unterminated_literal: lexed.diagnostics.iter().any(|diagnostic| {
+                diagnostic.code().is_some_and(|code| {
+                    code == codes::UNTERMINATED_STRING || code == codes::UNTERMINATED_RAW_STRING
+                })
+            }),
         }
     }
 
@@ -244,6 +252,16 @@ impl<'t> Parser<'t> {
     }
 
     pub(crate) fn push_diagnostic(&mut self, diagnostic: Diagnostic) {
+        if self.unterminated_literal
+            && self.at(EOF)
+            && diagnostic.code().is_some_and(|code| {
+                code == codes::MISSING_END
+                    || code == codes::UNCLOSED_DELIMITER
+                    || code == codes::EXPECTED_TOKEN
+            })
+        {
+            return;
+        }
         // One error per position is enough; later ones are usually consequences.
         let start = diagnostic.primary.span.range.start();
         if self

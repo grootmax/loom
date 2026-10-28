@@ -192,3 +192,15 @@ fn examples_are_already_formatted() {
         "not in canonical style: {unformatted:?}"
     );
 }
+
+#[test]
+fn regression_number_before_field_keeps_space() {
+    // `2 .0` is integer 2, field `0`; `2.0` would be a float (found by fuzzing).
+    check_guarantees("number-field", "def f\n  x = 2 .0\n  y = t.0 .1\nend\n");
+}
+
+#[test]
+fn regression_shebang_is_never_indented() {
+    let source = "#!/usr/bin/env loom\ndef f\n  x = a +\n    b\nend\n";
+    assert_eq!(format(source), source);
+}
