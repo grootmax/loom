@@ -1,6 +1,6 @@
 # ADR 0009: Backend strategy
 
-- **Status:** Proposed — owner decision (on the Rust-emit backend); the rest accepted
+- **Status:** Accepted; the Rust-emit question is deferred by the owner (2026-10-29)
 - **Date:** 2026-10-23
 - **Deciders:** lead architect; project owner for the Rust-emit question
 - **Related:** [ADR 0008](0008-compiler-architecture.md), [ADR 0012](0012-platform-tiers.md), [ADR 0016](0016-rust-interop.md)
@@ -68,4 +68,6 @@ in backends.
 
 - The MIR must be documented as the stable internal contract between the front end and backends.
 - The CI matrix must run differential tests per backend.
-- ⚑ **Owner decision:** approve or decline the optional Rust-emit mode for after Phase 3.
+- ⚑ **Owner decision (2026-10-29): deferred.** Phase 3 builds only Cranelift. The optional
+  Rust-emit mode is revisited with the owner after Phase 3, with data from differential
+  testing.

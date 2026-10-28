@@ -17,11 +17,11 @@ met us learns *why* Loom is the way it is ([ADR 0001](0001-record-decisions-as-a
 | [0002](0002-implementation-language-and-toolchain.md) | Implementation language and toolchain policy | Accepted |
 | [0003](0003-syntax-philosophy.md) | Syntax philosophy | Accepted (provisional) |
 | [0004](0004-type-system-and-inference.md) | Type system and inference boundaries | Accepted (provisional) |
-| [0005](0005-ownership-and-borrowing.md) | Ownership and borrowing model | Accepted (provisional); owner review requested |
+| [0005](0005-ownership-and-borrowing.md) | Ownership and borrowing model | Accepted (provisional); owner decisions recorded 2026-10-29 |
 | [0006](0006-concurrency-model.md) | Concurrency model | Accepted (provisional) |
 | [0007](0007-error-handling.md) | Error handling | Accepted |
 | [0008](0008-compiler-architecture.md) | Compiler architecture | Accepted |
-| [0009](0009-backend-strategy.md) | Backend strategy | Proposed — owner decision (Rust-emit) |
+| [0009](0009-backend-strategy.md) | Backend strategy | Accepted (Rust-emit deferred by the owner) |
 | [0010](0010-modules-and-packages.md) | Module and package system | Accepted (provisional) |
 | [0011](0011-editions-and-compatibility.md) | Editions and compatibility | Accepted |
 | [0012](0012-platform-tiers.md) | Platform tiers | Accepted |
