@@ -1,0 +1,9 @@
+# spec: §5.4
+def apply(x: Int, f: Fn(Int) -> Int) -> Int
+  f(x)
+end
+
+def main
+  add_one = { |x: Int| x + 1 }
+  puts apply(5, add_one)
+end

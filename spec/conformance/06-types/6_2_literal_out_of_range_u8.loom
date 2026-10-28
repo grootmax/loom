@@ -1,0 +1,5 @@
+# spec: §6.2 rule 2
+def main
+  x: U8 = 256
+  puts x
+end

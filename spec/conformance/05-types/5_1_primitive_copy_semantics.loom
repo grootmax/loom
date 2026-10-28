@@ -1,0 +1,12 @@
+# spec: §5.1 rule 2
+def main
+  x: Int = 42
+  y = x
+  puts x
+  puts y
+
+  b1: Bool = true
+  b2 = b1
+  puts b1
+  puts b2
+end

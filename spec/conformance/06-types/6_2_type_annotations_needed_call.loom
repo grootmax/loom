@@ -1,0 +1,8 @@
+# spec: §6.2 rule 3
+def make[T]() -> T
+  panic("none")
+end
+
+def main
+  x = make()
+end

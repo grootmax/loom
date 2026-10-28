@@ -1,0 +1,8 @@
+# spec: §6.5
+def double(x: Int) -> Int = x * 2
+
+def apply(f: Fn(Int) -> Int, x: Int) -> Int = f(x)
+
+def main
+  puts apply(double, 21)
+end

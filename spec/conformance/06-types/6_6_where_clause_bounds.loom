@@ -1,0 +1,9 @@
+# spec: §6.6
+def print_val[T](x: T) where T: Display
+  puts x
+end
+
+def main
+  print_val(42)
+  print_val("hello")
+end

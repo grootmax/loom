@@ -1,0 +1,7 @@
+# spec: §6.6
+def check_item[T: Eq](x: T)
+  x.non_existent_method()
+end
+
+def main
+end

@@ -1,0 +1,6 @@
+# spec: §5.4
+def main
+  val = 40
+  add_val = { |x: Int| x + val }
+  puts add_val(2)
+end

@@ -1,0 +1,24 @@
+# spec: §6.6
+trait TraitA
+  def run -> Int
+end
+
+trait TraitB
+  def run -> Int
+end
+
+struct Worker
+end
+
+impl TraitA for Worker
+  def run -> Int = 1
+end
+
+impl TraitB for Worker
+  def run -> Int = 2
+end
+
+def main
+  w = Worker()
+  w.run()
+end

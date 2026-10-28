@@ -1,0 +1,14 @@
+# spec: §6.4
+struct Item
+  value: Int
+end
+
+def identity(n: Int) -> Int = n
+
+def main
+  x: Int = 10
+  item = Item(value: 20)
+  arr: Array[Int] = [x, item.value, identity(30)]
+  res = if x > 0 then arr[0] else 0 end
+  puts res
+end

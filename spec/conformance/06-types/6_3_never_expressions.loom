@@ -1,0 +1,14 @@
+# spec: §6.3
+def stop() -> Never
+  panic("stopping")
+end
+
+def test_return(flag: Bool) -> Int
+  if flag then return 1 end
+  2
+end
+
+def main
+  puts test_return(true)
+  puts test_return(false)
+end

@@ -1,0 +1,6 @@
+# spec: §5.6
+def process(x: ref Int)
+end
+
+def main
+end

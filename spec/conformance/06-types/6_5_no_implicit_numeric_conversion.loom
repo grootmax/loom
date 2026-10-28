@@ -1,0 +1,6 @@
+# spec: §6.5
+def main
+  a: I32 = 10
+  y: Int = a
+  puts y
+end

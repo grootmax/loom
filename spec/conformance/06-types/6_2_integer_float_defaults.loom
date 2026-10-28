@@ -1,0 +1,7 @@
+# spec: §6.2 rule 2
+def main
+  x = 42
+  y = 3.14
+  puts x
+  puts y
+end

@@ -1,0 +1,17 @@
+# spec: §5.1 rule 1
+def main
+  a: I8 = 127
+  b: I16 = -32768
+  c: I32 = 2147483647
+  d: I64 = -9223372036854775807
+  e: I128 = 100
+  f: ISize = 42
+  g: Int = -100
+  puts a
+  puts b
+  puts c
+  puts d
+  puts e
+  puts f
+  puts g
+end

@@ -1,0 +1,6 @@
+# spec: §5.3
+def main
+  t: (Int, String) = (42, "hello")
+  puts t.0
+  puts t.1
+end

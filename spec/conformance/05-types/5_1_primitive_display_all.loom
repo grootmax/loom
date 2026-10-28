@@ -1,0 +1,39 @@
+# spec: §5.1 rule 2
+def main
+  a: I8 = -128
+  b: I16 = 32767
+  c: I32 = -2147483648
+  d: I64 = 9223372036854775807
+  e: I128 = -100
+  f: U8 = 255
+  g: U16 = 65535
+  h: U32 = 4294967295
+  i: U64 = 18446744073709551615
+  j: U128 = 200
+  k: ISize = -42
+  l: USize = 42
+  m: Int = -1
+  n: Bool = true
+  o: Bool = false
+  p: Char = 'X'
+  q: String = "hello"
+  r: Unit = ()
+  puts a
+  puts b
+  puts c
+  puts d
+  puts e
+  puts f
+  puts g
+  puts h
+  puts i
+  puts j
+  puts k
+  puts l
+  puts m
+  puts n
+  puts o
+  puts p
+  puts q
+  puts r
+end

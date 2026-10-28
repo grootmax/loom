@@ -1,0 +1,6 @@
+# spec: §5.2
+def process(x: Option[Int, String])
+end
+
+def main
+end

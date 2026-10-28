@@ -1,0 +1,7 @@
+# spec: §5.6
+struct Holder
+  field: ref Int
+end
+
+def main
+end
