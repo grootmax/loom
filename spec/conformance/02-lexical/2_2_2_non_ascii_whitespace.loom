@@ -1,0 +1,4 @@
+# spec: §2.2.2 rule 2
+def main
+  x = 1
+end

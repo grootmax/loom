@@ -1,0 +1,8 @@
+# spec: §2.5 rules 1, 5
+def main
+  größe = 10
+  名前 = 20
+  _unused = 30
+  default = 40
+  puts größe + 名前 + default
+end
