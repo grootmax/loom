@@ -1,0 +1,9 @@
+# spec: §7.12 rule 1
+struct NoDisplay
+  val: Int
+end
+
+def main
+  n = NoDisplay(val: 10)
+  puts "#{n}"
+end

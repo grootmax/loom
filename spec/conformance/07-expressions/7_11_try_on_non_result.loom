@@ -1,0 +1,5 @@
+# spec: §7.11 rule 1
+def main
+  x: Int = 42
+  y = x?
+end

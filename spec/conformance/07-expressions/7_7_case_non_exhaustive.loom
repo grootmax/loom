@@ -1,0 +1,8 @@
+# spec: §7.7 rule 1
+def main
+  x = 10
+  y = case x
+  in 1 then "one"
+  in 2 then "two"
+  end
+end

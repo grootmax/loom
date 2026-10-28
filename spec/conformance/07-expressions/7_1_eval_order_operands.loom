@@ -1,0 +1,9 @@
+# spec: §7.1 rule 1
+def step(n: Int) -> Int
+  puts n
+  n
+end
+
+def main
+  x = step(10) + step(20) * step(30)
+end

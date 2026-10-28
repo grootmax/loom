@@ -1,0 +1,5 @@
+# spec: §7.4 rule 5
+def main
+  x: Int = 42
+  puts x[0]
+end

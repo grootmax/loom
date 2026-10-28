@@ -1,0 +1,4 @@
+# spec: §7.1 rule 1
+def main
+  x: I8 = 300
+end

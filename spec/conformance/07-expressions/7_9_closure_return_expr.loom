@@ -1,0 +1,11 @@
+# spec: §7.9 rule 4
+def main
+  check = { |x: Int|
+    if x < 0
+      return "negative"
+    end
+    "non-negative"
+  }
+  puts check(-1)
+  puts check(5)
+end

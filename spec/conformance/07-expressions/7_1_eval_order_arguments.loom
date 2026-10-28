@@ -1,0 +1,13 @@
+# spec: §7.1 rule 1
+def step(n: Int) -> Int
+  puts n
+  n
+end
+
+def add(a: Int, b: Int, c: Int) -> Int
+  a + b + c
+end
+
+def main
+  add(step(1), step(2), step(3))
+end

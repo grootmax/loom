@@ -1,0 +1,4 @@
+# spec: §7.5 rule 1
+def main
+  x = 1 + "hello"
+end

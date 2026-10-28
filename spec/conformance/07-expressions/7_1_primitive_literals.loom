@@ -1,0 +1,13 @@
+# spec: §7.1 rule 1
+def main
+  i: Int = 42
+  f: Float = 3.14
+  c: Char = 'a'
+  s: String = "hello"
+  b: Bool = true
+  puts i
+  puts f
+  puts c
+  puts s
+  puts b
+end

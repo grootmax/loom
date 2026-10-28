@@ -1,0 +1,7 @@
+# spec: §7.4 rule 1
+def main
+  t = (10, "hello", true)
+  puts t.0
+  puts t.1
+  puts t.2
+end

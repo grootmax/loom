@@ -1,0 +1,8 @@
+# spec: §7.14 rule 1
+def compute() -> Int
+  return "not an int"
+end
+
+def main
+  compute()
+end

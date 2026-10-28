@@ -1,0 +1,10 @@
+# spec: §7.4 rule 2
+struct Handler
+  op: Fn(Int) -> Int
+end
+
+def main
+  h = Handler(op: { |x: Int| x + 5 })
+  f = h.op
+  puts f(10)
+end

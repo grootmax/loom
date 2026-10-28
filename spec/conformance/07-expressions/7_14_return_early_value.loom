@@ -1,0 +1,12 @@
+# spec: §7.14 rule 1
+def test_return(x: Int) -> Int
+  if x < 0
+    return 0
+  end
+  x * 2
+end
+
+def main
+  puts test_return(-5)
+  puts test_return(10)
+end
