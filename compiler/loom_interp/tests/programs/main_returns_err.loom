@@ -1,0 +1,12 @@
+struct Oops
+  why: String
+end
+
+impl Error for Oops
+  def message -> String = "oops: #{@why}"
+end
+
+def main -> Result[Unit, Oops]
+  puts "working"
+  Err(Oops(why: "disk full"))
+end

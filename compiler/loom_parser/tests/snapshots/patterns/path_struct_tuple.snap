@@ -1,0 +1,102 @@
+# loom-snapshot: patterns/path_struct_tuple
+
+SOURCE_FILE@0..95
+  FN_DEF@0..94
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..91
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      EXPR_STMT@8..90
+        CASE_EXPR@8..90
+          CASE_KW@8..12 "case"
+          WHITESPACE@12..13 " "
+          PATH_EXPR@13..14
+            NAME_REF@13..14
+              IDENT@13..14 "x"
+          NEWLINE@14..15 "\n"
+          WHITESPACE@15..17 "  "
+          CASE_ARM@17..32
+            IN_KW@17..19 "in"
+            WHITESPACE@19..20 " "
+            TUPLE_STRUCT_PAT@20..31
+              PATH@20..25
+                PATH_SEGMENT@20..25
+                  NAME_REF@20..25
+                    IDENT@20..25 "Point"
+              L_PAREN@25..26 "("
+              LITERAL_PAT@26..27
+                INT_LIT@26..27 "1"
+              COMMA@27..28 ","
+              WHITESPACE@28..29 " "
+              LITERAL_PAT@29..30
+                INT_LIT@29..30 "2"
+              R_PAREN@30..31 ")"
+            BLOCK@31..32
+              NEWLINE@31..32 "\n"
+          WHITESPACE@32..34 "  "
+          CASE_ARM@34..55
+            IN_KW@34..36 "in"
+            WHITESPACE@36..37 " "
+            TUPLE_STRUCT_PAT@37..54
+              PATH@37..42
+                PATH_SEGMENT@37..42
+                  NAME_REF@37..42
+                    IDENT@37..42 "Point"
+              L_PAREN@42..43 "("
+              FIELD_PAT@43..47
+                NAME@43..44
+                  IDENT@43..44 "x"
+                COLON@44..45 ":"
+                WHITESPACE@45..46 " "
+                LITERAL_PAT@46..47
+                  INT_LIT@46..47 "1"
+              COMMA@47..48 ","
+              WHITESPACE@48..49 " "
+              FIELD_PAT@49..53
+                NAME@49..50
+                  IDENT@49..50 "y"
+                COLON@50..51 ":"
+                WHITESPACE@51..52 " "
+                LITERAL_PAT@52..53
+                  INT_LIT@52..53 "2"
+              R_PAREN@53..54 ")"
+            BLOCK@54..55
+              NEWLINE@54..55 "\n"
+          WHITESPACE@55..57 "  "
+          CASE_ARM@57..70
+            IN_KW@57..59 "in"
+            WHITESPACE@59..60 " "
+            TUPLE_STRUCT_PAT@60..69
+              PATH@60..65
+                PATH_SEGMENT@60..65
+                  NAME_REF@60..65
+                    IDENT@60..65 "Point"
+              L_PAREN@65..66 "("
+              REST_PAT@66..68
+                DOT2@66..68 ".."
+              R_PAREN@68..69 ")"
+            BLOCK@69..70
+              NEWLINE@69..70 "\n"
+          WHITESPACE@70..72 "  "
+          CASE_ARM@72..85
+            IN_KW@72..74 "in"
+            WHITESPACE@74..75 " "
+            PATH_PAT@75..84
+              PATH@75..84
+                PATH_SEGMENT@75..80
+                  NAME_REF@75..80
+                    IDENT@75..80 "Color"
+                DOT@80..81 "."
+                PATH_SEGMENT@81..84
+                  NAME_REF@81..84
+                    IDENT@81..84 "Red"
+            BLOCK@84..85
+              NEWLINE@84..85 "\n"
+          WHITESPACE@85..87 "  "
+          END_KW@87..90 "end"
+      NEWLINE@90..91 "\n"
+    END_KW@91..94 "end"
+  NEWLINE@94..95 "\n"

@@ -1,0 +1,86 @@
+# loom-snapshot: statements/places
+
+SOURCE_FILE@0..74
+  FN_DEF@0..73
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..70
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      BIND_STMT@8..13
+        NAME@8..9
+          IDENT@8..9 "x"
+        WHITESPACE@9..10 " "
+        EQ@10..11 "="
+        WHITESPACE@11..12 " "
+        LITERAL@12..13
+          INT_LIT@12..13 "1"
+      NEWLINE@13..14 "\n"
+      WHITESPACE@14..16 "  "
+      ASSIGN_STMT@16..26
+        FIELD_REF_EXPR@16..22
+          AT_IDENT@16..22 "@field"
+        WHITESPACE@22..23 " "
+        EQ@23..24 "="
+        WHITESPACE@24..25 " "
+        LITERAL@25..26
+          INT_LIT@25..26 "2"
+      NEWLINE@26..27 "\n"
+      WHITESPACE@27..29 "  "
+      ASSIGN_STMT@29..37
+        PATH_EXPR@29..33
+          NAME_REF@29..33
+            SELF_KW@29..33 "self"
+        WHITESPACE@33..34 " "
+        EQ@34..35 "="
+        WHITESPACE@35..36 " "
+        LITERAL@36..37
+          INT_LIT@36..37 "3"
+      NEWLINE@37..38 "\n"
+      WHITESPACE@38..40 "  "
+      ASSIGN_STMT@40..55
+        INDEX_EXPR@40..51
+          FIELD_EXPR@40..48
+            FIELD_EXPR@40..46
+              PATH_EXPR@40..44
+                NAME_REF@40..44
+                  SELF_KW@40..44 "self"
+              DOT@44..45 "."
+              NAME_REF@45..46
+                IDENT@45..46 "x"
+            DOT@46..47 "."
+            NAME_REF@47..48
+              IDENT@47..48 "y"
+          L_BRACKET@48..49 "["
+          LITERAL@49..50
+            INT_LIT@49..50 "0"
+          R_BRACKET@50..51 "]"
+        WHITESPACE@51..52 " "
+        EQ@52..53 "="
+        WHITESPACE@53..54 " "
+        LITERAL@54..55
+          INT_LIT@54..55 "4"
+      NEWLINE@55..56 "\n"
+      WHITESPACE@56..58 "  "
+      ASSIGN_STMT@58..69
+        INDEX_EXPR@58..65
+          FIELD_EXPR@58..62
+            FIELD_REF_EXPR@58..60
+              AT_IDENT@58..60 "@a"
+            DOT@60..61 "."
+            NAME_REF@61..62
+              IDENT@61..62 "b"
+          L_BRACKET@62..63 "["
+          LITERAL@63..64
+            INT_LIT@63..64 "1"
+          R_BRACKET@64..65 "]"
+        WHITESPACE@65..66 " "
+        EQ@66..67 "="
+        WHITESPACE@67..68 " "
+        LITERAL@68..69
+          INT_LIT@68..69 "5"
+      NEWLINE@69..70 "\n"
+    END_KW@70..73 "end"
+  NEWLINE@73..74 "\n"

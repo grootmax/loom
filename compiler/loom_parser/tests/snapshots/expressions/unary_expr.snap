@@ -1,0 +1,28 @@
+# loom-snapshot: expressions/unary_expr
+
+SOURCE_FILE@0..20
+  FN_DEF@0..19
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..16
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      EXPR_STMT@8..10
+        PREFIX_EXPR@8..10
+          MINUS@8..9 "-"
+          PATH_EXPR@9..10
+            NAME_REF@9..10
+              IDENT@9..10 "x"
+      NEWLINE@10..11 "\n"
+      WHITESPACE@11..13 "  "
+      EXPR_STMT@13..15
+        PREFIX_EXPR@13..15
+          TILDE@13..14 "~"
+          PATH_EXPR@14..15
+            NAME_REF@14..15
+              IDENT@14..15 "x"
+      NEWLINE@15..16 "\n"
+    END_KW@16..19 "end"
+  NEWLINE@19..20 "\n"

@@ -1,0 +1,54 @@
+# loom-snapshot: expressions/primary_literals
+
+SOURCE_FILE@0..75
+  FN_DEF@0..74
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..71
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      EXPR_STMT@8..11
+        LITERAL@8..11
+          INT_LIT@8..11 "123"
+      NEWLINE@11..12 "\n"
+      WHITESPACE@12..14 "  "
+      EXPR_STMT@14..17
+        LITERAL@14..17
+          FLOAT_LIT@14..17 "1.5"
+      NEWLINE@17..18 "\n"
+      WHITESPACE@18..20 "  "
+      EXPR_STMT@20..23
+        LITERAL@20..23
+          CHAR_LIT@20..23 "'a'"
+      NEWLINE@23..24 "\n"
+      WHITESPACE@24..26 "  "
+      EXPR_STMT@26..33
+        STRING@26..33
+          STRING_START@26..27 "\""
+          STRING_FRAGMENT@27..32 "hello"
+          STRING_END@32..33 "\""
+      NEWLINE@33..34 "\n"
+      WHITESPACE@34..36 "  "
+      EXPR_STMT@36..44
+        LITERAL@36..44
+          RAW_STRING_LIT@36..44 "r#\"raw\"#"
+      NEWLINE@44..45 "\n"
+      WHITESPACE@45..47 "  "
+      EXPR_STMT@47..55
+        LITERAL@47..55
+          BYTE_STRING_LIT@47..55 "b\"bytes\""
+      NEWLINE@55..56 "\n"
+      WHITESPACE@56..58 "  "
+      EXPR_STMT@58..62
+        LITERAL@58..62
+          TRUE_KW@58..62 "true"
+      NEWLINE@62..63 "\n"
+      WHITESPACE@63..65 "  "
+      EXPR_STMT@65..70
+        LITERAL@65..70
+          FALSE_KW@65..70 "false"
+      NEWLINE@70..71 "\n"
+    END_KW@71..74 "end"
+  NEWLINE@74..75 "\n"

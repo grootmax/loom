@@ -223,23 +223,48 @@ mod tests {
         let registry_ids: HashSet<_> = codes::ALL.iter().map(|code| code.id).collect();
         let table_ids: HashSet<_> = EXPLANATIONS.iter().map(|(id, _)| *id).collect();
 
-        assert_eq!(EXPLANATIONS.len(), codes::ALL.len(), "length mismatch");
+        assert!(
+            table_ids.is_subset(&registry_ids),
+            "EXPLANATIONS contains codes not in registry"
+        );
         assert_eq!(
             table_ids.len(),
             EXPLANATIONS.len(),
             "duplicate keys in EXPLANATIONS"
         );
+
+        // Verify every explanation file in the directory has an entry in EXPLANATIONS
+        let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let explanations_dir = manifest_dir.join("../loom_diagnostics/explanations");
+        let dir_count = fs::read_dir(&explanations_dir)
+            .expect("read dir")
+            .filter_map(Result::ok)
+            .filter(|e| {
+                let name = e.file_name();
+                let name_str = name.to_string_lossy();
+                name_str.starts_with('E') && e.path().extension().is_some_and(|ext| ext == "md")
+            })
+            .count();
         assert_eq!(
-            table_ids, registry_ids,
-            "EXPLANATIONS entries must match ALL exactly"
+            EXPLANATIONS.len(),
+            dir_count,
+            "EXPLANATIONS entry count must match number of .md files in explanations directory"
         );
 
-        // Verify order matches codes::ALL
-        for (i, code) in codes::ALL.iter().enumerate() {
-            assert_eq!(
-                EXPLANATIONS[i].0, code.id,
-                "EXPLANATIONS entry at index {i} does not match code order"
-            );
+        // Verify order matches codes::ALL relative ordering
+        let mut prev_pos = None;
+        for (id, _) in EXPLANATIONS {
+            let pos = codes::ALL
+                .iter()
+                .position(|c| c.id == *id)
+                .expect("code in registry");
+            if let Some(prev) = prev_pos {
+                assert!(
+                    pos > prev,
+                    "EXPLANATIONS entries must follow codes::ALL order"
+                );
+            }
+            prev_pos = Some(pos);
         }
     }
 

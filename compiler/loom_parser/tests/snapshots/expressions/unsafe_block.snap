@@ -1,0 +1,29 @@
+# loom-snapshot: expressions/unsafe_block
+
+SOURCE_FILE@0..35
+  FN_DEF@0..34
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..31
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      EXPR_STMT@8..30
+        UNSAFE_EXPR@8..30
+          UNSAFE_KW@8..14 "unsafe"
+          WHITESPACE@14..15 " "
+          DO_KW@15..17 "do"
+          BLOCK@17..25
+            NEWLINE@17..18 "\n"
+            WHITESPACE@18..22 "    "
+            EXPR_STMT@22..24
+              PATH_EXPR@22..24
+                NAME_REF@22..24
+                  IDENT@22..24 "s1"
+            NEWLINE@24..25 "\n"
+          WHITESPACE@25..27 "  "
+          END_KW@27..30 "end"
+      NEWLINE@30..31 "\n"
+    END_KW@31..34 "end"
+  NEWLINE@34..35 "\n"

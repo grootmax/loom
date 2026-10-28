@@ -1,0 +1,31 @@
+# loom-snapshot: statements/binding_var
+
+SOURCE_FILE@0..27
+  FN_DEF@0..26
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..23
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      BIND_STMT@8..22
+        VAR_KW@8..11 "var"
+        WHITESPACE@11..12 " "
+        NAME@12..13
+          IDENT@12..13 "x"
+        COLON@13..14 ":"
+        WHITESPACE@14..15 " "
+        PATH_TYPE@15..18
+          PATH@15..18
+            PATH_SEGMENT@15..18
+              NAME_REF@15..18
+                IDENT@15..18 "Int"
+        WHITESPACE@18..19 " "
+        EQ@19..20 "="
+        WHITESPACE@20..21 " "
+        LITERAL@21..22
+          INT_LIT@21..22 "1"
+      NEWLINE@22..23 "\n"
+    END_KW@23..26 "end"
+  NEWLINE@26..27 "\n"

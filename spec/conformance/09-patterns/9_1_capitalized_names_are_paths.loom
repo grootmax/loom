@@ -1,0 +1,12 @@
+# spec: §9.1 rule 1
+enum Answer
+  Yes
+  No
+end
+
+def main
+  case Answer.No
+  in Yes then puts "yes"
+  in other then puts "something else"
+  end
+end

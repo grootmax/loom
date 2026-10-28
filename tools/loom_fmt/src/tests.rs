@@ -4,7 +4,7 @@
 use loom_span::FileId;
 use loom_syntax::SyntaxKind;
 
-use crate::format_source;
+use crate::{format_source, format_tree};
 
 fn format(source: &str) -> String {
     format_source(source).unwrap_or_else(|diagnostics| panic!("{diagnostics:?}"))
@@ -203,4 +203,35 @@ fn regression_number_before_field_keeps_space() {
 fn regression_shebang_is_never_indented() {
     let source = "#!/usr/bin/env loom\ndef f\n  x = a +\n    b\nend\n";
     assert_eq!(format(source), source);
+}
+
+#[test]
+fn regression_newline_inside_brackets_is_not_a_boundary() {
+    // A `.` followed by a space starts a line inside `[ ]`: the lexer emits `NEWLINE`,
+    // which the parser ignores in brackets (found by fuzzing).
+    let source = "def main -> Result[Unit, Any\n.  puError]\n  x\nend\n";
+    check_guarantees("bracketed-newline", source);
+    assert_eq!(
+        format(source),
+        "def main -> Result[Unit, Any\n    .puError]\n  x\nend\n"
+    );
+}
+
+#[test]
+fn regression_tokens_that_would_merge_keep_their_space() {
+    // `a.. =b` must not become `a..=b`, which lexes differently (found by fuzzing).
+    let source = "def f\n  x = a.. =b\nend\n";
+    let formatted = format_tree(&loom_parser::parse(source, FileId::DETACHED).syntax());
+    assert!(formatted.contains(".. ="), "{formatted}");
+    assert_eq!(significant_tokens(source), significant_tokens(&formatted));
+}
+
+#[test]
+fn regression_indented_hash_bang_comment_stays_a_comment() {
+    let formatted = format_tree(
+        &loom_parser::parse("\t#! not a shebang\ndef a\nend\n", FileId::DETACHED).syntax(),
+    );
+    assert!(formatted.starts_with("\n#!"), "{formatted:?}");
+    let again = format_tree(&loom_parser::parse(&formatted, FileId::DETACHED).syntax());
+    assert_eq!(formatted, again);
 }

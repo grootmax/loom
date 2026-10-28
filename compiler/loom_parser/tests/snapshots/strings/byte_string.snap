@@ -1,0 +1,32 @@
+# loom-snapshot: strings/byte_string
+
+SOURCE_FILE@0..47
+  FN_DEF@0..46
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..43
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      BIND_STMT@8..20
+        NAME@8..9
+          IDENT@8..9 "b"
+        WHITESPACE@9..10 " "
+        EQ@10..11 "="
+        WHITESPACE@11..12 " "
+        LITERAL@12..20
+          BYTE_STRING_LIT@12..20 "b\"hello\""
+      NEWLINE@20..21 "\n"
+      WHITESPACE@21..23 "  "
+      BIND_STMT@23..42
+        NAME@23..25
+          IDENT@23..25 "br"
+        WHITESPACE@25..26 " "
+        EQ@26..27 "="
+        WHITESPACE@27..28 " "
+        LITERAL@28..42
+          BYTE_STRING_LIT@28..42 "br#\"byte raw\"#"
+      NEWLINE@42..43 "\n"
+    END_KW@43..46 "end"
+  NEWLINE@46..47 "\n"

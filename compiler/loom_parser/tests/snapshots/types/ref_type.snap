@@ -1,0 +1,45 @@
+# loom-snapshot: types/ref_type
+
+SOURCE_FILE@0..41
+  FN_DEF@0..40
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    PARAM_LIST@5..36
+      L_PAREN@5..6 "("
+      PARAM@6..16
+        NAME@6..7
+          IDENT@6..7 "a"
+        COLON@7..8 ":"
+        WHITESPACE@8..9 " "
+        REF_TYPE@9..16
+          REF_KW@9..12 "ref"
+          WHITESPACE@12..13 " "
+          PATH_TYPE@13..16
+            PATH@13..16
+              PATH_SEGMENT@13..16
+                NAME_REF@13..16
+                  IDENT@13..16 "Int"
+      COMMA@16..17 ","
+      WHITESPACE@17..18 " "
+      PARAM@18..35
+        NAME@18..19
+          IDENT@18..19 "b"
+        COLON@19..20 ":"
+        WHITESPACE@20..21 " "
+        REF_TYPE@21..35
+          MUT_KW@21..24 "mut"
+          WHITESPACE@24..25 " "
+          REF_KW@25..28 "ref"
+          WHITESPACE@28..29 " "
+          PATH_TYPE@29..35
+            PATH@29..35
+              PATH_SEGMENT@29..35
+                NAME_REF@29..35
+                  IDENT@29..35 "String"
+      R_PAREN@35..36 ")"
+    BLOCK@36..37
+      NEWLINE@36..37 "\n"
+    END_KW@37..40 "end"
+  NEWLINE@40..41 "\n"

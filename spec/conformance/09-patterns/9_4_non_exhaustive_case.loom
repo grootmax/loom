@@ -1,0 +1,16 @@
+# spec: §9.4
+enum Coin
+  Penny
+  Nickel
+  Dime
+end
+
+def value(coin: Coin) -> Int
+  case coin
+  in Penny then 1
+  in Nickel then 5
+  end
+end
+
+def main
+end

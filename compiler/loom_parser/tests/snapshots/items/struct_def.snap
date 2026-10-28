@@ -1,0 +1,80 @@
+# loom-snapshot: items/struct_def
+
+SOURCE_FILE@0..82
+  STRUCT_DEF@0..81
+    STRUCT_KW@0..6 "struct"
+    WHITESPACE@6..7 " "
+    NAME@7..12
+      IDENT@7..12 "Point"
+    GENERIC_PARAM_LIST@12..15
+      L_BRACKET@12..13 "["
+      GENERIC_PARAM@13..14
+        NAME@13..14
+          IDENT@13..14 "T"
+      R_BRACKET@14..15 "]"
+    WHITESPACE@15..16 " "
+    WHERE_CLAUSE@16..29
+      WHERE_KW@16..21 "where"
+      WHITESPACE@21..22 " "
+      WHERE_PRED@22..29
+        PATH_TYPE@22..23
+          PATH@22..23
+            PATH_SEGMENT@22..23
+              NAME_REF@22..23
+                IDENT@22..23 "T"
+        COLON@23..24 ":"
+        WHITESPACE@24..25 " "
+        BOUND_LIST@25..29
+          PATH_TYPE@25..29
+            PATH@25..29
+              PATH_SEGMENT@25..29
+                NAME_REF@25..29
+                  IDENT@25..29 "Copy"
+    NEWLINE@29..30 "\n"
+    WHITESPACE@30..32 "  "
+    FIELD_DEF@32..36
+      NAME@32..33
+        IDENT@32..33 "x"
+      COLON@33..34 ":"
+      WHITESPACE@34..35 " "
+      PATH_TYPE@35..36
+        PATH@35..36
+          PATH_SEGMENT@35..36
+            NAME_REF@35..36
+              IDENT@35..36 "T"
+    NEWLINE@36..37 "\n"
+    WHITESPACE@37..39 "  "
+    FIELD_DEF@39..43
+      NAME@39..40
+        IDENT@39..40 "y"
+      COLON@40..41 ":"
+      WHITESPACE@41..42 " "
+      PATH_TYPE@42..43
+        PATH@42..43
+          PATH_SEGMENT@42..43
+            NAME_REF@42..43
+              IDENT@42..43 "T"
+    NEWLINE@43..44 "\n"
+    WHITESPACE@44..46 "  "
+    FN_DEF@46..77
+      ATTRIBUTE@46..55
+        AT_BRACKET@46..48 "@["
+        ATTR_ENTRY@48..54
+          IDENT@48..54 "inline"
+        R_BRACKET@54..55 "]"
+      NEWLINE@55..56 "\n"
+      WHITESPACE@56..58 "  "
+      VISIBILITY@58..61
+        PUB_KW@58..61 "pub"
+      WHITESPACE@61..62 " "
+      DEF_KW@62..65 "def"
+      WHITESPACE@65..66 " "
+      NAME@66..71
+        IDENT@66..71 "clear"
+      BLOCK@71..72
+        NEWLINE@71..72 "\n"
+      WHITESPACE@72..74 "  "
+      END_KW@74..77 "end"
+    NEWLINE@77..78 "\n"
+    END_KW@78..81 "end"
+  NEWLINE@81..82 "\n"

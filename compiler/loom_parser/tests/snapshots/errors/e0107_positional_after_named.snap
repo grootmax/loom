@@ -1,0 +1,36 @@
+# loom-snapshot: errors/e0107_positional_after_named
+
+SOURCE_FILE@0..23
+  FN_DEF@0..22
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..19
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      EXPR_STMT@8..18
+        CALL_EXPR@8..18
+          PATH_EXPR@8..9
+            NAME_REF@8..9
+              IDENT@8..9 "g"
+          ARG_LIST@9..18
+            L_PAREN@9..10 "("
+            NAMED_ARG@10..14
+              NAME_REF@10..11
+                IDENT@10..11 "a"
+              COLON@11..12 ":"
+              WHITESPACE@12..13 " "
+              LITERAL@13..14
+                INT_LIT@13..14 "1"
+            COMMA@14..15 ","
+            WHITESPACE@15..16 " "
+            ARG@16..17
+              LITERAL@16..17
+                INT_LIT@16..17 "2"
+            R_PAREN@17..18 ")"
+      NEWLINE@18..19 "\n"
+    END_KW@19..22 "end"
+  NEWLINE@22..23 "\n"
+--- diagnostics ---
+E0107 16..17 positional argument after a named argument

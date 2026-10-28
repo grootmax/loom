@@ -1,0 +1,61 @@
+# loom-snapshot: types/tuple_type
+
+SOURCE_FILE@0..46
+  FN_DEF@0..45
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    PARAM_LIST@5..41
+      L_PAREN@5..6 "("
+      PARAM@6..11
+        NAME@6..7
+          IDENT@6..7 "x"
+        COLON@7..8 ":"
+        WHITESPACE@8..9 " "
+        TUPLE_TYPE@9..11
+          L_PAREN@9..10 "("
+          R_PAREN@10..11 ")"
+      COMMA@11..12 ","
+      WHITESPACE@12..13 " "
+      PARAM@13..22
+        NAME@13..14
+          IDENT@13..14 "y"
+        COLON@14..15 ":"
+        WHITESPACE@15..16 " "
+        TUPLE_TYPE@16..22
+          L_PAREN@16..17 "("
+          PATH_TYPE@17..20
+            PATH@17..20
+              PATH_SEGMENT@17..20
+                NAME_REF@17..20
+                  IDENT@17..20 "Int"
+          COMMA@20..21 ","
+          R_PAREN@21..22 ")"
+      COMMA@22..23 ","
+      WHITESPACE@23..24 " "
+      PARAM@24..40
+        NAME@24..25
+          IDENT@24..25 "z"
+        COLON@25..26 ":"
+        WHITESPACE@26..27 " "
+        TUPLE_TYPE@27..40
+          L_PAREN@27..28 "("
+          PATH_TYPE@28..31
+            PATH@28..31
+              PATH_SEGMENT@28..31
+                NAME_REF@28..31
+                  IDENT@28..31 "Int"
+          COMMA@31..32 ","
+          WHITESPACE@32..33 " "
+          PATH_TYPE@33..39
+            PATH@33..39
+              PATH_SEGMENT@33..39
+                NAME_REF@33..39
+                  IDENT@33..39 "String"
+          R_PAREN@39..40 ")"
+      R_PAREN@40..41 ")"
+    BLOCK@41..42
+      NEWLINE@41..42 "\n"
+    END_KW@42..45 "end"
+  NEWLINE@45..46 "\n"

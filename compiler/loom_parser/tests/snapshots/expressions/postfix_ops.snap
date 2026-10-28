@@ -1,0 +1,94 @@
+# loom-snapshot: expressions/postfix_ops
+
+SOURCE_FILE@0..65
+  FN_DEF@0..64
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..61
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      EXPR_STMT@8..14
+        METHOD_CALL_EXPR@8..14
+          PATH_EXPR@8..9
+            NAME_REF@8..9
+              IDENT@8..9 "x"
+          DOT@9..10 "."
+          NAME_REF@10..11
+            IDENT@10..11 "f"
+          ARG_LIST@11..14
+            L_PAREN@11..12 "("
+            ARG@12..13
+              LITERAL@12..13
+                INT_LIT@12..13 "1"
+            R_PAREN@13..14 ")"
+      NEWLINE@14..15 "\n"
+      WHITESPACE@15..17 "  "
+      EXPR_STMT@17..20
+        FIELD_EXPR@17..20
+          PATH_EXPR@17..18
+            NAME_REF@17..18
+              IDENT@17..18 "x"
+          DOT@18..19 "."
+          INT_LIT@19..20 "0"
+      NEWLINE@20..21 "\n"
+      WHITESPACE@21..23 "  "
+      EXPR_STMT@23..30
+        CALL_EXPR@23..30
+          PATH_EXPR@23..24
+            NAME_REF@23..24
+              IDENT@23..24 "x"
+          WHITESPACE@24..25 " "
+          TRAILING_BLOCK@25..30
+            L_BRACE@25..26 "{"
+            WHITESPACE@26..27 " "
+            BLOCK@27..28
+              EXPR_STMT@27..28
+                LITERAL@27..28
+                  INT_LIT@27..28 "1"
+            WHITESPACE@28..29 " "
+            R_BRACE@29..30 "}"
+      NEWLINE@30..31 "\n"
+      WHITESPACE@31..33 "  "
+      EXPR_STMT@33..43
+        CALL_EXPR@33..43
+          PATH_EXPR@33..34
+            NAME_REF@33..34
+              IDENT@33..34 "x"
+          WHITESPACE@34..35 " "
+          TRAILING_BLOCK@35..43
+            DO_KW@35..37 "do"
+            WHITESPACE@37..38 " "
+            BLOCK@38..39
+              EXPR_STMT@38..39
+                LITERAL@38..39
+                  INT_LIT@38..39 "1"
+            WHITESPACE@39..40 " "
+            END_KW@40..43 "end"
+      NEWLINE@43..44 "\n"
+      WHITESPACE@44..46 "  "
+      EXPR_STMT@46..53
+        INDEX_EXPR@46..53
+          PATH_EXPR@46..47
+            NAME_REF@46..47
+              IDENT@46..47 "a"
+          L_BRACKET@47..48 "["
+          LITERAL@48..49
+            INT_LIT@48..49 "0"
+          COMMA@49..50 ","
+          WHITESPACE@50..51 " "
+          LITERAL@51..52
+            INT_LIT@51..52 "1"
+          R_BRACKET@52..53 "]"
+      NEWLINE@53..54 "\n"
+      WHITESPACE@54..56 "  "
+      EXPR_STMT@56..60
+        TRY_EXPR@56..60
+          PATH_EXPR@56..59
+            NAME_REF@56..59
+              IDENT@56..59 "res"
+          QUESTION@59..60 "?"
+      NEWLINE@60..61 "\n"
+    END_KW@61..64 "end"
+  NEWLINE@64..65 "\n"

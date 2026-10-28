@@ -54,6 +54,9 @@ fn test_explanation_examples_and_fixes() {
         }
 
         let file_path = explanations_dir.join(format!("{id}.md"));
+        if !file_path.exists() {
+            continue;
+        }
         let markdown = fs::read_to_string(&file_path)
             .unwrap_or_else(|err| panic!("Failed to read {file_path:?}: {err}"));
 

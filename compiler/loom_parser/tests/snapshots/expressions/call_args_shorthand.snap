@@ -1,0 +1,32 @@
+# loom-snapshot: expressions/call_args_shorthand
+
+SOURCE_FILE@0..21
+  FN_DEF@0..20
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..17
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      EXPR_STMT@8..16
+        CALL_EXPR@8..16
+          PATH_EXPR@8..9
+            NAME_REF@8..9
+              IDENT@8..9 "g"
+          ARG_LIST@9..16
+            L_PAREN@9..10 "("
+            ARG@10..11
+              PATH_EXPR@10..11
+                NAME_REF@10..11
+                  IDENT@10..11 "a"
+            COMMA@11..12 ","
+            WHITESPACE@12..13 " "
+            NAMED_ARG@13..15
+              NAME_REF@13..14
+                IDENT@13..14 "b"
+              COLON@14..15 ":"
+            R_PAREN@15..16 ")"
+      NEWLINE@16..17 "\n"
+    END_KW@17..20 "end"
+  NEWLINE@20..21 "\n"

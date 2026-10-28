@@ -1,0 +1,27 @@
+# loom-snapshot: errors/e0103_unexpected_closing
+
+SOURCE_FILE@0..20
+  FN_DEF@0..19
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..16
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      BIND_STMT@8..13
+        NAME@8..9
+          IDENT@8..9 "x"
+        WHITESPACE@9..10 " "
+        EQ@10..11 "="
+        WHITESPACE@11..12 " "
+        LITERAL@12..13
+          INT_LIT@12..13 "1"
+      WHITESPACE@13..14 " "
+      ERROR@14..15
+        R_PAREN@14..15 ")"
+      NEWLINE@15..16 "\n"
+    END_KW@16..19 "end"
+  NEWLINE@19..20 "\n"
+--- diagnostics ---
+E0103 14..15 unexpected `)`

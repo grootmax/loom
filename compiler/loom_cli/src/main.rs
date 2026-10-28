@@ -23,11 +23,7 @@ const COMMANDS: &[Command] = &[
     cmd("init", "Create a project in the current directory", 5),
     cmd("run", "Build and run a program", 2),
     cmd("build", "Compile a program to a native binary", 3),
-    cmd(
-        "check",
-        "Check programs for errors (syntax only until phase 2)",
-        1,
-    ),
+    cmd("check", "Check programs for errors", 1),
     cmd("test", "Run tests, including doc-tests", 2),
     cmd("bench", "Run benchmarks", 6),
     cmd("fmt", "Format source files in the canonical style", 1),
@@ -99,6 +95,8 @@ fn main() -> ExitCode {
             ExitCode::SUCCESS
         }
         "check" => check(rest),
+        "run" => run(rest, false),
+        "test" => run(rest, true),
         "fmt" => fmt(rest),
         "explain" => explain(rest),
         name => {
@@ -160,13 +158,16 @@ fn print_diagnostics(session: &Session) {
     }
 }
 
-/// `loom check`: reports lexical and syntax errors (Phase 1).
+/// `loom check`: reports every error the implemented phases can find. Each file is
+/// checked as the root of its own program.
 fn check(args: &[String]) -> ExitCode {
     let (options, paths) = split_options(args);
     let mut dump_cst = false;
+    let mut dump_hir = false;
     for option in options {
         match option {
             "--dump=cst" => dump_cst = true,
+            "--dump=hir" => dump_hir = true,
             "--message-format=short" => {}
             other => return usage_error(&format!("check: unknown option `{other}`")),
         }
@@ -174,22 +175,117 @@ fn check(args: &[String]) -> ExitCode {
     if paths.is_empty() {
         return usage_error("check: expected at least one path");
     }
-    let session = match load(&paths) {
+    let mut session = match load(&paths) {
         Ok(session) => session,
         Err(code) => return code,
     };
-    if dump_cst {
-        for (_, path, parse) in session.files() {
+    let files: Vec<(loom_span::FileId, PathBuf)> = session
+        .files()
+        .map(|(id, path, _)| (id, path.to_owned()))
+        .collect();
+    let mut failed = false;
+    let stderr = std::io::stderr();
+    for (file, path) in files {
+        if dump_cst && let Some(parse) = session.parse(file) {
             println!("# {}", path.display());
             print!("{}", parse.syntax().debug_dump());
         }
+        let analysis = session.analyze(file);
+        if dump_hir {
+            for body in &analysis.hir.bodies {
+                if analysis.hir.package_of(body.owner) == loom_hir::Package::Main {
+                    println!("# {}", analysis.hir.path_string(body.owner));
+                    print!("{}", loom_hir::dump_body(body));
+                }
+            }
+        }
+        let mut out = stderr.lock();
+        for diagnostic in &analysis.diagnostics {
+            let _ = writeln!(out, "{}", diagnostic.short(session.sources()));
+        }
+        failed |= analysis.has_errors();
     }
-    print_diagnostics(&session);
-    if session.has_errors() {
+    if failed {
         ExitCode::FAILURE
     } else {
         ExitCode::SUCCESS
     }
+}
+
+/// `loom run <file> [-- args]` and `loom test <file>`: checks the program, then
+/// interprets `main` or the `@[test]` functions (ADR 0019 §8–§9).
+fn run(args: &[String], tests: bool) -> ExitCode {
+    let split = args.iter().position(|a| a == "--").unwrap_or(args.len());
+    let (options, paths) = split_options(&args[..split]);
+    if let Some(option) = options.first() {
+        return usage_error(&format!("unknown option `{option}`"));
+    }
+    let [path] = paths.as_slice() else {
+        return usage_error(if tests {
+            "test: expected one file"
+        } else {
+            "run: expected one file"
+        });
+    };
+    let path = path.clone();
+    // Deep recursion in the interpreted program needs a large native stack.
+    let worker = std::thread::Builder::new()
+        .stack_size(1 << 30)
+        .spawn(move || run_on_this_thread(&path, tests));
+    if let Ok(Ok(code)) = worker.map(std::thread::JoinHandle::join) {
+        ExitCode::from(code)
+    } else {
+        eprintln!("loom: internal error while running the program");
+        ExitCode::from(USAGE)
+    }
+}
+
+fn run_on_this_thread(path: &std::path::Path, tests: bool) -> u8 {
+    let mut session = Session::new();
+    let file = match session.load(path) {
+        Ok(file) => file,
+        Err(error) => {
+            eprintln!("loom: {error}");
+            return 1;
+        }
+    };
+    let analysis = session.analyze(file);
+    {
+        let stderr = std::io::stderr();
+        let mut out = stderr.lock();
+        for diagnostic in &analysis.diagnostics {
+            let _ = writeln!(out, "{}", diagnostic.short(session.sources()));
+        }
+    }
+    if analysis.has_errors() {
+        return 1;
+    }
+    let stdout = std::io::stdout();
+    let out = Box::new(std::io::BufWriter::new(stdout.lock()));
+    let interp = loom_interp::Interp::new(&analysis.hir, &analysis.checked, session.sources(), out);
+    if tests {
+        return if interp.run_tests(analysis.root) {
+            0
+        } else {
+            101
+        };
+    }
+    let Some(main) = analysis.main() else {
+        eprintln!(
+            "{}: error[E0211]: a program needs a `main` function",
+            path.display()
+        );
+        return 1;
+    };
+    let outcome = interp.run_main(main);
+    interp.flush();
+    match &outcome {
+        loom_interp::Outcome::Error(message) | loom_interp::Outcome::Panicked(message) => {
+            eprintln!("{message}");
+        }
+        loom_interp::Outcome::Finished => {}
+    }
+    outcome.exit_code()
 }
 
 /// `loom fmt`: formats files in place, or with `--check` reports files that would change.

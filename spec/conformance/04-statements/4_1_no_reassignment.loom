@@ -1,0 +1,6 @@
+# spec: §4.1 rule 2
+def main
+  count = 1
+  count = 2
+  puts count
+end

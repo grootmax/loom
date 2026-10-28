@@ -1,0 +1,18 @@
+# spec: §3.3 rule 2
+enum Light
+  Red
+  Green
+end
+
+def show(light: Light) -> String
+  case light
+  in Red then "stop"
+  in Green then "go"
+  end
+end
+
+def main
+  light: Light = Green
+  puts show(light)
+  puts show(Light.Red)
+end

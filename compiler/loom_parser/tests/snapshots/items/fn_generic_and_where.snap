@@ -1,0 +1,64 @@
+# loom-snapshot: items/fn_generic_and_where
+
+SOURCE_FILE@0..42
+  FN_DEF@0..41
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    GENERIC_PARAM_LIST@5..8
+      L_BRACKET@5..6 "["
+      GENERIC_PARAM@6..7
+        NAME@6..7
+          IDENT@6..7 "T"
+      R_BRACKET@7..8 "]"
+    PARAM_LIST@8..14
+      L_PAREN@8..9 "("
+      PARAM@9..13
+        NAME@9..10
+          IDENT@9..10 "x"
+        COLON@10..11 ":"
+        WHITESPACE@11..12 " "
+        PATH_TYPE@12..13
+          PATH@12..13
+            PATH_SEGMENT@12..13
+              NAME_REF@12..13
+                IDENT@12..13 "T"
+      R_PAREN@13..14 ")"
+    WHITESPACE@14..15 " "
+    RET_TYPE@15..19
+      ARROW@15..17 "->"
+      WHITESPACE@17..18 " "
+      PATH_TYPE@18..19
+        PATH@18..19
+          PATH_SEGMENT@18..19
+            NAME_REF@18..19
+              IDENT@18..19 "T"
+    WHITESPACE@19..20 " "
+    WHERE_CLAUSE@20..33
+      WHERE_KW@20..25 "where"
+      WHITESPACE@25..26 " "
+      WHERE_PRED@26..33
+        PATH_TYPE@26..27
+          PATH@26..27
+            PATH_SEGMENT@26..27
+              NAME_REF@26..27
+                IDENT@26..27 "T"
+        COLON@27..28 ":"
+        WHITESPACE@28..29 " "
+        BOUND_LIST@29..33
+          PATH_TYPE@29..33
+            PATH@29..33
+              PATH_SEGMENT@29..33
+                NAME_REF@29..33
+                  IDENT@29..33 "Copy"
+    BLOCK@33..38
+      NEWLINE@33..34 "\n"
+      WHITESPACE@34..36 "  "
+      EXPR_STMT@36..37
+        PATH_EXPR@36..37
+          NAME_REF@36..37
+            IDENT@36..37 "x"
+      NEWLINE@37..38 "\n"
+    END_KW@38..41 "end"
+  NEWLINE@41..42 "\n"
