@@ -74,3 +74,58 @@ fn deep_nesting_is_reported_not_overflowed() {
     assert!(codes(&source).contains(&"E0112".to_owned()));
     assert_eq!(parse(&source, FileId::DETACHED).syntax().text(), source);
 }
+
+#[test]
+fn binary_precedence_follows_spec_7_5() {
+    // Each operator one level tighter than its left neighbor must bind first.
+    let cases = [
+        ("1 + 2 * 3", "1 + (2 * 3)"),
+        ("1 << 2 + 1", "1 << (2 + 1)"),
+        ("a or b and c", "a or (b and c)"),
+        ("a & b | c ^ d", "(a & b) | (c ^ d)"),
+        ("1 - 2 - 3", "(1 - 2) - 3"),
+        ("a == b + 1", "a == (b + 1)"),
+        ("0..n + 1", "0..(n + 1)"),
+    ];
+    for (source, expected) in cases {
+        let parse = crate::parse(
+            &format!("def f\n  x = {source}\nend\n"),
+            loom_span::FileId::DETACHED,
+        );
+        assert!(!parse.has_errors(), "{source}");
+        let tree = parse.syntax();
+        let expr = tree
+            .descendants()
+            .find(|n| {
+                matches!(
+                    n.kind(),
+                    loom_syntax::SyntaxKind::BINARY_EXPR | loom_syntax::SyntaxKind::RANGE_EXPR
+                )
+            })
+            .expect("binary expression");
+        assert_eq!(parenthesize(&expr), expected, "{source}");
+    }
+}
+
+/// Renders a binary tree with parentheses around nested binary operands.
+fn parenthesize(node: &loom_syntax::SyntaxNode) -> String {
+    use loom_syntax::SyntaxKind::{BINARY_EXPR, RANGE_EXPR};
+    let mut parts = Vec::new();
+    for child in node.children_with_tokens() {
+        match child {
+            loom_syntax::SyntaxElement::Node(n) if matches!(n.kind(), BINARY_EXPR | RANGE_EXPR) => {
+                parts.push(format!("({})", parenthesize(&n)));
+            }
+            loom_syntax::SyntaxElement::Node(n) => parts.push(n.text().trim().to_owned()),
+            loom_syntax::SyntaxElement::Token(t) if !t.kind().is_trivia() => {
+                parts.push(t.text().to_owned());
+            }
+            loom_syntax::SyntaxElement::Token(_) => {}
+        }
+    }
+    let joined = parts.join(" ");
+    joined
+        .replace(" .. ", "..")
+        .replace("( ", "(")
+        .replace(" )", ")")
+}

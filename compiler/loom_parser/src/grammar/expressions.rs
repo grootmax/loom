@@ -299,7 +299,10 @@ fn expr_bp_inner(
         let Some((power, kind)) = infix(operator) else {
             break;
         };
-        if power < min_power || (power == min_power && power != 4 && power != 5) {
+        // Left-associative: the right operand is parsed with `power + 1`, so an operator
+        // of the same level ends it. Chains of the non-associative levels are reported
+        // through `previous_level` below.
+        if power < min_power {
             break;
         }
         if power == 4 || power == 5 {
