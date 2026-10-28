@@ -54,7 +54,8 @@ pub fn run() -> Result<(), String> {
     let mut failures = Vec::new();
     let (mut passed, mut skipped) = (0, 0);
     for case in &cases {
-        let key = case.display().to_string();
+        // Reported paths use `/`; so do the keys, on every platform.
+        let key = case.display().to_string().replace('\\', "/");
         let got = reported.get(&key).cloned().unwrap_or_default();
         match runner.check_case(case, &got)? {
             Outcome::Passed => passed += 1,
