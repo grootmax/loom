@@ -39,7 +39,7 @@ fn programs_produce_their_expected_output() {
         .filter(|p| p.extension().is_some_and(|x| x == "loom"))
         .collect();
     entries.sort();
-    assert!(!entries.is_empty());
+    assert_ne!(entries.len(), 0);
     for path in entries {
         let expected =
             std::fs::read_to_string(path.with_extension("stdout")).expect("expected output");
