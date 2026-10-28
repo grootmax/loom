@@ -12,5 +12,11 @@ publish = false
 name = "loom"
 path = "src/main.rs"
 
+[dependencies]
+loom_span = { path = "../loom_span" }
+loom_diagnostics = { path = "../loom_diagnostics" }
+loom_driver = { path = "../loom_driver" }
+loom_fmt = { path = "../../tools/loom_fmt" }
+
 [lints]
 workspace = true

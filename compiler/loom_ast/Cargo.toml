@@ -8,5 +8,13 @@ license.workspace = true
 repository.workspace = true
 publish = false
 
+[dependencies]
+loom_span = { path = "../loom_span" }
+loom_syntax = { path = "../loom_syntax" }
+
+[dev-dependencies]
+loom_parser = { path = "../loom_parser" }
+loom_snapshot = { path = "../loom_snapshot" }
+
 [lints]
 workspace = true

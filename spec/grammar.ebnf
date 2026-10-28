@@ -359,7 +359,7 @@ closure_expr = "{" , block_params , block_body , "}" ;   (* standalone closure v
 block_params = "|" , [ block_param , { "," , block_param } ] , "|" ;
 
 (* §7.9 *)
-block_param = [ "mut" | "own" ] , pattern , [ ":" , type ] ;
+block_param = [ "mut" | "own" ] , pattern_atom , [ ":" , type ] ;   (* or-patterns need parens *)
 
 (* §7 *)
 primary_expr = literal
