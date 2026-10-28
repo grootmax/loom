@@ -1,0 +1,19 @@
+[package]
+name = "loom_fuzz"
+description = "In-house fuzzer for the Loom front end."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+loom_span = { path = "../../compiler/loom_span" }
+loom_syntax = { path = "../../compiler/loom_syntax" }
+loom_lexer = { path = "../../compiler/loom_lexer" }
+loom_parser = { path = "../../compiler/loom_parser" }
+loom_fmt = { path = "../loom_fmt" }
+
+[lints]
+workspace = true

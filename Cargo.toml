@@ -25,6 +25,7 @@ members = [
     "tools/loom_lsp",
     "tools/loom_doc",
     "tools/loom_pkg",
+    "tools/loom_fuzz",
     "xtask",
 ]
 

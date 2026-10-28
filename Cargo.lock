@@ -64,6 +64,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "loom_fuzz"
+version = "0.0.0"
+dependencies = [
+ "loom_fmt",
+ "loom_lexer",
+ "loom_parser",
+ "loom_span",
+ "loom_syntax",
+]
+
+[[package]]
 name = "loom_hir"
 version = "0.0.0"
 
