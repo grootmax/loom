@@ -135,7 +135,7 @@ field, trait, impl, function, const, type alias, type parameter, associated type
 4. **`dyn Trait`** is a type. A value of type `T` coerces to `dyn Trait` where `T:
    Trait` and a `dyn Trait` is expected (§6.5). The trait must be object-safe (Rust's rules,
    simplified: no generic methods, no `Self` in argument or return types except as the
-   receiver, no associated functions without a receiver). Not object-safe is E0330.
+   receiver, no associated functions without a receiver). Not object-safe is E0328.
 5. **Integer literals** get an integer inference variable, which defaults to `Int`, and
    float literals a float inference variable, which defaults to `Float`. A literal that
    does not fit its final type is E0310.
@@ -149,7 +149,7 @@ field, trait, impl, function, const, type alias, type parameter, associated type
 ### 4. Built-in types and the core library
 
 1. Every built-in type except the primitives, tuples, callables and `dyn` is an ordinary
-   generic struct or enum written in Loom in the **core library** (`library/core/*.loom`),
+   generic struct or enum written in Loom in the **core library** (`std/core/*.loom`),
    marked with `@[lang("name")]` so the compiler can find it: `Option`, `Result`, `Array`,
    `Map`, `Set`, `String`, `Range`, `Ordering`, and the traits `Eq`, `Ord`, `Hash`, `Clone`,
    `Copy`, `Display`, `Iterator`, `Iterable`, `From`, `Default`, `Error`. The primitives get
@@ -164,7 +164,7 @@ field, trait, impl, function, const, type alias, type parameter, associated type
    package `core`. The **prelude** is a fixed list of core names that every module sees
    without importing them: the types and traits above, `Some`, `None`, `Ok`, `Err`,
    `puts`, `print`, `panic`, `assert`, `assert_eq`, `todo`. The list lives in
-   `library/core/prelude.loom` as `pub use` declarations.
+   `std/core/prelude.loom` as `pub use` declarations.
 4. The core library's public API is part of the language and is named by the lead
    architect (CLAUDE.md "never delegate: public API naming"). Bodies of core functions
    whose signatures are written may be delegated.
@@ -198,9 +198,9 @@ field, trait, impl, function, const, type alias, type parameter, associated type
    so sorting and `max` are total.
 6. **Derives** (`@[derive(…)]`) are built into the checker for `Copy`, `Clone`, `Eq`,
    `Ord` (by variant order, then lexicographic by field order), `Hash` and `Default`.
-   `Display` is not derivable. Deriving `Copy` requires every field to be `Copy` (E0340).
+   `Display` is not derivable. Deriving `Copy` requires every field to be `Copy` (E0329).
 7. **Coherence** is Rust's orphan rule, with core treated as a foreign package. Overlapping
-   impls are E0341; Phase 2 has no specialization.
+   impls are E0326; Phase 2 has no specialization.
 
 ### 6. Inference (spec §6)
 
@@ -220,7 +220,7 @@ field, trait, impl, function, const, type alias, type parameter, associated type
    float variables `Float`. Any other unresolved variable is E0282.
 6. `?` (spec §10.3): on `Result[T, E]` in a body returning `Result[U, F]`, the expression
    has type `T`, and `F: From[E]` must hold (`From[T]` is implemented for `T` itself). On
-   `Option[T]` in a body returning `Option[U]`, the type is `T`. Anything else is E0360.
+   `Option[T]` in a body returning `Option[U]`, the type is `T`. Anything else is E0313.
    In a closure, "the body" is the closure.
 
 ### 7. Patterns and exhaustiveness (spec §9)

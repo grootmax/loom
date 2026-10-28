@@ -1,0 +1,104 @@
+##! The core traits: comparison, copying, conversion and display.
+
+## Equality, used by `==` and `!=` (spec §7.5).
+@[lang("Eq")]
+pub trait Eq
+  ## Whether `self` equals `other`.
+  def eq(other: Self) -> Bool
+
+  ## Whether `self` differs from `other`.
+  default def ne(other: Self) -> Bool = not self.eq(other)
+end
+
+## The result of comparing two values.
+@[lang("Ordering"), derive(Copy, Clone, Eq, Ord, Hash)]
+pub enum Ordering
+  Less
+  Equal
+  Greater
+
+  ## Whether this is `Less`.
+  pub def is_less -> Bool = self == Ordering.Less
+
+  ## Whether this is `Greater`.
+  pub def is_greater -> Bool = self == Ordering.Greater
+
+  ## The opposite ordering.
+  pub def reverse -> Ordering
+    case self
+    in Less then Ordering.Greater
+    in Equal then Ordering.Equal
+    in Greater then Ordering.Less
+    end
+  end
+
+  ## This ordering, or `other` if this one is `Equal`.
+  pub def then_by(other: Ordering) -> Ordering = if self == Ordering.Equal then other else self end
+end
+
+## A total order, used by `<`, `<=`, `>` and `>=` (spec §7.5).
+@[lang("Ord")]
+pub trait Ord: Eq
+  ## Compares `self` with `other`.
+  def compare(other: Self) -> Ordering
+end
+
+## Explicit duplication of a value.
+@[lang("Clone")]
+pub trait Clone
+  ## A copy of `self` that shares nothing with it.
+  def clone -> Self
+end
+
+## Types whose values are copied instead of moved (ADR 0005).
+@[lang("Copy")]
+pub trait Copy: Clone
+end
+
+## Types that can be keys of a `Map` or elements of a `Set`.
+@[lang("Hash")]
+pub trait Hash
+end
+
+## Types with a default value.
+@[lang("Default")]
+pub trait Default
+  ## The default value.
+  def self.default -> Self
+end
+
+## Conversion from another type, used by `?` (spec §10.3).
+@[lang("From")]
+pub trait From[T]
+  ## Converts `value`.
+  def self.from(own value: T) -> Self
+end
+
+impl[T] From[T] for T
+  def self.from(own value: T) -> T = value
+end
+
+## Types with a text representation for users, used by string interpolation and `puts`
+## (spec §7.12).
+@[lang("Display")]
+pub trait Display
+  ## The text representation.
+  def to_string -> String
+end
+
+## Errors (spec §10.2).
+@[lang("Error")]
+pub trait Error
+  ## A description of the error for users.
+  def message -> String
+end
+
+## Types that can be added up with `Iterator.sum`.
+@[lang("Sum")]
+pub trait Sum
+  ## The value of an empty sum.
+  def self.zero -> Self
+
+  ## `self + other`.
+  def add(other: Self) -> Self
+end

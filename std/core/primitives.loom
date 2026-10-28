@@ -1,0 +1,340 @@
+##! The primitive types (spec §5.1) and their methods.
+
+extern "intrinsic"
+  def int_to_string[T](value: T) -> String
+  def int_parse[T](text: String) -> Option[T]
+  def int_abs[T](value: T) -> T
+  def int_pow[T](base: T, exponent: U32) -> T
+  def int_checked[T](left: T, right: T, operation: String) -> Option[T]
+  def int_wrapping[T](left: T, right: T, operation: String) -> T
+  def int_saturating[T](left: T, right: T, operation: String) -> T
+  def int_to_float[T](value: T) -> Float
+  def int_min[T] -> T
+  def int_max[T] -> T
+  def float_to_string[T](value: T) -> String
+  def float_parse[T](text: String) -> Option[T]
+  def float_math[T](value: T, operation: String) -> T
+  def float_round_to[T](value: T, digits: Int) -> T
+  def float_truncate[T](value: T) -> Int
+  def char_is[T](value: Char, class: String) -> Bool
+  def char_convert(value: Char, operation: String) -> Char
+  def char_code(value: Char) -> U32
+  def char_to_string(value: Char) -> String
+  def int_zero[T] -> T
+end
+
+## A failure to parse a number.
+@[derive(Clone, Eq)]
+pub struct ParseNumberError
+  text: String
+
+  ## The text that could not be parsed.
+  pub def text -> String = @text.clone
+end
+
+impl Error for ParseNumberError
+  def message -> String = "'#{@text}' is not a valid number"
+end
+
+impl Display for ParseNumberError
+  def to_string -> String = self.message
+end
+
+## Methods shared by every integer type.
+pub trait Integer: Copy + Eq + Ord + Hash
+  ## Parses a decimal integer, with an optional leading `-` or `+`.
+  default def self.parse(text: String) -> Result[Self, ParseNumberError]
+    case int_parse(text)
+    in Some(value) then Ok(value)
+    in None then Err(ParseNumberError(text: text.clone))
+    end
+  end
+
+  ## The smallest value of the type.
+  default def self.min_value -> Self = int_min()
+
+  ## The largest value of the type.
+  default def self.max_value -> Self = int_max()
+
+  ## The absolute value. Panics if it does not fit (the minimum of a signed type).
+  default def abs -> Self = int_abs(self)
+
+  ## `self` raised to `exponent`. Panics on overflow.
+  default def pow(exponent: U32) -> Self = int_pow(self, exponent)
+
+  ## `self + other`, or `None` on overflow.
+  default def checked_add(other: Self) -> Option[Self] = int_checked(self, other, "add")
+
+  ## `self - other`, or `None` on overflow.
+  default def checked_sub(other: Self) -> Option[Self] = int_checked(self, other, "sub")
+
+  ## `self * other`, or `None` on overflow.
+  default def checked_mul(other: Self) -> Option[Self] = int_checked(self, other, "mul")
+
+  ## `self / other`, or `None` if `other` is zero or the result overflows.
+  default def checked_div(other: Self) -> Option[Self] = int_checked(self, other, "div")
+
+  ## `self + other`, wrapping around on overflow.
+  default def wrapping_add(other: Self) -> Self = int_wrapping(self, other, "add")
+
+  ## `self - other`, wrapping around on overflow.
+  default def wrapping_sub(other: Self) -> Self = int_wrapping(self, other, "sub")
+
+  ## `self * other`, wrapping around on overflow.
+  default def wrapping_mul(other: Self) -> Self = int_wrapping(self, other, "mul")
+
+  ## `self + other`, clamped to the type's range.
+  default def saturating_add(other: Self) -> Self = int_saturating(self, other, "add")
+
+  ## `self - other`, clamped to the type's range.
+  default def saturating_sub(other: Self) -> Self = int_saturating(self, other, "sub")
+
+  ## The value as a `Float` (rounded to the nearest representable value).
+  default def to_float -> Float = int_to_float(self)
+
+  ## The smaller of `self` and `other`.
+  default def min(other: Self) -> Self = if other < self then other else self end
+
+  ## The larger of `self` and `other`.
+  default def max(other: Self) -> Self = if other > self then other else self end
+end
+
+## Methods shared by the float types.
+pub trait FloatMath: Copy + Eq + Ord
+  ## Parses a decimal float.
+  default def self.parse(text: String) -> Result[Self, ParseNumberError]
+    case float_parse(text)
+    in Some(value) then Ok(value)
+    in None then Err(ParseNumberError(text: text.clone))
+    end
+  end
+
+  ## The square root.
+  default def sqrt -> Self = float_math(self, "sqrt")
+
+  ## The absolute value.
+  default def abs -> Self = float_math(self, "abs")
+
+  ## The largest integer value not greater than `self`.
+  default def floor -> Self = float_math(self, "floor")
+
+  ## The smallest integer value not less than `self`.
+  default def ceil -> Self = float_math(self, "ceil")
+
+  ## `self` rounded to `digits` decimal places, with halves rounded away from zero.
+  default def round(digits: Int = 0) -> Self = float_round_to(self, digits)
+
+  ## The integer part, as an `Int`. Panics if it does not fit or is NaN.
+  default def truncate -> Int = float_truncate(self)
+
+  ## Whether the value is NaN.
+  default def is_nan -> Bool = self != self
+end
+
+## 8-bit signed integer.
+@[lang("I8")]
+pub struct I8
+end
+
+## 16-bit signed integer.
+@[lang("I16")]
+pub struct I16
+end
+
+## 32-bit signed integer.
+@[lang("I32")]
+pub struct I32
+end
+
+## 64-bit signed integer. `Int` is the same type.
+@[lang("I64")]
+pub struct I64
+end
+
+## 128-bit signed integer.
+@[lang("I128")]
+pub struct I128
+end
+
+## Pointer-sized signed integer.
+@[lang("ISize")]
+pub struct ISize
+end
+
+## 8-bit unsigned integer.
+@[lang("U8")]
+pub struct U8
+end
+
+## 16-bit unsigned integer.
+@[lang("U16")]
+pub struct U16
+end
+
+## 32-bit unsigned integer.
+@[lang("U32")]
+pub struct U32
+end
+
+## 64-bit unsigned integer.
+@[lang("U64")]
+pub struct U64
+end
+
+## 128-bit unsigned integer.
+@[lang("U128")]
+pub struct U128
+end
+
+## Pointer-sized unsigned integer.
+@[lang("USize")]
+pub struct USize
+end
+
+## The default integer type.
+pub type Int = I64
+
+## 32-bit IEEE 754 float.
+@[lang("F32")]
+pub struct F32
+end
+
+## 64-bit IEEE 754 float. `Float` is the same type.
+@[lang("F64")]
+pub struct F64
+  ## π.
+  pub const PI: F64 = 3.141592653589793
+
+  ## Euler's number.
+  pub const E: F64 = 2.718281828459045
+end
+
+## The default float type.
+pub type Float = F64
+
+## `true` or `false`.
+@[lang("Bool")]
+pub struct Bool
+end
+
+## A Unicode scalar value.
+@[lang("Char")]
+pub struct Char
+  ## Whether the character is alphabetic.
+  pub def is_alphabetic -> Bool = char_is(self, "alphabetic")
+
+  ## Whether the character is alphabetic or numeric.
+  pub def is_alphanumeric -> Bool = char_is(self, "alphanumeric")
+
+  ## Whether the character is an ASCII decimal digit.
+  pub def is_digit -> Bool = char_is(self, "digit")
+
+  ## Whether the character is whitespace.
+  pub def is_whitespace -> Bool = char_is(self, "whitespace")
+
+  ## Whether the character is uppercase.
+  pub def is_uppercase -> Bool = char_is(self, "uppercase")
+
+  ## Whether the character is lowercase.
+  pub def is_lowercase -> Bool = char_is(self, "lowercase")
+
+  ## The simple uppercase mapping of the character.
+  pub def to_uppercase -> Char = char_convert(self, "upper")
+
+  ## The simple lowercase mapping of the character.
+  pub def to_lowercase -> Char = char_convert(self, "lower")
+
+  ## The character's code point.
+  pub def code -> U32 = char_code(self)
+end
+
+## The type of `()`.
+@[lang("Unit")]
+pub struct Unit
+end
+
+## The type of expressions that never complete.
+@[lang("Never")]
+pub struct Never
+end
+
+impl Integer for I8
+end
+
+impl Integer for I16
+end
+
+impl Integer for I32
+end
+
+impl Integer for I64
+end
+
+impl Integer for I128
+end
+
+impl Integer for ISize
+end
+
+impl Integer for U8
+end
+
+impl Integer for U16
+end
+
+impl Integer for U32
+end
+
+impl Integer for U64
+end
+
+impl Integer for U128
+end
+
+impl Integer for USize
+end
+
+impl FloatMath for F32
+end
+
+impl FloatMath for F64
+end
+
+impl[T: Integer] Display for T
+  def to_string -> String = int_to_string(self)
+end
+
+impl[T: Integer] Sum for T
+  def self.zero -> T = int_zero()
+  def add(other: T) -> T = self + other
+end
+
+impl Display for F32
+  def to_string -> String = float_to_string(self)
+end
+
+impl Display for F64
+  def to_string -> String = float_to_string(self)
+end
+
+impl Sum for F32
+  def self.zero -> F32 = 0.0
+  def add(other: F32) -> F32 = self + other
+end
+
+impl Sum for F64
+  def self.zero -> F64 = 0.0
+  def add(other: F64) -> F64 = self + other
+end
+
+impl Display for Bool
+  def to_string -> String = if self then "true" else "false" end
+end
+
+impl Display for Char
+  def to_string -> String = char_to_string(self)
+end
+
+impl Display for Unit
+  def to_string -> String = "()"
+end

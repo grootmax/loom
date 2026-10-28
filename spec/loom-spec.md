@@ -736,7 +736,7 @@ with `else` must be exhaustive (§9.4).
 2. `while c … end` evaluates `c` (a `Bool`, or a pattern-test chain, §9.3) before each
    iteration and stops when it is `false`. Its type is `Unit`.
 3. `for pattern in expr … end` iterates: if the type of `expr` implements `Iterator`, its
-   values are taken by calling `next` until it returns `None`; otherwise the type must
+   values are taken by calling `next_item` until it returns `None`; otherwise the type must
    implement `Iterable`, and the loop iterates `expr.iter`. Each value is matched against
    the pattern, which must be irrefutable. Its type is `Unit`.
 4. `break` leaves the innermost loop; `break value` (only in `loop`) gives the loop's
@@ -1081,3 +1081,68 @@ Warnings are named lints, not numbered codes.
 | Lint | Warning | Rule |
 |---|---|---|
 | `dangling_doc_comment` | Outer doc comment not followed by an item, field, variant or method | §2.4.2 |
+| `unreachable_pattern` | `case` arm that can never match | §9.4 |
+| `unused_result` | Unused value of type `Result` | §10.6 |
+
+### C.4 Name and module errors (§3, §4, §12)
+
+| Code | Error | At | Rule |
+|---|---|---|---|
+| E0200 | Unresolved name | the name | §12.2 |
+| E0201 | Unknown variant or unqualified variant without an enum type | the variant name | §3.3, §9.1 |
+| E0202 | Name declared twice in one namespace | the second declaration | §12.1 |
+| E0203 | Assignment to an immutable binding | the binding's name | §4.1, §4.2 |
+| E0204 | Pattern test binds names outside a condition | the pattern | §9.3 |
+| E0205 | Item, field or method is not visible here | the name | §3.11 |
+| E0206 | Unresolved import | the unresolved segment | §3.7 |
+| E0207 | `self` or `@field` outside a method | the `self` or `@field` | §3.1, §7.4 |
+| E0208 | `break` or `next` outside a loop | the keyword | §7.8 |
+| E0209 | Name of the wrong kind (a type where a value is expected, or the reverse) | the name | §12.2 |
+| E0210 | Binding declared again in the same function | the second binding | §4.1 |
+| E0211 | Missing or invalid `main` function | the file start or `main`'s name | §14.1 |
+| E0212 | Intrinsic declared outside the core library, or unknown intrinsic | the declaration | §13 |
+| E0213 | Unknown attribute | the attribute name | §3.10 |
+| E0282 | Type annotations needed | the expression or binding | §6.2 |
+
+E0282 keeps the number rustc uses for the same error.
+
+### C.5 Type, trait and pattern errors (§5–§10)
+
+| Code | Error | At | Rule |
+|---|---|---|---|
+| E0300 | Mismatched types | the expression | §6.4 |
+| E0301 | Wrong number of arguments, or a missing argument | the call | §3.1 |
+| E0302 | `ref` type outside a function's return type | the `ref` type | §5.6 |
+| E0303 | Wrong number of generic arguments | the type or path | §5.2 |
+| E0304 | Unknown field | the field name | §3.2, §7.4 |
+| E0305 | Missing or repeated field in a construction | the construction or the field | §3.2 |
+| E0306 | No method with this name for this type | the method name | §7.4 |
+| E0307 | Unknown or repeated named argument | the argument name | §3.1 |
+| E0308 | Value is not callable | the callee | §7.3 |
+| E0309 | Type cannot be indexed | the index expression | §7.4 |
+| E0310 | Literal out of range for its type | the literal | §6.2 |
+| E0311 | Operator not supported for these operand types | the operator | §7.5 |
+| E0312 | Cannot mutate an immutable place | the place | §4.2 |
+| E0313 | `?` used on a value or in a function that does not support it | the `?` | §10.3 |
+| E0314 | `break` with a value outside `loop` | the `break` | §7.8 |
+| E0320 | Trait bound not satisfied | the expression or type | §6.6 |
+| E0321 | Missing item in an implementation | the `impl` | §3.5 |
+| E0322 | Ambiguous method | the method name | §7.4 |
+| E0323 | Item is not a member of the trait | the item | §3.5 |
+| E0324 | Method does not match the trait's declaration | the method | §3.5 |
+| E0325 | Expected a trait | the path | §3.5 |
+| E0326 | Conflicting implementations | the second `impl` | §3.5 |
+| E0327 | Implementation violates the orphan rule | the `impl` | §3.5 |
+| E0328 | Trait is not object-safe | the `dyn` type | §5.5 |
+| E0329 | Trait cannot be derived for this type | the derive entry | §6.7 |
+| E0330 | Unknown associated item | the item name | §7.2 |
+| E0398 | Feature not implemented yet in this phase | the construct | — |
+| E0400 | Non-exhaustive `case` | the `case` keyword | §9.4 |
+| E0401 | Refutable pattern where an irrefutable one is required | the pattern | §9.2 |
+| E0402 | Or-pattern alternatives bind different names | the alternative | §9.1 |
+| E0403 | Name bound twice in one pattern | the second binding | §9.1 |
+| E0404 | Pattern does not fit the matched type | the pattern | §9.1 |
+| E0405 | Invalid range pattern | the range | §9.1 |
+
+E0398 marks a construct the grammar accepts but this phase of the implementation does not
+implement yet (`select`, `unsafe`, `extern "C"`); it disappears as the phases land.

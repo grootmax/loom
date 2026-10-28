@@ -1,0 +1,5 @@
+##! The Loom core library: built-in types, core traits and the prelude.
+##!
+##! Each file of `std/core/` is a module of package `core`. Built-in types are ordinary
+##! structs and enums marked `@[lang("…")]`; operations the language cannot express are
+##! `extern "intrinsic"` functions (ADR 0019 §4).
