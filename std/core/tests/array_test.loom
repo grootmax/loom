@@ -1,0 +1,384 @@
+@[test]
+def array_new_is_empty
+  var arr: Array[Int] = Array.new
+  assert_eq(arr.length, 0)
+  assert(arr.is_empty)
+end
+
+@[test]
+def array_length_and_count
+  var arr = Array.new
+  arr.push(10)
+  arr.push(20)
+  assert_eq(arr.length, 2)
+  assert_eq(arr.count, 2)
+  assert(not arr.is_empty)
+end
+
+@[test]
+def array_get_valid_index
+  var arr = Array.new
+  arr.push(5)
+  arr.push(15)
+  assert_eq(arr.get(0), Some(5))
+  assert_eq(arr.get(1), Some(15))
+end
+
+@[test]
+def array_get_out_of_bounds_returns_none
+  var arr = Array.new
+  arr.push(1)
+  assert_eq(arr.get(1), None)
+  assert_eq(arr.get(100), None)
+end
+
+@[test]
+def array_get_negative_index_returns_none
+  var arr = Array.new
+  arr.push(1)
+  assert_eq(arr.get(-1), None)
+end
+
+@[test]
+def array_first_and_last_on_non_empty
+  var arr = Array.new
+  arr.push(1)
+  arr.push(2)
+  arr.push(3)
+  assert_eq(arr.first, Some(1))
+  assert_eq(arr.last, Some(3))
+end
+
+@[test]
+def array_first_and_last_on_empty_returns_none
+  var arr: Array[Int] = Array.new
+  assert_eq(arr.first, None)
+  assert_eq(arr.last, None)
+end
+
+@[test]
+def array_push_and_pop
+  var arr = Array.new
+  arr.push(100)
+  arr.push(200)
+  assert_eq(arr.pop, Some(200))
+  assert_eq(arr.pop, Some(100))
+  assert_eq(arr.pop, None)
+end
+
+@[test]
+def array_pop_on_empty_returns_none
+  var arr: Array[Int] = Array.new
+  assert_eq(arr.pop, None)
+end
+
+@[test]
+def array_insert_at_start_middle_end
+  var arr = Array.new
+  arr.push(10)
+  arr.push(30)
+  arr.insert(1, 20)
+  arr.insert(0, 5)
+  arr.insert(4, 40)
+  assert_eq(arr.get(0), Some(5))
+  assert_eq(arr.get(1), Some(10))
+  assert_eq(arr.get(2), Some(20))
+  assert_eq(arr.get(3), Some(30))
+  assert_eq(arr.get(4), Some(40))
+end
+
+@[test]
+def array_remove_returns_element_and_shifts
+  var arr = Array.new
+  arr.push(10)
+  arr.push(20)
+  arr.push(30)
+  assert_eq(arr.remove(1), 20)
+  assert_eq(arr.length, 2)
+  assert_eq(arr.get(0), Some(10))
+  assert_eq(arr.get(1), Some(30))
+end
+
+@[test]
+def array_reverse_in_place
+  var arr = Array.new
+  arr.push(1)
+  arr.push(2)
+  arr.push(3)
+  arr.reverse
+  assert_eq(arr.get(0), Some(3))
+  assert_eq(arr.get(1), Some(2))
+  assert_eq(arr.get(2), Some(1))
+end
+
+@[test]
+def array_reverse_empty
+  var arr: Array[Int] = Array.new
+  arr.reverse
+  assert(arr.is_empty)
+end
+
+@[test]
+def array_iter_yields_elements
+  var arr = Array.new
+  arr.push(10)
+  arr.push(20)
+  var it = arr.iter
+  assert_eq(it.next_item, Some(10))
+  assert_eq(it.next_item, Some(20))
+  assert_eq(it.next_item, None)
+end
+
+@[test]
+def array_enumerate_yields_index_value_pairs
+  var arr = Array.new
+  arr.push("a")
+  arr.push("b")
+  var enum_it = arr.enumerate
+  assert_eq(enum_it.next_item, Some((0, "a")))
+  assert_eq(enum_it.next_item, Some((1, "b")))
+  assert_eq(enum_it.next_item, None)
+end
+
+@[test]
+def array_each_visits_all_elements
+  var arr = Array.new
+  arr.push(1)
+  arr.push(2)
+  arr.push(3)
+  var sum = 0
+  arr.each { |x| sum += x }
+  assert_eq(sum, 6)
+end
+
+@[test]
+def array_map_transforms_elements
+  var arr = Array.new
+  arr.push(1)
+  arr.push(2)
+  var doubled = arr.map { |x| x * 2 }
+  assert_eq(doubled.get(0), Some(2))
+  assert_eq(doubled.get(1), Some(4))
+end
+
+@[test]
+def array_filter_selects_matching_elements
+  var arr = Array.new
+  arr.push(1)
+  arr.push(2)
+  arr.push(3)
+  arr.push(4)
+  var evens = arr.filter { |x| x % 2 == 0 }
+  assert_eq(evens.length, 2)
+  assert_eq(evens.get(0), Some(2))
+  assert_eq(evens.get(1), Some(4))
+end
+
+@[test]
+def array_filter_map_transforms_and_filters
+  var arr = Array.new
+  arr.push(1)
+  arr.push(2)
+  arr.push(3)
+  var mapped = arr.filter_map { |x| if x % 2 == 1 then Some(x * 10) else None end }
+  assert_eq(mapped.length, 2)
+  assert_eq(mapped.get(0), Some(10))
+  assert_eq(mapped.get(1), Some(30))
+end
+
+@[test]
+def array_any_returns_true_if_match_exists
+  var arr = Array.new
+  arr.push(1)
+  arr.push(2)
+  assert(arr.any { |x| x == 2 })
+end
+
+@[test]
+def array_any_returns_false_if_no_match
+  var arr = Array.new
+  arr.push(1)
+  arr.push(2)
+  assert(not arr.any { |x| x == 5 })
+end
+
+@[test]
+def array_all_returns_true_if_all_match
+  var arr = Array.new
+  arr.push(2)
+  arr.push(4)
+  assert(arr.all { |x| x % 2 == 0 })
+end
+
+@[test]
+def array_all_returns_false_if_any_fails
+  var arr = Array.new
+  arr.push(2)
+  arr.push(3)
+  assert(not arr.all { |x| x % 2 == 0 })
+end
+
+@[test]
+def array_find_returns_first_matching
+  var arr = Array.new
+  arr.push(1)
+  arr.push(2)
+  arr.push(3)
+  assert_eq(arr.find { |x| x > 1 }, Some(2))
+end
+
+@[test]
+def array_find_returns_none_when_no_match
+  var arr = Array.new
+  arr.push(1)
+  arr.push(2)
+  assert_eq(arr.find { |x| x > 10 }, None)
+end
+
+@[test]
+def array_contains_returns_true_for_existing_element
+  var arr = Array.new
+  arr.push("hello")
+  assert(arr.contains("hello"))
+  assert(not arr.contains("world"))
+end
+
+@[test]
+def array_take_fewer_than_length
+  var arr = Array.new
+  arr.push(1)
+  arr.push(2)
+  arr.push(3)
+  var taken = arr.take(2)
+  assert_eq(taken.length, 2)
+  assert_eq(taken.get(0), Some(1))
+  assert_eq(taken.get(1), Some(2))
+end
+
+@[test]
+def array_take_more_than_length
+  var arr = Array.new
+  arr.push(1)
+  var taken = arr.take(10)
+  assert_eq(taken.length, 1)
+  assert_eq(taken.get(0), Some(1))
+end
+
+@[test]
+def array_skip_fewer_than_length
+  var arr = Array.new
+  arr.push(1)
+  arr.push(2)
+  arr.push(3)
+  var skipped = arr.skip(1)
+  assert_eq(skipped.length, 2)
+  assert_eq(skipped.get(0), Some(2))
+  assert_eq(skipped.get(1), Some(3))
+end
+
+@[test]
+def array_skip_more_than_length
+  var arr = Array.new
+  arr.push(1)
+  var skipped = arr.skip(10)
+  assert(skipped.is_empty)
+end
+
+@[test]
+def array_max_and_min_non_empty
+  var arr = Array.new
+  arr.push(5)
+  arr.push(1)
+  arr.push(10)
+  assert_eq(arr.max, Some(10))
+  assert_eq(arr.min, Some(1))
+end
+
+@[test]
+def array_max_and_min_empty_returns_none
+  var arr: Array[Int] = Array.new
+  assert_eq(arr.max, None)
+  assert_eq(arr.min, None)
+end
+
+@[test]
+def array_max_by_and_min_by
+  var arr = Array.new
+  arr.push(-10)
+  arr.push(2)
+  arr.push(5)
+  assert_eq(arr.max_by { |x| x.abs }, Some(-10))
+  assert_eq(arr.min_by { |x| x.abs }, Some(2))
+end
+
+@[test]
+def array_sort_orders_elements
+  var arr = Array.new
+  arr.push(3)
+  arr.push(1)
+  arr.push(2)
+  arr.sort
+  assert_eq(arr.get(0), Some(1))
+  assert_eq(arr.get(1), Some(2))
+  assert_eq(arr.get(2), Some(3))
+end
+
+@[test]
+def array_sort_by_orders_by_key
+  var arr = Array.new
+  arr.push(-5)
+  arr.push(2)
+  arr.push(-1)
+  arr.sort_by { |x| x.abs }
+  assert_eq(arr.get(0), Some(-1))
+  assert_eq(arr.get(1), Some(2))
+  assert_eq(arr.get(2), Some(-5))
+end
+
+@[test]
+def array_sort_with_custom_comparator
+  var arr = Array.new
+  arr.push(1)
+  arr.push(3)
+  arr.push(2)
+  arr.sort_with { |a, b| b.compare(a) }
+  assert_eq(arr.get(0), Some(3))
+  assert_eq(arr.get(1), Some(2))
+  assert_eq(arr.get(2), Some(1))
+end
+
+@[test]
+def array_join_formats_string
+  var arr = Array.new
+  arr.push("a")
+  arr.push("b")
+  arr.push("c")
+  assert_eq(arr.join(", "), "a, b, c")
+end
+
+@[test]
+def array_join_empty_returns_empty_string
+  var arr: Array[String] = Array.new
+  assert_eq(arr.join("-"), "")
+end
+
+@[test]
+def array_sum_adds_elements
+  var arr = Array.new
+  arr.push(10)
+  arr.push(20)
+  arr.push(30)
+  assert_eq(arr.sum, 60)
+end
+
+@[test]
+def array_sum_empty_returns_zero
+  var arr: Array[Int] = Array.new
+  assert_eq(arr.sum, 0)
+end
+
+@[test]
+def array_default_returns_empty_array
+  var arr: Array[Int] = Array.default
+  assert(arr.is_empty)
+end

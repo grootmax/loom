@@ -1,0 +1,50 @@
+@[test]
+def ordering_is_less_and_is_greater
+  var l = Ordering.Less
+  var e = Ordering.Equal
+  var g = Ordering.Greater
+  assert(l.is_less)
+  assert(not l.is_greater)
+  assert(g.is_greater)
+  assert(not g.is_less)
+  assert(not e.is_less)
+  assert(not e.is_greater)
+end
+
+@[test]
+def ordering_reverse
+  assert_eq(Ordering.Less.reverse, Ordering.Greater)
+  assert_eq(Ordering.Equal.reverse, Ordering.Equal)
+  assert_eq(Ordering.Greater.reverse, Ordering.Less)
+end
+
+@[test]
+def ordering_then_by
+  assert_eq(Ordering.Less.then_by(Ordering.Greater), Ordering.Less)
+  assert_eq(Ordering.Greater.then_by(Ordering.Less), Ordering.Greater)
+  assert_eq(Ordering.Equal.then_by(Ordering.Greater), Ordering.Greater)
+  assert_eq(Ordering.Equal.then_by(Ordering.Less), Ordering.Less)
+end
+
+@[test]
+def ord_compare_integers
+  assert_eq(10.compare(20), Ordering.Less)
+  assert_eq(20.compare(20), Ordering.Equal)
+  assert_eq(30.compare(20), Ordering.Greater)
+end
+
+@[test]
+def eq_and_ne_operators
+  assert(10 == 10)
+  assert(10 != 20)
+  assert("a" == "a")
+  assert("a" != "b")
+end
+
+@[test]
+def from_identity_conversion
+  var x: Int = From.from(42)
+  assert_eq(x, 42)
+  var s: String = From.from("hello")
+  assert_eq(s, "hello")
+end

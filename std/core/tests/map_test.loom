@@ -1,0 +1,184 @@
+@[test]
+def map_new_is_empty
+  var m: Map[String, Int] = Map.new
+  assert_eq(m.length, 0)
+  assert(m.is_empty)
+end
+
+@[test]
+def map_length_and_is_empty
+  var m = Map.new
+  m.insert("a", 1)
+  assert_eq(m.length, 1)
+  assert(not m.is_empty)
+end
+
+@[test]
+def map_insert_new_key_returns_none
+  var m = Map.new
+  assert_eq(m.insert("a", 10), None)
+  assert_eq(m.get("a"), Some(10))
+end
+
+@[test]
+def map_insert_existing_key_returns_old_value
+  var m = Map.new
+  m.insert("a", 10)
+  assert_eq(m.insert("a", 20), Some(10))
+  assert_eq(m.get("a"), Some(20))
+end
+
+@[test]
+def map_get_existing_key
+  var m = Map.new
+  m.insert("x", 100)
+  assert_eq(m.get("x"), Some(100))
+end
+
+@[test]
+def map_get_missing_key_returns_none
+  var m: Map[String, Int] = Map.new
+  assert_eq(m.get("missing"), None)
+end
+
+@[test]
+def map_has_key_returns_true_for_existing
+  var m = Map.new
+  m.insert("k", 1)
+  assert(m.has_key("k"))
+  assert(not m.has_key("other"))
+end
+
+@[test]
+def map_remove_existing_key_returns_value
+  var m = Map.new
+  m.insert("k", 5)
+  assert_eq(m.remove("k"), Some(5))
+  assert_eq(m.length, 0)
+  assert(not m.has_key("k"))
+end
+
+@[test]
+def map_remove_missing_key_returns_none
+  var m: Map[String, Int] = Map.new
+  assert_eq(m.remove("absent"), None)
+end
+
+@[test]
+def map_update_existing_key
+  var m = Map.new
+  m.insert("count", 1)
+  m.update("count", 0) { |v| m.insert("count", v + 1) }
+  assert_eq(m.get("count"), Some(2))
+end
+
+@[test]
+def map_update_missing_key_inserts_default_first
+  var m = Map.new
+  m.update("new_key", 10) { |v| m.insert("new_key", v + 5) }
+  assert_eq(m.get("new_key"), Some(15))
+end
+
+@[test]
+def map_keys_preserves_insertion_order
+  var m = Map.new
+  m.insert("first", 1)
+  m.insert("second", 2)
+  m.insert("third", 3)
+  var ks = m.keys
+  assert_eq(ks.length, 3)
+  assert_eq(ks.get(0), Some("first"))
+  assert_eq(ks.get(1), Some("second"))
+  assert_eq(ks.get(2), Some("third"))
+end
+
+@[test]
+def map_values_preserves_insertion_order
+  var m = Map.new
+  m.insert("a", 10)
+  m.insert("b", 20)
+  var vs = m.values
+  assert_eq(vs.length, 2)
+  assert_eq(vs.get(0), Some(10))
+  assert_eq(vs.get(1), Some(20))
+end
+
+@[test]
+def map_to_array_returns_key_value_pairs
+  var m = Map.new
+  m.insert("a", 1)
+  var arr = m.to_array
+  assert_eq(arr.length, 1)
+  assert_eq(arr.get(0), Some(("a", 1)))
+end
+
+@[test]
+def map_iter_yields_entries
+  var m = Map.new
+  m.insert("k1", 100)
+  var it = m.iter
+  assert_eq(it.next_item, Some(("k1", 100)))
+  assert_eq(it.next_item, None)
+end
+
+@[test]
+def map_default_returns_empty_map
+  var m: Map[String, Int] = Map.default
+  assert(m.is_empty)
+end
+
+@[test]
+def set_new_is_empty
+  var s: Set[Int] = Set.new
+  assert_eq(s.length, 0)
+  assert(s.is_empty)
+end
+
+@[test]
+def set_insert_new_value_returns_true
+  var s = Set.new
+  assert(s.insert(10))
+  assert_eq(s.length, 1)
+  assert(s.contains(10))
+end
+
+@[test]
+def set_insert_duplicate_value_returns_false
+  var s = Set.new
+  s.insert(10)
+  assert(not s.insert(10))
+  assert_eq(s.length, 1)
+end
+
+@[test]
+def set_contains_returns_false_for_missing
+  var s = Set.new
+  s.insert(1)
+  assert(not s.contains(99))
+end
+
+@[test]
+def set_remove_existing_value_returns_true
+  var s = Set.new
+  s.insert(5)
+  assert(s.remove(5))
+  assert(not s.contains(5))
+  assert_eq(s.length, 0)
+end
+
+@[test]
+def set_remove_missing_value_returns_false
+  var s: Set[Int] = Set.new
+  assert(not s.remove(42))
+end
+
+@[test]
+def set_to_array_preserves_insertion_order
+  var s = Set.new
+  s.insert(100)
+  s.insert(200)
+  var arr = s.to_array
+  assert_eq(arr.length, 2)
+  assert_eq(arr.get(0), Some(100))
+  assert_eq(arr.get(1), Some(200))
+end

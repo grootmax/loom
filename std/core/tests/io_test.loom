@@ -1,0 +1,19 @@
+@[test]
+def io_puts_and_print_do_not_crash
+  print("hello ")
+  puts("world")
+  assert(true)
+end
+
+@[test]
+def io_assert_true_passes
+  assert(true)
+  assert(1 + 1 == 2, "math works")
+end
+
+@[test]
+def io_assert_eq_equal_values_passes
+  assert_eq(42, 42)
+  assert_eq("abc", "abc")
+  assert_eq(true, true)
+end

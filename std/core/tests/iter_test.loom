@@ -1,0 +1,123 @@
+@[test]
+def iter_range_exclusive_iteration
+  var arr = (1..4).to_array
+  assert_eq(arr.length, 3)
+  assert_eq(arr.get(0), Some(1))
+  assert_eq(arr.get(1), Some(2))
+  assert_eq(arr.get(2), Some(3))
+end
+
+@[test]
+def iter_range_inclusive_iteration
+  var arr = (1..=3).to_array
+  assert_eq(arr.length, 3)
+  assert_eq(arr.get(0), Some(1))
+  assert_eq(arr.get(1), Some(2))
+  assert_eq(arr.get(2), Some(3))
+end
+
+@[test]
+def iter_range_empty
+  var arr = (5..5).to_array
+  assert_eq(arr.length, 0)
+end
+
+@[test]
+def iter_map_adapter
+  var mapped = (1..4).map { |x| x * 10 }
+  var arr = mapped.to_array
+  assert_eq(arr.get(0), Some(10))
+  assert_eq(arr.get(1), Some(20))
+  assert_eq(arr.get(2), Some(30))
+end
+
+@[test]
+def iter_filter_adapter
+  var evens = (1..6).filter { |x| x % 2 == 0 }
+  var arr = evens.to_array
+  assert_eq(arr.length, 2)
+  assert_eq(arr.get(0), Some(2))
+  assert_eq(arr.get(1), Some(4))
+end
+
+@[test]
+def iter_enumerate_adapter
+  var enum_it = (10..12).enumerate
+  assert_eq(enum_it.next_item, Some((0, 10)))
+  assert_eq(enum_it.next_item, Some((1, 11)))
+  assert_eq(enum_it.next_item, None)
+end
+
+@[test]
+def iter_skip_adapter
+  var skipped = (1..5).skip(2).to_array
+  assert_eq(skipped.length, 2)
+  assert_eq(skipped.get(0), Some(3))
+  assert_eq(skipped.get(1), Some(4))
+end
+
+@[test]
+def iter_skip_more_than_count
+  var skipped = (1..3).skip(10).to_array
+  assert_eq(skipped.length, 0)
+end
+
+@[test]
+def iter_take_adapter
+  var taken = (1..10).take(3).to_array
+  assert_eq(taken.length, 3)
+  assert_eq(taken.get(0), Some(1))
+  assert_eq(taken.get(1), Some(2))
+  assert_eq(taken.get(2), Some(3))
+end
+
+@[test]
+def iter_take_zero_or_negative
+  var taken = (1..5).take(0).to_array
+  assert_eq(taken.length, 0)
+end
+
+@[test]
+def iter_count_method
+  assert_eq((1..6).count, 5)
+end
+
+@[test]
+def iter_sum_method
+  assert_eq((1..5).sum, 10)
+end
+
+@[test]
+def iter_each_method
+  var total = 0
+  (1..4).each { |x| total += x }
+  assert_eq(total, 6)
+end
+
+@[test]
+def iter_find_method_matching
+  assert_eq((1..10).find { |x| x > 5 }, Some(6))
+end
+
+@[test]
+def iter_find_method_none
+  assert_eq((1..5).find { |x| x > 10 }, None)
+end
+
+@[test]
+def iter_last_method_non_empty
+  assert_eq((1..5).last, Some(4))
+end
+
+@[test]
+def iter_last_method_empty
+  assert_eq((5..5).last, None)
+end
+
+@[test]
+def iter_chained_adapters
+  var result = (1..10).filter { |x| x % 2 == 1 }.map { |x| x * 2 }.take(2).to_array
+  assert_eq(result.length, 2)
+  assert_eq(result.get(0), Some(2))
+  assert_eq(result.get(1), Some(6))
+end

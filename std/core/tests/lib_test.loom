@@ -1,0 +1,4 @@
+@[test]
+def lib_core_module_loads
+  assert(true)
+end

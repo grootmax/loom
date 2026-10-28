@@ -4,6 +4,7 @@
 //! pinned toolchain does. See `CONTRIBUTING.md` for when to run each command.
 
 mod conformance;
+mod core_tests;
 mod examples;
 mod gen_unicode;
 mod spec_check;
@@ -15,8 +16,9 @@ const HELP: &str = "\
 cargo xtask <command>
 
 COMMANDS:
-  ci          Run every check CI runs: fmt, clippy, test, doc, conformance, examples, deny
+  ci          Run every check CI runs: fmt, clippy, test, doc, conformance, examples, core-tests, deny
   conformance Run spec/conformance against the implementation
+  core-tests  Run loom test on every file in std/core/tests
   examples    Run the examples whose phase has been reached
   gen-unicode Generate Unicode tables from UCD 17.0.0
   spec-check  Check that grammar rules cite existing spec sections
@@ -28,6 +30,7 @@ fn main() -> ExitCode {
     let result = match command.as_deref() {
         Some("ci") => ci(),
         Some("conformance") => conformance::run(),
+        Some("core-tests") => core_tests::run(),
         Some("examples") => examples::run(),
         Some("gen-unicode") => match std::env::args().nth(2) {
             Some(ucd_dir) => gen_unicode::run(Path::new(&ucd_dir)),
@@ -77,6 +80,7 @@ fn ci() -> Result<(), String> {
     )?;
     conformance::run()?;
     examples::run()?;
+    core_tests::run()?;
     if has_cargo_subcommand("deny") {
         run(&root, "cargo", &["deny", "--locked", "check"], &[])?;
     } else if std::env::var_os("CI").is_some() {

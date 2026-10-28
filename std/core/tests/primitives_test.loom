@@ -1,0 +1,224 @@
+@[test]
+def parse_number_error_properties
+  var res: Result[Int, ParseNumberError] = Int.parse("bad")
+  var err = res.unwrap_err
+  assert_eq(err.text, "bad")
+  assert_eq(err.message, "'bad' is not a valid number")
+  assert_eq(err.to_string, "'bad' is not a valid number")
+end
+
+@[test]
+def int_parse_valid
+  var res: Result[Int, ParseNumberError] = Int.parse("123")
+  assert_eq(res, Ok(123))
+  var res_neg: Result[Int, ParseNumberError] = Int.parse("-456")
+  assert_eq(res_neg, Ok(-456))
+end
+
+@[test]
+def int_parse_invalid
+  var res: Result[Int, ParseNumberError] = Int.parse("not_a_number")
+  assert(res.is_err)
+  assert_eq(res.unwrap_err.text, "not_a_number")
+end
+
+@[test]
+def int_min_and_max_value
+  var min_val: Int = Int.min_value
+  var max_val: Int = Int.max_value
+  assert(min_val < 0)
+  assert(max_val > 0)
+end
+
+@[test]
+def int_abs
+  var x: Int = -10
+  assert_eq(x.abs, 10)
+  var y: Int = 10
+  assert_eq(y.abs, 10)
+end
+
+@[test]
+def int_pow
+  var base: Int = 2
+  var exp: U32 = 10
+  assert_eq(base.pow(exp), 1024)
+end
+
+@[test]
+def int_checked_operations
+  var a: Int = 100
+  var b: Int = 50
+  assert_eq(a.checked_add(b), Some(150))
+  assert_eq(a.checked_sub(b), Some(50))
+  assert_eq(a.checked_mul(b), Some(5000))
+  assert_eq(a.checked_div(b), Some(2))
+end
+
+@[test]
+def int_checked_div_by_zero
+  var a: Int = 10
+  var zero: Int = 0
+  assert_eq(a.checked_div(zero), None)
+end
+
+@[test]
+def int_wrapping_operations
+  var max_val: Int = Int.max_value
+  var wrapped = max_val.wrapping_add(1)
+  assert_eq(wrapped, Int.min_value)
+  var min_val: Int = Int.min_value
+  var wrapped_sub = min_val.wrapping_sub(1)
+  assert_eq(wrapped_sub, Int.max_value)
+  var wmul = 2.wrapping_mul(3)
+  assert_eq(wmul, 6)
+end
+
+@[test]
+def int_saturating_operations
+  var max_val: Int = Int.max_value
+  assert_eq(max_val.saturating_add(10), max_val)
+  var min_val: Int = Int.min_value
+  assert_eq(min_val.saturating_sub(10), min_val)
+end
+
+@[test]
+def int_to_float
+  var x: Int = 42
+  assert_eq(x.to_float, 42.0)
+end
+
+@[test]
+def int_min_max_methods
+  var a: Int = 10
+  var b: Int = 20
+  assert_eq(a.min(b), 10)
+  assert_eq(a.max(b), 20)
+end
+
+@[test]
+def int_sum_and_display
+  var zero: Int = Int.zero
+  assert_eq(zero, 0)
+  assert_eq(zero.add(5), 5)
+  var val: Int = 123
+  assert_eq(val.to_string, "123")
+end
+
+@[test]
+def u8_operations
+  var a: U8 = U8.min_value
+  var b: U8 = U8.max_value
+  assert_eq(a, 0)
+  assert_eq(b, 255)
+  var ten: U8 = 10
+  var twenty: U8 = 20
+  assert_eq(ten.saturating_sub(twenty), 0)
+end
+
+@[test]
+def i8_min_max
+  assert(I8.min_value < 0)
+  assert(I8.max_value > 0)
+end
+
+@[test]
+def float_parse_valid
+  var res: Result[Float, ParseNumberError] = Float.parse("3.14")
+  assert(res.is_ok)
+  assert_eq(res.unwrap, 3.14)
+end
+
+@[test]
+def float_parse_invalid
+  var res: Result[Float, ParseNumberError] = Float.parse("invalid")
+  assert(res.is_err)
+end
+
+@[test]
+def float_math_sqrt_and_abs
+  var x: Float = 16.0
+  assert_eq(x.sqrt, 4.0)
+  var neg: Float = -5.5
+  assert_eq(neg.abs, 5.5)
+end
+
+@[test]
+def float_math_floor_and_ceil
+  var x: Float = 2.7
+  assert_eq(x.floor, 2.0)
+  assert_eq(x.ceil, 3.0)
+end
+
+@[test]
+def float_round_and_truncate
+  var x: Float = 3.14159
+  assert_eq(x.round(2), 3.14)
+  assert_eq(x.truncate, 3)
+end
+
+@[test]
+def float_is_nan
+  var x: Float = 1.0
+  assert(not x.is_nan)
+end
+
+@[test]
+def float_constants
+  assert(F64.PI > 3.14)
+  assert(F64.PI < 3.15)
+  assert(F64.E > 2.71)
+  assert(F64.E < 2.72)
+end
+
+@[test]
+def float_sum_and_display
+  var zero: Float = Float.zero
+  assert_eq(zero, 0.0)
+  assert_eq(1.5.to_string, "1.5")
+end
+
+@[test]
+def bool_display
+  assert_eq(true.to_string, "true")
+  assert_eq(false.to_string, "false")
+end
+
+@[test]
+def char_classifications
+  var a = 'a'
+  var digit = '5'
+  var space = ' '
+  assert(a.is_alphabetic)
+  assert(a.is_alphanumeric)
+  assert(not a.is_digit)
+  assert(not a.is_whitespace)
+  assert(digit.is_digit)
+  assert(digit.is_alphanumeric)
+  assert(space.is_whitespace)
+end
+
+@[test]
+def char_casing
+  var lower = 'a'
+  var upper = 'A'
+  assert(lower.is_lowercase)
+  assert(not lower.is_uppercase)
+  assert(upper.is_uppercase)
+  assert(not upper.is_lowercase)
+  assert_eq(lower.to_uppercase, 'A')
+  assert_eq(upper.to_lowercase, 'a')
+end
+
+@[test]
+def char_code_and_display
+  var c = 'A'
+  assert_eq(c.code, 65)
+  assert_eq(c.to_string, "A")
+end
+
+@[test]
+def unit_display
+  var u = ()
+  assert_eq(u.to_string, "()")
+end
