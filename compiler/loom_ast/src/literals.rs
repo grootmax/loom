@@ -36,7 +36,47 @@ impl Literal {
     /// The literal's value, or `None` if it is malformed.
     #[must_use]
     pub fn value(&self) -> Option<LiteralValue> {
-        let token = self.token()?;
+        token_value(&self.token()?)
+    }
+}
+
+impl crate::LiteralPat {
+    /// The value of the literal in the pattern (without its leading `-`), or `None` if it
+    /// is malformed or a string with interpolation.
+    #[must_use]
+    pub fn value(&self) -> Option<LiteralValue> {
+        use crate::AstNode;
+        for element in self.syntax().children_with_tokens() {
+            match element {
+                loom_syntax::SyntaxElement::Token(t) => {
+                    if let Some(value) = token_value(&t) {
+                        return Some(value);
+                    }
+                }
+                loom_syntax::SyntaxElement::Node(n) => {
+                    if let Some(lit) = Literal::cast(n.clone()) {
+                        return lit.value();
+                    }
+                    if let Some(s) = StringLit::cast(n) {
+                        let mut text = String::new();
+                        for part in s.value_parts() {
+                            match part {
+                                StringValuePart::Text(t) => text.push_str(&t),
+                                StringValuePart::Interpolation(_) => return None,
+                            }
+                        }
+                        return Some(LiteralValue::String(text));
+                    }
+                }
+            }
+        }
+        None
+    }
+}
+
+/// The value of a literal token.
+fn token_value(token: &loom_syntax::SyntaxToken) -> Option<LiteralValue> {
+    {
         let text = token.text();
         match token.kind() {
             SyntaxKind::INT_LIT => int_value(text).map(LiteralValue::Int),

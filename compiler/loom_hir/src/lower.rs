@@ -1251,20 +1251,7 @@ impl BodyLowerer {
     }
 
     fn pat_literal(l: &ast::LiteralPat) -> Option<(Literal, bool)> {
-        let negative = l.is_negative();
-        if let Some(s) = ast_child::<ast::StringLit>(l.syntax()) {
-            let text: String = s
-                .value_parts()
-                .into_iter()
-                .filter_map(|p| match p {
-                    ast::StringValuePart::Text(t) => Some(t),
-                    ast::StringValuePart::Interpolation(_) => None,
-                })
-                .collect();
-            return Some((Literal::String(Rc::from(text.as_str())), negative));
-        }
-        let lit = ast_child::<ast::Literal>(l.syntax())?;
-        let value = match lit.value()? {
+        let value = match l.value()? {
             ast::LiteralValue::Int(v) => Literal::Int(v),
             ast::LiteralValue::Float(v) => Literal::Float(v),
             ast::LiteralValue::Char(c) => Literal::Char(c),
@@ -1272,7 +1259,7 @@ impl BodyLowerer {
             ast::LiteralValue::Bytes(b) => Literal::Bytes(Rc::from(b.as_slice())),
             ast::LiteralValue::Bool(b) => Literal::Bool(b),
         };
-        Some((value, negative))
+        Some((value, l.is_negative()))
     }
 
     #[allow(clippy::too_many_lines, reason = "one arm per pattern kind")]

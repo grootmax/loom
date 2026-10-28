@@ -30,6 +30,7 @@ dependencies = [
  "loom_driver",
  "loom_fmt",
  "loom_hir",
+ "loom_interp",
  "loom_span",
 ]
 
@@ -88,6 +89,13 @@ dependencies = [
 [[package]]
 name = "loom_interp"
 version = "0.0.0"
+dependencies = [
+ "loom_check",
+ "loom_hir",
+ "loom_resolve",
+ "loom_span",
+ "loom_types",
+]
 
 [[package]]
 name = "loom_lexer"

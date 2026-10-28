@@ -93,6 +93,8 @@ fn main() -> ExitCode {
             ExitCode::SUCCESS
         }
         "check" => check(rest),
+        "run" => run(rest, false),
+        "test" => run(rest, true),
         "fmt" => fmt(rest),
         "explain" => explain(rest),
         name => {
@@ -206,6 +208,83 @@ fn check(args: &[String]) -> ExitCode {
     } else {
         ExitCode::SUCCESS
     }
+}
+
+/// `loom run <file> [-- args]` and `loom test <file>`: checks the program, then
+/// interprets `main` or the `@[test]` functions (ADR 0019 §8–§9).
+fn run(args: &[String], tests: bool) -> ExitCode {
+    let split = args.iter().position(|a| a == "--").unwrap_or(args.len());
+    let (options, paths) = split_options(&args[..split]);
+    if let Some(option) = options.first() {
+        return usage_error(&format!("unknown option `{option}`"));
+    }
+    let [path] = paths.as_slice() else {
+        return usage_error(if tests {
+            "test: expected one file"
+        } else {
+            "run: expected one file"
+        });
+    };
+    let path = path.clone();
+    // Deep recursion in the interpreted program needs a large native stack.
+    let worker = std::thread::Builder::new()
+        .stack_size(1 << 30)
+        .spawn(move || run_on_this_thread(&path, tests));
+    match worker.map(std::thread::JoinHandle::join) {
+        Ok(Ok(code)) => ExitCode::from(code),
+        _ => {
+            eprintln!("loom: internal error while running the program");
+            ExitCode::from(USAGE)
+        }
+    }
+}
+
+fn run_on_this_thread(path: &std::path::Path, tests: bool) -> u8 {
+    let mut session = Session::new();
+    let file = match session.load(path) {
+        Ok(file) => file,
+        Err(error) => {
+            eprintln!("loom: {error}");
+            return 1;
+        }
+    };
+    let analysis = session.analyze(file);
+    {
+        let stderr = std::io::stderr();
+        let mut out = stderr.lock();
+        for diagnostic in &analysis.diagnostics {
+            let _ = writeln!(out, "{}", diagnostic.short(session.sources()));
+        }
+    }
+    if analysis.has_errors() {
+        return 1;
+    }
+    let stdout = std::io::stdout();
+    let out = Box::new(std::io::BufWriter::new(stdout.lock()));
+    let interp = loom_interp::Interp::new(&analysis.hir, &analysis.checked, session.sources(), out);
+    if tests {
+        return if interp.run_tests(analysis.root) {
+            0
+        } else {
+            101
+        };
+    }
+    let Some(main) = analysis.main() else {
+        eprintln!(
+            "{}: error[E0211]: a program needs a `main` function",
+            path.display()
+        );
+        return 1;
+    };
+    let outcome = interp.run_main(main);
+    interp.flush();
+    match &outcome {
+        loom_interp::Outcome::Error(message) | loom_interp::Outcome::Panicked(message) => {
+            eprintln!("{message}")
+        }
+        loom_interp::Outcome::Finished => {}
+    }
+    outcome.exit_code()
 }
 
 /// `loom fmt`: formats files in place, or with `--check` reports files that would change.
