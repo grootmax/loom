@@ -1,0 +1,133 @@
+@[test]
+def option_is_some_and_is_none
+  var s: Option[Int] = Some(42)
+  var n: Option[Int] = None
+  assert(s.is_some)
+  assert(not s.is_none)
+  assert(n.is_none)
+  assert(not n.is_some)
+end
+
+@[test]
+def option_unwrap_and_expect_on_some
+  var s: Option[String] = Some("hello")
+  assert_eq(s.unwrap, "hello")
+  var w: Option[String] = Some("world")
+  assert_eq(w.expect("should succeed"), "world")
+end
+
+@[test]
+def option_unwrap_or_on_some_and_none
+  var s: Option[Int] = Some(10)
+  var n: Option[Int] = None
+  assert_eq(s.unwrap_or(0), 10)
+  assert_eq(n.unwrap_or(0), 0)
+end
+
+@[test]
+def option_unwrap_or_else_on_some_and_none
+  var s: Option[Int] = Some(10)
+  var n: Option[Int] = None
+  assert_eq(s.unwrap_or_else { 99 }, 10)
+  assert_eq(n.unwrap_or_else { 99 }, 99)
+end
+
+@[test]
+def option_map_transforms_some_and_preserves_none
+  var s: Option[Int] = Some(5)
+  var n: Option[Int] = None
+  assert_eq(s.map { |x| x * 2 }, Some(10))
+  assert_eq(n.map { |x| x * 2 }, None)
+end
+
+@[test]
+def option_and_then_flattens_result
+  var s: Option[Int] = Some(5)
+  var n: Option[Int] = None
+  assert_eq(s.and_then { |x| if x > 0 then Some(x * 10) else None end }, Some(50))
+  assert_eq(s.and_then { |x| if x < 0 then Some(x) else None end }, None)
+  assert_eq(n.and_then { |x| Some(x) }, None)
+end
+
+@[test]
+def option_ok_or_converts_to_result
+  var s: Option[Int] = Some(42)
+  var n: Option[Int] = None
+  assert_eq(s.ok_or("error"), Ok(42))
+  assert_eq(n.ok_or("missing"), Err("missing"))
+end
+
+@[test]
+def option_filter_matches_predicate
+  var s1: Option[Int] = Some(10)
+  var s2: Option[Int] = Some(5)
+  var n: Option[Int] = None
+  assert_eq(s1.filter { |x| x > 8 }, Some(10))
+  assert_eq(s2.filter { |x| x > 8 }, None)
+  assert_eq(n.filter { |x| x > 8 }, None)
+end
+
+@[test]
+def result_is_ok_and_is_err
+  var ok: Result[Int, String] = Ok(100)
+  var err: Result[Int, String] = Err("failed")
+  assert(ok.is_ok)
+  assert(not ok.is_err)
+  assert(err.is_err)
+  assert(not err.is_ok)
+end
+
+@[test]
+def result_unwrap_and_expect_on_ok
+  var ok: Result[String, String] = Ok("value")
+  assert_eq(ok.unwrap, "value")
+  var ok2: Result[String, String] = Ok("test")
+  assert_eq(ok2.expect("should succeed"), "test")
+end
+
+@[test]
+def result_unwrap_err_on_err
+  var err: Result[Int, String] = Err("oops")
+  assert_eq(err.unwrap_err, "oops")
+end
+
+@[test]
+def result_unwrap_or_on_ok_and_err
+  var ok: Result[Int, String] = Ok(10)
+  var err: Result[Int, String] = Err("bad")
+  assert_eq(ok.unwrap_or(0), 10)
+  assert_eq(err.unwrap_or(0), 0)
+end
+
+@[test]
+def result_map_transforms_ok_and_preserves_err
+  var ok: Result[Int, String] = Ok(5)
+  var err: Result[Int, String] = Err("fail")
+  assert_eq(ok.map { |x| x + 1 }, Ok(6))
+  assert_eq(err.map { |x| x + 1 }, Err("fail"))
+end
+
+@[test]
+def result_map_err_transforms_err_and_preserves_ok
+  var ok: Result[Int, String] = Ok(5)
+  var err: Result[Int, String] = Err("fail")
+  assert_eq(ok.map_err { |e| "fatal: #{e}" }, Ok(5))
+  assert_eq(err.map_err { |e| "fatal: #{e}" }, Err("fatal: fail"))
+end
+
+@[test]
+def result_and_then_flattens_result
+  var ok: Result[Int, String] = Ok(10)
+  var err: Result[Int, String] = Err("initial error")
+  assert_eq(ok.and_then { |x| if x > 0 then Ok(x * 2) else Err("negative") end }, Ok(20))
+  assert_eq(ok.and_then { |x| if x > 100 then Ok(x) else Err("too small") end }, Err("too small"))
+  assert_eq(err.and_then { |x| Ok(x) }, Err("initial error"))
+end
+
+@[test]
+def result_ok_converts_to_option
+  var ok: Result[Int, String] = Ok(42)
+  var err: Result[Int, String] = Err("err")
+  assert_eq(ok.ok, Some(42))
+  assert_eq(err.ok, None)
+end
