@@ -22,6 +22,7 @@ dependencies = [
  "loom_diagnostics",
  "loom_driver",
  "loom_fmt",
+ "loom_parser",
  "loom_span",
 ]
 
