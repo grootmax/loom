@@ -1,0 +1,14 @@
+# spec: §8.1 rule 1
+struct Holder
+  name: String
+
+  def get_ref -> ref String = self.name
+end
+
+def main
+  h = Holder(name: "shared")
+  r1 = h.get_ref
+  r2 = r1
+  puts r1
+  puts r2
+end

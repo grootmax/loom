@@ -1,0 +1,9 @@
+# spec: §8.1 rule 2
+def make_string -> String
+  s = "created"
+  s
+end
+
+def main
+  puts make_string()
+end

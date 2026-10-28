@@ -1,0 +1,7 @@
+# spec: §8.1 rule 2
+def main
+  items = ["a", "b", "c"]
+  for item in items
+    puts item
+  end
+end

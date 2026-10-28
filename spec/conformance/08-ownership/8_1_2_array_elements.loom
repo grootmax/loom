@@ -1,0 +1,7 @@
+# spec: §8.1 rule 2
+def main
+  a = "one"
+  b = "two"
+  arr = [a, b]
+  puts arr.length
+end

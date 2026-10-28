@@ -1,0 +1,7 @@
+# spec: §8.3 rule 4
+def main
+  var list = ["a", "b"]
+  for item in list
+    list.push("c")
+  end
+end

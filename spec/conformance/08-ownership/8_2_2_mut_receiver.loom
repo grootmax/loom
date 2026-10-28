@@ -1,0 +1,14 @@
+# spec: §8.2 rule 2
+struct Counter
+  count: Int
+
+  def mut increment
+    @count += 1
+  end
+end
+
+def main
+  var c = Counter(count: 0)
+  c.increment
+  puts c.count
+end

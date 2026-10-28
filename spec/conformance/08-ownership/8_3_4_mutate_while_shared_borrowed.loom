@@ -1,0 +1,19 @@
+# spec: §8.3 rule 4
+struct Holder
+  name: String
+
+  def get_ref -> ref String
+    self.name
+  end
+end
+
+def modify(mut h: Holder)
+  h.name = "new"
+end
+
+def main
+  var h = Holder(name: "old")
+  r = h.get_ref
+  modify(h)
+  puts r
+end

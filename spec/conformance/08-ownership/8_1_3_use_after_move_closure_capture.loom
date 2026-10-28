@@ -1,0 +1,6 @@
+# spec: §8.1 rule 3
+def main
+  s = "hello"
+  c = { || puts s }
+  puts s
+end

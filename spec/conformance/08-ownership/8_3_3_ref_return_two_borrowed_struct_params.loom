@@ -1,0 +1,8 @@
+# spec: §8.3 rule 3
+struct Point
+  x: Int
+end
+
+def select_point(p1: Point, p2: Point) -> ref Point
+  p1
+end

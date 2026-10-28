@@ -1,0 +1,13 @@
+# spec: §8.1 rule 2
+struct Pair
+  first: String
+  second: String
+end
+
+def main
+  a = "first"
+  b = "second"
+  p = Pair(first: a, second: b)
+  puts p.first
+  puts p.second
+end

@@ -1,0 +1,19 @@
+# spec: §8.3 rule 4
+struct Counter
+  val: Int
+
+  def val_ref -> ref Int
+    self.val
+  end
+
+  def mut inc
+    @val += 1
+  end
+end
+
+def main
+  var c = Counter(val: 0)
+  r = c.val_ref
+  c.inc
+  puts r
+end

@@ -1,0 +1,18 @@
+# spec: §8.3 rule 6
+def inspect_opt(opt: Option[String])
+  case opt
+  in Some(s)
+    puts s
+  in None
+  end
+end
+
+def main
+  opt = Some("hello")
+  inspect_opt(opt)
+  case opt
+  in Some(s)
+    puts s
+  in None
+  end
+end

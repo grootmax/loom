@@ -1,0 +1,10 @@
+# spec: §8.2 rule 1
+def append_exclamation(mut list: Array[String])
+  list.push("!")
+end
+
+def main
+  var words = ["hello"]
+  append_exclamation(words)
+  puts words.length
+end

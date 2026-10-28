@@ -1,0 +1,12 @@
+# spec: §8.1 rule 2
+struct Consumer
+  data: String
+
+  def own finish -> String = @data
+end
+
+def main
+  c = Consumer(data: "done")
+  res = c.finish
+  puts res
+end

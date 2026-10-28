@@ -1,0 +1,9 @@
+# spec: §8.1 rule 3
+def consume(own s: String)
+end
+
+def main
+  s = "hello"
+  consume(s)
+  puts s
+end
