@@ -4,7 +4,7 @@ struct AppErr
 end
 
 impl Error for AppErr
-  def message -> String = self.msg
+  def message -> String = self.msg.clone
 end
 
 def main -> Result[Unit, AppErr]

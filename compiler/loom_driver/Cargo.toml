@@ -19,6 +19,7 @@ loom_hir = { path = "../loom_hir" }
 loom_resolve = { path = "../loom_resolve" }
 loom_types = { path = "../loom_types" }
 loom_check = { path = "../loom_check" }
+loom_mir = { path = "../loom_mir" }
 
 [lints]
 workspace = true

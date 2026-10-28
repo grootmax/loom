@@ -12,7 +12,7 @@ struct Person
 end
 
 impl Named for Person
-  def name -> String = self.n
+  def name -> String = self.n.clone
 end
 
 impl Greet for Person

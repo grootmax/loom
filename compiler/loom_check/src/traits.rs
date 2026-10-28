@@ -200,6 +200,15 @@ impl Solver<'_> {
                 // A projection of a concrete type may still have impls; a parameter only
                 // through blanket impls.
             }
+            // A borrow is Copy and Clone; every other trait is the borrowed type's
+            // (spec §8.3 rule 2).
+            TyKind::Ref { inner, .. } => {
+                return if matches!(lang.as_str(), "Copy" | "Clone") {
+                    Ok(Selection::Builtin)
+                } else {
+                    self.select_at(*inner, trait_ref, env, depth + 1)
+                };
+            }
             TyKind::Dyn(dyn_trait, args) if self.trait_implies(*dyn_trait, args, ty, trait_ref) => {
                 return Ok(Selection::Dyn);
             }

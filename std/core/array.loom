@@ -5,7 +5,7 @@ use core.iter.Enumerated
 extern "intrinsic"
   def array_new[T] -> Array[T]
   def array_length[T](array: Array[T]) -> Int
-  def array_get[T](array: Array[T], index: Int) -> T
+  def array_get[T](array: Array[T], index: Int) -> ref T
   def array_set[T](mut array: Array[T], index: Int, own value: T)
   def array_push[T](mut array: Array[T], own value: T)
   def array_pop[T](mut array: Array[T]) -> Option[T]
@@ -192,7 +192,10 @@ pub struct Array[T]
       end
       index += 1
     end
-    best.map { |i| array_get(self, i) }
+    case best
+    in Some(i) then Some(array_get(self, i))
+    in None then None
+    end
   end
 
   ## The smallest element (the first of equal ones).
@@ -209,7 +212,10 @@ pub struct Array[T]
       end
       index += 1
     end
-    best.map { |i| array_get(self, i) }
+    case best
+    in Some(i) then Some(array_get(self, i))
+    in None then None
+    end
   end
 
   ## The element with the largest `key` (the last of equal ones).
@@ -226,7 +232,10 @@ pub struct Array[T]
       end
       index += 1
     end
-    best.map { |i| array_get(self, i) }
+    case best
+    in Some(i) then Some(array_get(self, i))
+    in None then None
+    end
   end
 
   ## The element with the smallest `key` (the first of equal ones).
@@ -243,7 +252,10 @@ pub struct Array[T]
       end
       index += 1
     end
-    best.map { |i| array_get(self, i) }
+    case best
+    in Some(i) then Some(array_get(self, i))
+    in None then None
+    end
   end
 
   ## Sorts the elements in place in increasing order. The sort is stable.
@@ -294,15 +306,16 @@ impl[T] Iterable for Array[T]
 end
 
 ## An iterator over the elements of an array.
+@[view]
 pub struct ArrayIter[T]
-  array: Array[T]
+  array: ref Array[T]
   index: Int
 end
 
 impl[T] Iterator for ArrayIter[T]
-  type Item = T
+  type Item = ref T
 
-  def mut next_item -> Option[T]
+  def mut next_item -> Option[ref T]
     if @index < array_length(@array)
       value = array_get(@array, @index)
       @index += 1

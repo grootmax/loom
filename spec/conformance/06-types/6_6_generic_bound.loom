@@ -1,5 +1,5 @@
 # spec: §6.6
-def biggest[T: Ord](a: T, b: T) -> T = if a > b then a else b end
+def biggest[T: Ord + Clone](a: T, b: T) -> T = if a > b then a.clone else b.clone end
 
 def main
   puts biggest(3, 9)

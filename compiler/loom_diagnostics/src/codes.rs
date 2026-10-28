@@ -146,6 +146,13 @@ codes! {
     DUPLICATE_PATTERN_BINDING = "E0403", "Name bound twice in one pattern";
     PATTERN_TYPE_MISMATCH = "E0404", "Pattern does not fit the matched type";
     INVALID_RANGE_PATTERN = "E0405", "Invalid range pattern";
+
+    // Ownership errors (spec Appendix C.6).
+    USE_AFTER_MOVE = "E0500", "Use of a moved value";
+    MOVE_OUT_OF_BORROW = "E0501", "Move out of a borrowed place";
+    BORROW_CONFLICT = "E0502", "Conflicting borrow, or use of a borrowed place";
+    BORROW_ESCAPES = "E0503", "Borrow escapes: stored, moved to `own`, or captured by an escaping closure";
+    REF_RETURN_WITHOUT_SOURCE = "E0504", "`ref` return type without an elided source";
 }
 
 /// Outer doc comment not followed by an item, field, variant or method (spec §2.4.2).

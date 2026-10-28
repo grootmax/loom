@@ -32,3 +32,4 @@ met us learns *why* Loom is the way it is ([ADR 0001](0001-record-decisions-as-a
 | [0017](0017-rust-as-the-base.md) | Rust as the base: matches and deliberate differences | Accepted (living document) |
 | [0018](0018-front-end-design.md) | Front-end design (Phase 1) | Accepted (provisional) |
 | [0019](0019-semantic-analysis-and-interpreter.md) | Semantic analysis and the reference interpreter (Phase 2) | Accepted (provisional) |
+| [0020](0020-mir-and-ownership-checking.md) | MIR and ownership checking (Phase 3) | Accepted (provisional) |

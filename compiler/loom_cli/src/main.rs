@@ -160,14 +160,17 @@ fn print_diagnostics(session: &Session) {
 
 /// `loom check`: reports every error the implemented phases can find. Each file is
 /// checked as the root of its own program.
+#[allow(clippy::similar_names, reason = "names mirror the MIR terms")]
 fn check(args: &[String]) -> ExitCode {
     let (options, paths) = split_options(args);
     let mut dump_cst = false;
     let mut dump_hir = false;
+    let mut dump_mir = false;
     for option in options {
         match option {
             "--dump=cst" => dump_cst = true,
             "--dump=hir" => dump_hir = true,
+            "--dump=mir" => dump_mir = true,
             "--message-format=short" => {}
             other => return usage_error(&format!("check: unknown option `{other}`")),
         }
@@ -196,6 +199,21 @@ fn check(args: &[String]) -> ExitCode {
                 if analysis.hir.package_of(body.owner) == loom_hir::Package::Main {
                     println!("# {}", analysis.hir.path_string(body.owner));
                     print!("{}", loom_hir::dump_body(body));
+                }
+            }
+        }
+        if dump_mir && let Some(mir) = &analysis.mir {
+            for body in &mir.bodies {
+                if analysis.hir.package_of(body.owner) == loom_hir::Package::Main {
+                    print!(
+                        "{}",
+                        loom_mir::dump_body(
+                            &analysis.hir,
+                            &analysis.checked.items,
+                            &analysis.checked.interner,
+                            body
+                        )
+                    );
                 }
             }
         }

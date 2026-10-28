@@ -8,7 +8,7 @@ struct Person
 end
 
 impl Printable for Person
-  def print_me -> String = self.name
+  def print_me -> String = self.name.clone
 end
 
 def show(p: dyn Printable)

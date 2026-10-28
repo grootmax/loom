@@ -4,7 +4,7 @@ struct CustomErr
 end
 
 impl Error for CustomErr
-  def message -> String = self.msg
+  def message -> String = self.msg.clone
 end
 
 def main

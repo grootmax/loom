@@ -13,11 +13,38 @@ impl InferCtxt<'_> {
     #[allow(clippy::too_many_lines, reason = "one case per language construct")]
     #[allow(clippy::similar_names, reason = "names mirror the spec terms")]
     pub(super) fn check_pat(&mut self, pat: PatId, expected: Ty) {
-        self.pat_tys[pat.index()] = Some(expected);
         let interner = self.cx.interner;
+        // Matching through a borrow: the pattern sees the borrowed value, and its
+        // bindings borrow parts of it (spec §8.3 rule 6).
+        if !matches!(
+            self.body.pat(pat),
+            Pat::Bind(_) | Pat::Wild | Pat::Missing | Pat::Rest
+        ) {
+            let resolved = self.structurally(expected);
+            if let TyKind::Ref { mutable, inner } = interner.kind(resolved) {
+                let saved = self.binding_ref.replace(mutable);
+                self.check_pat(pat, inner);
+                self.binding_ref = saved;
+                return;
+            }
+        }
+        self.pat_tys[pat.index()] = Some(expected);
         match self.body.pat(pat) {
             Pat::Missing | Pat::Wild | Pat::Rest => {}
-            &Pat::Bind(binding) => self.declare_binding(binding, expected),
+            &Pat::Bind(binding) => {
+                let already_ref = matches!(
+                    interner.kind(self.structurally(expected)),
+                    TyKind::Ref { .. }
+                );
+                let ty = match self.binding_ref {
+                    Some(mutable) if !already_ref => interner.intern(TyKind::Ref {
+                        mutable,
+                        inner: expected,
+                    }),
+                    _ => expected,
+                };
+                self.declare_binding(binding, ty);
+            }
             Pat::Literal { lit, negative } => {
                 let _ = negative;
                 let ty = self.pat_literal_ty(lit);

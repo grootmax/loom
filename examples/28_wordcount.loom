@@ -21,7 +21,7 @@ def main
     """
   counts = word_counts(text)
   var entries = counts.to_array
-  entries.sort_by { |(word, count)| (-count, word) }
+  entries.sort_by { |(word, count)| (-count, word.clone) }
   for (word, count) in entries.take(3)
     puts "#{word}: #{count}"
   end

@@ -124,6 +124,17 @@ pub enum ExprInfo {
     Closure(FnKind),
 }
 
+/// An implicit conversion applied to an expression's value (spec §6.5, §8.3 rule 2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Coercion {
+    /// A `ref T` used as a `T`.
+    Deref,
+    /// A place used where a `ref T` is expected: it is borrowed.
+    Autoref,
+    /// A value converted to `dyn Trait` (the target type).
+    Unsize(Ty),
+}
+
 /// What a path pattern refers to.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum PatInfo {
@@ -148,6 +159,8 @@ pub struct TypedBody {
     pub exprs: HashMap<ExprId, ExprInfo>,
     /// Meanings of path patterns.
     pub pats: HashMap<PatId, PatInfo>,
+    /// Implicit conversions.
+    pub coercions: HashMap<ExprId, Coercion>,
     /// For each `x = e` that is an assignment: the binding it assigns.
     pub assignments: HashMap<BindingId, BindingId>,
     /// Or-pattern binding aliases.

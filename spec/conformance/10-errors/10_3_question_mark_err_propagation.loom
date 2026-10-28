@@ -1,5 +1,5 @@
 # spec: §10.3 rule 1
-def propagate_err(res: Result[Int, String]) -> Result[Int, String]
+def propagate_err(own res: Result[Int, String]) -> Result[Int, String]
   val = res?
   Ok(val * 2)
 end

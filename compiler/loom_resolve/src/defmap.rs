@@ -90,6 +90,7 @@ const KNOWN_ATTRIBUTES: &[&str] = &[
     "stable",
     "unstable",
     "lang",
+    "view",
 ];
 
 impl DefMap {
@@ -103,7 +104,8 @@ impl DefMap {
             }
             for attr in &data.attrs {
                 let known = KNOWN_ATTRIBUTES.contains(&attr.name.as_str());
-                let core_only = attr.name.as_str() == "lang" && data.package != Package::Core;
+                let core_only =
+                    matches!(attr.name.as_str(), "lang" | "view") && data.package != Package::Core;
                 if !known || core_only {
                     diagnostics.push(
                         Diagnostic::error(

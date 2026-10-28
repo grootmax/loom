@@ -344,7 +344,7 @@ impl InferCtxt<'_> {
         }
         // A value of a callable type.
         let callee_ty = self.infer(callee);
-        let callee_ty = self.structurally(callee_ty);
+        let callee_ty = self.deref(callee_ty);
         match interner.kind(callee_ty) {
             TyKind::Callable { params, ret, .. } => {
                 let params: Vec<(Mode, Name, Ty, bool)> = params
@@ -1084,7 +1084,7 @@ impl InferCtxt<'_> {
         let interner = self.cx.interner;
         let _ = expected;
         let span = Span::new(self.body.file, name_range);
-        let receiver_ty = self.structurally(receiver_ty);
+        let receiver_ty = self.deref(receiver_ty);
         let receiver_ty = self.settle_numeric_receiver(receiver_ty, name, span);
         match interner.kind(receiver_ty) {
             TyKind::Error => {
@@ -1186,7 +1186,7 @@ impl InferCtxt<'_> {
     ) -> Ty {
         let interner = self.cx.interner;
         let span = Span::new(self.body.file, name_range);
-        let base_ty = self.structurally(base_ty);
+        let base_ty = self.deref(base_ty);
         let base_ty = self.settle_numeric_receiver(base_ty, name, span);
         match interner.kind(base_ty) {
             TyKind::Error => return interner.error(),

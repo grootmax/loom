@@ -548,9 +548,12 @@ an error.
 
 ### 5.6 Reference types (`ref T`)
 
-`ref T` and `mut ref T` may appear only in a function's return type, including inside a
-generic argument of it (`Option[ref V]`). They denote a borrow of a value reachable from
-the function's borrowed parameters (§8.3). For type checking, `ref T` behaves as `T`.
+`ref T` and `mut ref T` may be written only in a function's return type, including inside
+a generic argument of it (`Option[ref V]`), and in the associated type definitions of an
+`impl` (`type Item = ref T`); the core library also uses them in the fields of view types
+(§8.3 rule 5). They denote a borrow of the function's elided
+source (§8.3 rule 3). Generic parameters may be instantiated with them, and the uses and
+conversions of their values are given in §8.3 rule 2.
 
 ## 6. Type checking and inference
 
@@ -795,15 +798,92 @@ repeated key keeps the last value at the position of the first.
 
 ## 8. Ownership and borrowing
 
-*TODO(Phase 3):* normative rules. Summary of
-[ADR 0005](../docs/adr/0005-ownership-and-borrowing.md):
+See [ADR 0005](../docs/adr/0005-ownership-and-borrowing.md) and
+[ADR 0020](../docs/adr/0020-mir-and-ownership-checking.md). Every value has exactly one
+owner. These rules are checked at compile time; a program that violates one is rejected.
 
 ### 8.1 Ownership, moves, `Copy` and `Drop`
+
+1. **Copy types** are the primitive types except `String` and `Bytes`, tuples of Copy
+   types, structs and enums that derive `Copy`, and `ref T`. Using a value of a Copy type
+   copies it. Every other value is *moved* when it is used in an owning position.
+2. **Owning positions** are: the initializer of a binding; the value of an assignment;
+   an argument or receiver passed to an `own` parameter; a returned value (including
+   the final expression of a body); a field or element of a constructed struct, variant,
+   tuple, array or map; the iterated value of a `for` loop; and a binding captured by an
+   escaping closure (§8.4). Arguments to borrow-mode and `mut` parameters, receivers of
+   borrow and `mut` methods, operands of operators, interpolated values, field reads and
+   `case` scrutinees are not owning positions.
+3. It is an error to use a place after it has been moved on any path that reaches the
+   use. Moving a field moves part of a value; the rest of the value stays usable, but
+   the value as a whole does not. Assigning a new value to a `var` binding that was
+   moved makes it usable again.
+4. It is an error to move a non-Copy value out of a borrowed place: a borrowed parameter
+   or `self` and its fields, a binding that borrows (§8.3), or an element reached by
+   indexing.
+
 ### 8.2 Parameter modes: borrow (default), `mut`, `own`
+
+1. A borrow-mode parameter gives the callee read-only access to the argument for the
+   duration of the call. The argument is not moved. A `mut` parameter gives exclusive
+   read-write access for the call; its argument must be a mutable place (§4.2 rule 1).
+   An `own` parameter takes ownership: the argument is moved (or copied).
+2. The same modes apply to method receivers: `def m` borrows `self`, `def mut m` borrows
+   it mutably, `def own m` consumes it.
+3. Within one call, an argument passed in `mut` mode must not overlap any other argument
+   of the call.
+
 ### 8.3 Second-class references, elided borrow returns, and view types
+
+1. A type is **borrowed** if it contains `ref T`, `mut ref T` or a view type (rule 5).
+   Values of borrowed types may be held in local bindings, passed as arguments, returned
+   under rule 3, and placed in values whose type is itself borrowed. They must not be
+   stored in a field or element of a value whose type is not borrowed, passed to an
+   `own` parameter of a type that is not borrowed, or captured by an escaping closure.
+2. A value of type `ref T` may be used where a borrowed `T` suffices: as a receiver or
+   operand, in a field read, interpolation or pattern, or as an argument to a borrow-mode
+   or `mut` parameter of type `T`. Where an owned `T` is needed it converts to `T` only if
+   `T` is Copy.
+3. **Borrow returns.** A function whose return type contains `ref` returns a borrow of
+   its *elided source*: `self` for a method; otherwise its only parameter that is in
+   borrow or `mut` mode and not of a Copy type. It is an error to declare such a return
+   type for a function that has no elided source. The result of a call borrows from the
+   place passed as the elided source and from every argument of a borrowed type.
+4. **Loans.** A borrow of a place lasts as long as some value that carries it may still
+   be used. While a shared borrow of a place lasts, the place and the places it contains
+   or is contained in may be read but not assigned, moved or borrowed mutably. While a
+   mutable borrow lasts, they may not be used at all except through that borrow.
+5. **View types** are core-library types that hold a borrow, such as the iterators of
+   `Array`, `Map` and `String`. Every value of a view type is borrowed, and a method
+   returning one is a borrow return under rule 3.
+6. A `case` on a place binds borrows of its parts, except that a non-Copy binding used
+   in an owning position within its arm moves that part out of the place (which must
+   then not be borrowed, rule 8.1.4). A `case` on any other value binds by move.
+
 ### 8.4 Closure captures and escaping
+
+1. A closure literal in an owning position (§8.1 rule 2) is **escaping**: it captures
+   the bindings it uses by move, or by copy for Copy types, and assignments to a capture
+   change the closure's own copy.
+2. Any other closure captures by reference. Its value borrows every binding it uses,
+   mutably those it assigns or passes in `mut` mode, and is a value of a borrowed type.
+3. It is an error to move a closure that captures by reference to an owning position.
+
 ### 8.5 Shared ownership (`Shared[T]`)
+
+*TODO(Phase 4):* `Shared[T]`, `Weak[T]` and `Mutex[T]` with the concurrency runtime.
+
 ### 8.6 Drop order
+
+1. A value is **dropped** when its owner stops existing without the value having been
+   moved: a binding at the end of its block, in reverse order of declaration; a
+   temporary at the end of the statement that created it; the old value of a place when
+   a new value is assigned to it; and the parameters of a function when it returns, in
+   reverse order.
+2. Dropping a value of a type that implements the core trait `Drop` first calls its
+   `drop` method, then drops its fields in declaration order (or the payload of its
+   variant). Arrays, maps and sets drop their elements in order.
+3. A panic drops the values owned by every function it unwinds, innermost first.
 
 ## 9. Patterns
 
@@ -1010,6 +1090,7 @@ See [`grammar.ebnf`](grammar.ebnf).
 | 2026-10-23 | Initial draft (Phase 0): lexical structure complete; other chapters outlined. |
 | 2026-10-28 | Phase 1 (ADR 0018): §2.3 rule 1(a) ignores trivia; `LINE_BREAK` trivia; disambiguation rules in §4.1, §4.4, §7.3, §7.9, §11.3; Appendix C diagnostic codes. |
 | 2026-10-28 | Phase 2 (ADR 0019): normative text for §3–§7, §9, §10, §12.1–§12.2, §12.4 and §14; capitalization classifies identifier patterns (§9.1); `ref T` is checked as `T` until Phase 3 (§5.6); Display rules for primitives (§7.12). |
+| 2026-10-29 | Phase 3 (ADR 0020): normative §8 (moves, modes, second-class borrows, elided returns, view types, closure captures, drop order); `ref T` is a type (§5.6). |
 
 ## Appendix C. Diagnostic codes
 
@@ -1149,3 +1230,13 @@ E0282 keeps the number rustc uses for the same error.
 
 E0398 marks a construct the grammar accepts but this phase of the implementation does not
 implement yet (`select`, `unsafe`, `extern "C"`); it disappears as the phases land.
+
+### C.6 Ownership errors (§8)
+
+| Code | Error | At | Rule |
+|---|---|---|---|
+| E0500 | Use of a moved value | the use | §8.1 |
+| E0501 | Move out of a borrowed place | the moved place | §8.1, §8.3 |
+| E0502 | Conflicting borrow, or use of a borrowed place | the conflicting use | §8.2, §8.3 |
+| E0503 | Borrow escapes: stored, moved to `own`, or captured by an escaping closure | the escaping value | §8.3, §8.4 |
+| E0504 | `ref` return type without an elided source | the return type | §8.3 |

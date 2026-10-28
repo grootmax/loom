@@ -40,6 +40,7 @@ impl InferCtxt<'_> {
                 for part in parts {
                     if let InterpolationPart::Expr(e) = part {
                         let ty = self.infer(*e);
+                        let ty = self.deref(ty);
                         self.require(ty, "Display", Vec::new(), self.span(*e));
                     }
                 }
@@ -66,7 +67,7 @@ impl InferCtxt<'_> {
             }
             &Expr::TupleField { base, index } => {
                 let base_ty = self.infer(base);
-                let base_ty = self.structurally(base_ty);
+                let base_ty = self.deref(base_ty);
                 match interner.kind(base_ty) {
                     TyKind::Tuple(elements) if (index as usize) < elements.len() => {
                         elements[index as usize]
@@ -128,6 +129,7 @@ impl InferCtxt<'_> {
             &Expr::Binary { op, lhs, rhs, .. } => self.binary(id, op, lhs, rhs, expected),
             &Expr::Range { start, end, .. } => {
                 let ty = self.infer(start);
+                let ty = self.deref(ty);
                 self.check(end, ty);
                 self.operator_checks.push(OperatorCheck {
                     expr: id,
@@ -545,7 +547,7 @@ impl InferCtxt<'_> {
             }
             Expr::Index { base, indices, .. } => {
                 let base_ty = self.infer(*base);
-                let base_resolved = self.structurally(base_ty);
+                let base_resolved = self.deref(base_ty);
                 // `map[key] = value` inserts (spec §7.4 rule 5).
                 let ty = if let (Some(map), TyKind::Adt(def, args)) =
                     (self.lang("Map"), interner.kind(base_resolved))
@@ -581,7 +583,7 @@ impl InferCtxt<'_> {
 
     fn index(&mut self, id: ExprId, base_ty: Ty, indices: &[ExprId]) -> Ty {
         let interner = self.cx.interner;
-        let base_ty = self.structurally(base_ty);
+        let base_ty = self.deref(base_ty);
         let kind = interner.kind(base_ty);
         let Some(&index) = indices.first() else {
             return interner.error();
@@ -643,6 +645,7 @@ impl InferCtxt<'_> {
             }
             UnaryOp::BitNot => {
                 let ty = self.expr(operand, expected);
+                let ty = self.deref(ty);
                 self.operator_checks.push(OperatorCheck {
                     expr: id,
                     ty,
@@ -671,6 +674,7 @@ impl InferCtxt<'_> {
             }
             _ if op.is_equality() || op.is_ordering() => {
                 let ty = self.infer(lhs);
+                let ty = self.deref(ty);
                 self.check(rhs, ty);
                 let trait_name = if op.is_equality() { "Eq" } else { "Ord" };
                 self.require(ty, trait_name, Vec::new(), self.span(id));
@@ -687,6 +691,7 @@ impl InferCtxt<'_> {
                     )
                 });
                 let ty = self.expr(lhs, hint);
+                let ty = self.deref(ty);
                 self.check(rhs, ty);
                 let allowed = if op.is_bitwise() {
                     Allowed::IntegerOrBool
@@ -709,7 +714,7 @@ impl InferCtxt<'_> {
     fn try_expr(&mut self, id: ExprId, inner: ExprId) -> Ty {
         let interner = self.cx.interner;
         let ty = self.infer(inner);
-        let ty = self.structurally(ty);
+        let ty = self.deref(ty);
         let ret = self
             .return_tys
             .last()
@@ -797,7 +802,7 @@ impl InferCtxt<'_> {
     fn for_item(&mut self, id: ExprId, iter: ExprId) -> Ty {
         let interner = self.cx.interner;
         let ty = self.infer(iter);
-        let ty = self.structurally(ty);
+        let ty = self.deref(ty);
         if matches!(interner.kind(ty), TyKind::Error) {
             return interner.error();
         }
