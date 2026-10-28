@@ -28,6 +28,7 @@ use std::collections::{HashMap, HashSet};
 #[allow(clippy::similar_names, reason = "names mirror the MIR terms")]
 pub fn check_program(hir: &Hir, checked: &Checked, mir: &crate::Mir) -> Vec<Diagnostic> {
     let mut diagnostics = Vec::new();
+    check_signatures(hir, checked, &mut diagnostics);
     for body in &mir.bodies {
         let generics = checked.items.generics_of(body.owner);
         let mut table = InferTable::new();
@@ -52,6 +53,71 @@ pub fn check_program(hir: &Hir, checked: &Checked, mir: &crate::Mir) -> Vec<Diag
     diagnostics.sort_by_key(|d| (d.primary.span.file, d.primary.span.range.start()));
     diagnostics.dedup_by_key(|d| (d.primary.span, d.id));
     diagnostics
+}
+
+/// A function whose return type contains `ref` needs an elided source: a receiver, or
+/// exactly one borrow-mode or `mut` parameter of a non-Copy type (spec §8.3 rule 3).
+fn check_signatures(hir: &Hir, checked: &Checked, diagnostics: &mut Vec<Diagnostic>) {
+    let interner = &checked.interner;
+    for (def, data) in hir.iter_defs() {
+        let DefKind::Fn(f) = &data.kind else { continue };
+        if f.extern_abi.is_some() {
+            continue;
+        }
+        let Some(sig) = checked.items.fns.get(&def) else {
+            continue;
+        };
+        if !interner.any(sig.ret, &|k| matches!(k, TyKind::Ref { .. })) || sig.receiver.is_some() {
+            continue;
+        }
+        let generics = checked.items.generics_of(def);
+        let mut table = InferTable::new();
+        let mut solver = Solver {
+            hir,
+            items: &checked.items,
+            interner,
+            table: &mut table,
+        };
+        let env = solver.elaborate(&generics.predicates);
+        let copy = checked.items.lang.get("Copy");
+        let sources = sig
+            .params
+            .iter()
+            .filter(|p| p.0 != loom_hir::Mode::Own)
+            .filter(|p| match copy {
+                Some(copy) => solver
+                    .select(
+                        p.2,
+                        &TraitRef {
+                            trait_: copy,
+                            args: Vec::new(),
+                        },
+                        &env,
+                    )
+                    .is_err(),
+                None => true,
+            })
+            .count();
+        if sources != 1 {
+            let span = f
+                .ret
+                .as_ref()
+                .map_or(data.span, |r| Span::new(data.span.file, r.range));
+            diagnostics.push(
+                Diagnostic::error(
+                    codes::REF_RETURN_WITHOUT_SOURCE,
+                    span,
+                    if sources == 0 {
+                        "this function returns a borrow, but has no borrowed parameter to borrow from".to_owned()
+                    } else {
+                        format!("this function returns a borrow, but {sources} parameters could be its source")
+                    },
+                )
+                .with_label("a borrow can only be returned from `self` or the single borrowed parameter")
+                .with_help("return an owned value (for example with `.clone`), or an index or key"),
+            );
+        }
+    }
 }
 
 /// A program point: a block and a statement index (the terminator is `statements.len()`).
@@ -367,7 +433,8 @@ impl Checker<'_> {
                     if self.is_borrowed(dest_ty)
                         || matches!(self.interner.kind(dest_ty), TyKind::Callable { .. })
                     {
-                        let incoming = self.call_result_loans(callee, args, &loans, &direct);
+                        let incoming =
+                            self.call_result_loans(callee, args, dest_ty, &loans, &direct);
                         let target = &mut loans[dest.local.index()];
                         let before = target.len();
                         target.extend(incoming);
@@ -386,6 +453,7 @@ impl Checker<'_> {
         &self,
         callee: &Callee,
         args: &[Operand],
+        result_ty: Ty,
         loans: &[HashSet<Loan>],
         direct: &HashMap<Local, Loan>,
     ) -> HashSet<Loan> {
@@ -409,8 +477,18 @@ impl Checker<'_> {
         };
         let Some(sig) = sig else { return out };
         let interner = self.interner;
-        let ret_has_ref = interner.any(sig.ret, &|k| matches!(k, TyKind::Ref { .. }))
-            || matches!(interner.kind(sig.ret), TyKind::Adt(def, _) if self.hir.def(def).attr("view").is_some());
+        // A borrow return: the declared return type, or the type it takes at this call
+        // (an associated type such as `Iterable.Iter` may be a view), holds a borrow.
+        let holds_borrow = |ty: Ty| {
+            interner.any(ty, &|k| match k {
+                TyKind::Ref { .. } => true,
+                TyKind::Adt(def, _) => self.hir.def(*def).attr("view").is_some(),
+                _ => false,
+            })
+        };
+        let ret_has_ref = holds_borrow(sig.ret)
+            || (interner.any(sig.ret, &|k| matches!(k, TyKind::Projection { .. }))
+                && holds_borrow(result_ty));
         let ret_may_hold = ret_has_ref
             || interner.any(sig.ret, &|k| {
                 matches!(k, TyKind::Param(_) | TyKind::Projection { .. })
@@ -437,7 +515,6 @@ impl Checker<'_> {
             let (Operand::Copy(p) | Operand::Move(p)) = arg else {
                 continue;
             };
-            let arg_loans = &loans[p.local.index()];
             let mode = modes.get(i).copied().unwrap_or(loom_hir::Mode::Own);
             if mode == loom_hir::Mode::Own {
                 if ret_may_hold {
@@ -445,20 +522,26 @@ impl Checker<'_> {
                 }
                 continue;
             }
-            let own_loan = direct.get(&p.local);
-            for loan in arg_loans {
-                let is_call_borrow = own_loan == Some(loan);
-                if (is_call_borrow && ret_has_ref && elided == Some(i))
-                    || (!is_call_borrow && ret_may_hold)
-                {
-                    out.insert(loan.clone());
+            // A borrow made for the call: `&place`.
+            let Some(own_loan) = direct.get(&p.local) else {
+                if ret_may_hold {
+                    out.extend(loans[p.local.index()].iter().cloned());
                 }
-            }
-            if ret_has_ref
-                && elided == Some(i)
-                && let Some(loan) = own_loan
-            {
-                out.insert(loan.clone());
+                continue;
+            };
+            // Borrows stored inside the borrowed value (a view in a local, for example).
+            let content: HashSet<Loan> = if own_loan.place.is_behind_ref() {
+                HashSet::new()
+            } else {
+                loans[own_loan.place.local.index()].clone()
+            };
+            if ret_has_ref && elided == Some(i) {
+                // The result borrows the source, and whatever the source borrows.
+                out.insert(own_loan.clone());
+                out.extend(loans[p.local.index()].iter().cloned());
+                out.extend(content);
+            } else if ret_may_hold {
+                out.extend(content);
             }
         }
         out

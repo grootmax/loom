@@ -1427,14 +1427,16 @@ impl<'a> Builder<'a> {
                     if let Some(&existing) = self.typed.assignments.get(&binding) {
                         let place = self.binding_place(existing);
                         let value_op = self.as_operand(value);
-                        self.drop_place(place.clone(), span);
-                        self.assign(&place, Rvalue::Use(value_op), span);
+                        let value_span = self.span(value);
+                        self.drop_place(place.clone(), value_span);
+                        self.assign(&place, Rvalue::Use(value_op), value_span);
                     } else {
                         let ty = self.typed.binding_tys[self.typed.canonical(binding).index()];
                         let mutable = self.body.binding(binding).kind.is_mutable();
                         let value_op = self.as_operand(value);
                         let local = self.declare_binding(binding, ty, mutable);
-                        self.assign(&Place::local(local), Rvalue::Use(value_op), span);
+                        let value_span = self.span(value);
+                        self.assign(&Place::local(local), Rvalue::Use(value_op), value_span);
                     }
                     if last {
                         let unit = self.unit_operand();
