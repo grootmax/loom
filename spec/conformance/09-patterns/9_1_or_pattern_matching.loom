@@ -1,0 +1,8 @@
+# spec: §9.1 rule 5
+def main
+  x = 2
+  case x
+  in 1 | 2 | 3 then puts "small int"
+  in _ then puts "large int"
+  end
+end

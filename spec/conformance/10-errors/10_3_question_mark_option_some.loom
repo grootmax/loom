@@ -1,0 +1,12 @@
+# spec: §10.3 rule 2
+def get_val(opt: Option[Int]) -> Option[Int]
+  val = opt?
+  Some(val * 2)
+end
+
+def main
+  case get_val(Some(21))
+  in Some(v) then puts "value is #{v}"
+  in None then puts "none"
+  end
+end

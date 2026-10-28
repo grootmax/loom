@@ -1,0 +1,6 @@
+# spec: §9.1 rule 6
+def main
+  case (10, 20)
+  in (a, b) then puts "a = #{a}, b = #{b}"
+  end
+end

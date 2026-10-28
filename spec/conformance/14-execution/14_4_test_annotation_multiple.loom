@@ -1,0 +1,14 @@
+# spec: §14.4 rule 1
+@[test]
+def test_first
+  puts "first"
+end
+
+@[test]
+def test_second
+  puts "second"
+end
+
+def main
+  puts "main"
+end

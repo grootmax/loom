@@ -1,0 +1,13 @@
+# spec: §14.2
+struct AppErr
+  msg: String
+end
+
+impl Error for AppErr
+  def message -> String = self.msg
+end
+
+def main -> Result[Unit, AppErr]
+  puts "main returning ok"
+  Ok(())
+end

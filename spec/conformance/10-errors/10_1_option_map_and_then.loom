@@ -1,0 +1,9 @@
+# spec: §10.1
+def main
+  opt = Some(5)
+  doubled = opt.map { |x| x * 2 }
+  case doubled
+  in Some(v) then puts "doubled: #{v}"
+  in None then puts "none"
+  end
+end

@@ -1,0 +1,11 @@
+# spec: §9.1 rule 3
+enum Point3D
+  Pt(Int, Int, Int)
+end
+
+def main
+  p = Point3D.Pt(1, 2, 3)
+  case p
+  in Point3D.Pt(x, ..) then puts "first is #{x}"
+  end
+end

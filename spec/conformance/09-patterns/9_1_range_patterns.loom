@@ -1,0 +1,13 @@
+# spec: §9.1 rule 4
+def main
+  case 5
+  in 1..5 then puts "exclusive 1..5"
+  in 5..=10 then puts "inclusive 5..=10"
+  in _ then puts "other"
+  end
+
+  case 'c'
+  in 'a'..='z' then puts "lowercase char"
+  in _ then puts "other char"
+  end
+end

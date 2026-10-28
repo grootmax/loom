@@ -1,0 +1,8 @@
+# spec: §9.4
+def main
+  s = "hello"
+  case s
+  in "hello" then puts "hello"
+  in "world" then puts "world"
+  end
+end

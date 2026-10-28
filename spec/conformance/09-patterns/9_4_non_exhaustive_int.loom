@@ -1,0 +1,8 @@
+# spec: §9.4
+def main
+  x = 10
+  case x
+  in 1 then puts "one"
+  in 2 then puts "two"
+  end
+end

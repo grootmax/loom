@@ -1,0 +1,11 @@
+# spec: §9.1
+enum Color
+  Rgb(Int, Int, Int)
+end
+
+def main
+  c = Color.Rgb(255, 0, 0)
+  case c
+  in Color.Rgb(r, g, b) then puts "rgb #{r},#{g},#{b}"
+  end
+end

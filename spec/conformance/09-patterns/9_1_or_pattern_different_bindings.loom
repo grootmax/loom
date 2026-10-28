@@ -1,0 +1,7 @@
+# spec: §9.1 rule 5
+def main
+  opt = Some(5)
+  case opt
+  in Some(x) | None then puts "bad"
+  end
+end

@@ -1,0 +1,6 @@
+# spec: §9.2
+def main
+  for Some(x) in [Some(1)]
+    puts x
+  end
+end

@@ -1,0 +1,8 @@
+# spec: §9.4
+def main
+  ch = 'm'
+  case ch
+  in 'a'..='z' then puts "lowercase"
+  in _ then puts "other"
+  end
+end

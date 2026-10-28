@@ -1,0 +1,18 @@
+# spec: §9.1 rule 2
+enum Fruit
+  Apple
+  Banana
+end
+
+enum Color
+  Red
+  Blue
+end
+
+def main
+  f: Fruit = Fruit.Apple
+  case f
+  in Red then puts "bad"
+  in Banana then puts "ok"
+  end
+end

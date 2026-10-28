@@ -1,0 +1,7 @@
+# spec: §9.1 rule 2
+def main
+  x = 10
+  case x
+  in UnknownVariant then puts "bad"
+  end
+end

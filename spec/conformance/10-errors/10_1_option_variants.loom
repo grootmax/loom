@@ -1,0 +1,11 @@
+# spec: §10.1
+def main
+  opt: Option[Int] = Some(42)
+  if opt.is_some
+    puts "has value: #{opt.unwrap}"
+  end
+  empty: Option[Int] = None
+  if empty.is_none
+    puts "is empty"
+  end
+end

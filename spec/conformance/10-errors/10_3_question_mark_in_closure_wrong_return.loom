@@ -1,0 +1,5 @@
+# spec: §10.3 rule 3
+def main
+  f: Fn(Option[Int]) -> Int = { |opt| opt? + 1 }
+  puts f(Some(5))
+end
