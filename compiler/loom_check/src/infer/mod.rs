@@ -367,7 +367,10 @@ impl<'a> InferCtxt<'a> {
             (other, TyKind::Ref { inner, .. })
                 if !matches!(
                     other,
-                    TyKind::Ref { .. } | TyKind::Never | TyKind::Infer(..) | TyKind::Error
+                    TyKind::Ref { .. }
+                        | TyKind::Never
+                        | TyKind::Infer(_, VarKind::General)
+                        | TyKind::Error
                 ) =>
             {
                 self.coercions.insert(expr, Coercion::Autoref);

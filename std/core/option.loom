@@ -5,7 +5,7 @@ extern "intrinsic"
 end
 
 ## An optional value: `Some(value)` or `None`. There is no null (ADR 0007).
-@[lang("Option"), derive(Clone, Eq, Ord, Hash)]
+@[lang("Option"), derive(Copy, Clone, Eq, Ord, Hash)]
 pub enum Option[T]
   Some(T)
   None
@@ -82,7 +82,7 @@ pub enum Option[T]
 end
 
 ## The outcome of an operation that can fail: `Ok(value)` or `Err(error)`.
-@[lang("Result"), derive(Clone, Eq, Ord, Hash)]
+@[lang("Result"), derive(Copy, Clone, Eq, Ord, Hash)]
 pub enum Result[T, E]
   Ok(T)
   Err(E)

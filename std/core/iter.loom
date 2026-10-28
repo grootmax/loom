@@ -99,7 +99,7 @@ pub trait Iterable
 end
 
 ## A range of integers or characters (spec §7.10).
-@[lang("Range"), derive(Clone, Eq)]
+@[lang("Range"), derive(Copy, Clone, Eq)]
 pub struct Range[T]
   pub start: T
   pub end_value: T
