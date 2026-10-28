@@ -204,3 +204,15 @@ fn regression_shebang_is_never_indented() {
     let source = "#!/usr/bin/env loom\ndef f\n  x = a +\n    b\nend\n";
     assert_eq!(format(source), source);
 }
+
+#[test]
+fn regression_newline_inside_brackets_is_not_a_boundary() {
+    // A `.` followed by a space starts a line inside `[ ]`: the lexer emits `NEWLINE`,
+    // which the parser ignores in brackets (found by fuzzing).
+    let source = "def main -> Result[Unit, Any\n.  puError]\n  x\nend\n";
+    check_guarantees("bracketed-newline", source);
+    assert_eq!(
+        format(source),
+        "def main -> Result[Unit, Any\n    .puError]\n  x\nend\n"
+    );
+}

@@ -230,6 +230,29 @@ fn code_indent(
     levels.len() + usize::from(is_continuation(first, innermost_bracket.as_ref()))
 }
 
+/// Whether `token` is nested in a bracket container more closely than in a block.
+fn inside_brackets(token: &SyntaxToken) -> bool {
+    for ancestor in token.parent().ancestors() {
+        if is_bracket_container(ancestor.kind()) {
+            return true;
+        }
+        if matches!(
+            ancestor.kind(),
+            SyntaxKind::BLOCK
+                | SyntaxKind::SOURCE_FILE
+                | SyntaxKind::STRUCT_DEF
+                | SyntaxKind::ENUM_DEF
+                | SyntaxKind::TRAIT_DEF
+                | SyntaxKind::IMPL_DEF
+                | SyntaxKind::MODULE_DEF
+                | SyntaxKind::EXTERN_BLOCK
+        ) {
+            return false;
+        }
+    }
+    false
+}
+
 /// Whether `first` continues a statement from an earlier line (spec §2.3 rule 1).
 fn is_continuation(first: &SyntaxToken, innermost_bracket: Option<&SyntaxNode>) -> bool {
     if is_closer(first.kind()) {
@@ -242,6 +265,9 @@ fn is_continuation(first: &SyntaxToken, innermost_bracket: Option<&SyntaxNode>) 
             | ERROR_TOKEN => {
                 cursor = token.prev_token();
             }
+            // A `NEWLINE` inside brackets is ignored by the parser, so it is not a
+            // statement boundary.
+            NEWLINE if inside_brackets(&token) => cursor = token.prev_token(),
             NEWLINE | L_PAREN | L_BRACKET | L_BRACE | AT_BRACKET | INTERP_START | DO_KW => {
                 return false;
             }
