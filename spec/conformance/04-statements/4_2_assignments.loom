@@ -1,7 +1,7 @@
 # spec: §4.2
 struct Point
-  var x: Int
-  var y: Int
+  x: Int
+  y: Int
 
   def mut set_x(new_x: Int)
     @x = new_x

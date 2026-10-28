@@ -81,7 +81,7 @@ Each line terminator produces a `NEWLINE` token, unless it is *suppressed* by ru
 the parser then ignores `NEWLINE`s in the contexts of rule 2.
 
 1. **Continuation (lexical).** A line terminator does not produce `NEWLINE` if:
-   - (a) the last token before it on the line is one of: a binary operator from §2.8
+   - (a) the last token before it, ignoring trivia, is one of: a binary operator from §2.8
      *other than* `|`; `,`; `.`; `=` or a compound assignment operator; `->`; `=>`; `and`;
      `or`; `not`; or
    - (b) the first token on the next line that is not inside a whitespace-only or
@@ -90,6 +90,12 @@ the parser then ignores `NEWLINE`s in the contexts of rule 2.
 
    Lines containing only whitespace and/or comments between the two lines are skipped
    when applying rule (b).
+
+   Because rule (a) ignores trivia, a comment-only or blank line inside a continued
+   expression does not end it: every line terminator up to the next token is suppressed.
+   A suppressed line terminator is trivia (`LINE_BREAK`, §2.9).
+   - (c) The line it ends contains no tokens (it is blank or holds only whitespace and
+     comments). By rule 3 such a `NEWLINE` would be redundant.
 2. **Bracketed contexts (syntactic).** Inside a parenthesized expression, an argument or
    parameter list, an array literal, a map literal, an index expression, or a generic
    argument list, the parser ignores `NEWLINE` tokens. A nested **block body** (§7.9 closure
@@ -280,7 +286,8 @@ Other        .  ,  :  ->  =>  ?  @  @[  (  )  [  ]  {  }
 `IDENT`, `AT_IDENT`, keywords, `INT_LIT`, `FLOAT_LIT`, `CHAR_LIT`, `STRING_START` /
 `STRING_FRAGMENT` / `INTERP_START` / `INTERP_END` / `STRING_END` (an interpolated string is
 a token sequence), `RAW_STRING_LIT`, `BYTE_STRING_LIT`, operators and punctuation,
-`NEWLINE`, `EOF`. Trivia: `WHITESPACE`, `COMMENT`, `DOC_COMMENT`, `INNER_DOC_COMMENT`, `SHEBANG`.
+`NEWLINE`, `EOF`. Trivia: `WHITESPACE`, `LINE_BREAK` (a line terminator suppressed by
+§2.3 rule 1), `COMMENT`, `DOC_COMMENT`, `INNER_DOC_COMMENT`, `SHEBANG`.
 
 ---
 
@@ -356,6 +363,10 @@ Private to the module by default. `pub` makes an item public; `pub(package)` lim
 scope of the same function. `var x = expr` introduces a reassignable binding. A type may
 be given: `x: T = expr`, `var x: T = expr`.
 
+Syntactically, `x = expr` with a lone identifier on the left is a binding statement.
+Name resolution reclassifies it as an assignment (§4.2) when `x` is a `var` binding that is
+already in scope.
+
 ### 4.2 Assignment
 
 `place = expr` and compound assignment, where `place` is a `var` binding, or a field or
@@ -374,6 +385,12 @@ A statement of the form `IDENT arg, …` (without parentheses), where `IDENT` is
 followed by whitespace and the first argument begins with a literal, an identifier, an
 `AT_IDENT`, `self`, or a keyword-argument label. It is equivalent to `IDENT(arg, …)`.
 Example: `puts "hi"`.
+
+Precisely: the statement starts with an `IDENT` that is followed by whitespace (not a line
+terminator) and then by a token that can begin a command argument: a literal, the start of
+a string, an `IDENT`, an `AT_IDENT`, `self`, `Self` or `not`. A label (`IDENT :`) also
+qualifies.
+`puts -1` and `puts [1]` are therefore binary and index expressions, not command calls.
 
 ## 5. Types
 
@@ -413,6 +430,10 @@ expression otherwise.
 passed as the final argument. A standalone closure value is written `{ |params| body }`; the
 parameter list is required, so `{` in expression position without `|` is a map literal (§7.13).
 
+A `{ … }` or `do … end` block is a trailing block of the expression before it only if it
+starts on the same line as the end of that expression. A trailing block's parameter list is
+optional: `s.spawn { work() }`.
+
 ### 7.4 Field access, method calls and `@field`
 
 `expr.name`, `expr.name(args)`, `expr.0` (tuple). Inside a method, `@name` means `self.name`.
@@ -449,6 +470,10 @@ Includes the pattern test `if expr in Pattern` (§9).
 ### 7.7 `case` expressions
 ### 7.8 Loops: `loop`, `while`, `for`, `break`, `next`
 ### 7.9 Closures
+
+A block parameter is a single pattern atom (`block_param` in the grammar), so a top-level
+or-pattern must be parenthesized: `{ |(A | B)| … }`. This lets the parser treat the next
+`|` as the end of the parameter list.
 ### 7.10 Ranges
 ### 7.11 The `?` operator — see §10.3
 ### 7.12 String interpolation
@@ -494,6 +519,10 @@ Exhaustiveness is checked for `case`; `x in P` is a `Bool` test that binds on su
 ### 11.1 Tasks and `scope`
 ### 11.2 Channels
 ### 11.3 `select`
+
+An arm `when P = e` receives into the pattern `P`, and an arm `when e` waits on `e`. The
+parser tells them apart by looking for a `=` at bracket depth 0 before `then` or the end of
+the line.
 ### 11.4 Cancellation and deadlines
 ### 11.5 `Send` and `Sync`
 ### 11.6 Detached tasks
@@ -527,3 +556,75 @@ See [`grammar.ebnf`](grammar.ebnf).
 | Date | Change |
 |---|---|
 | 2026-10-23 | Initial draft (Phase 0): lexical structure complete; other chapters outlined. |
+| 2026-10-28 | Phase 1 (ADR 0018): §2.3 rule 1(a) ignores trivia; `LINE_BREAK` trivia; disambiguation rules in §4.1, §4.4, §7.3, §7.9, §11.3; Appendix C diagnostic codes. |
+
+## Appendix C. Diagnostic codes
+
+Error codes and their primary positions are part of conformance
+(`spec/conformance/README.md`). Message wording is not. Codes are allocated by range
+([ADR 0018](../docs/adr/0018-front-end-design.md)): E0001–E0099 lexical, E0100–E0199
+syntax, E0200–E0299 names and modules, E0300–E0499 types and traits, E0500–E0599
+ownership, E0600–E0699 concurrency. A code is never reused. The "At" column gives the
+primary position, which is where the diagnostic points.
+
+### C.1 Lexical errors (§2)
+
+| Code | Error | At | Rule |
+|---|---|---|---|
+| E0001 | Source file is not valid UTF-8 | first invalid byte | §2.1.1 |
+| E0002 | Bidirectional formatting character | the character | §2.1.4 |
+| E0003 | Carriage return not followed by line feed | the CR | §2.2.1 |
+| E0004 | Non-ASCII whitespace character | the character | §2.2.2 |
+| E0005 | Unexpected character | the character | §2 |
+| E0006 | `;` is not used in Loom | the `;` | §2.3.4 |
+| E0007 | `!` is not an operator | the `!` | §2.8.3 |
+| E0008 | `&&` or `\|\|` is not an operator | the operator | §2.8.4 |
+| E0009 | Reserved word used as an identifier | the word | §2.6 |
+| E0010 | Misplaced `_` in a numeric literal | the literal | §2.7.1.1 |
+| E0011 | Decimal literal with a leading zero | the literal | §2.7.1.2 |
+| E0012 | Invalid or missing digits in a numeric literal | the literal | §2.7.1, §2.7.2 |
+| E0013 | Uppercase radix prefix | the literal | §2.7.1.3 |
+| E0014 | Invalid suffix on a numeric literal | the suffix | §2.7.1.4 |
+| E0015 | Empty character literal | the literal | §2.7.3.2 |
+| E0016 | Character literal with more than one character | the literal | §2.7.3.2 |
+| E0017 | Unterminated character literal | the opening `'` | §2.7.3 |
+| E0018 | Unterminated string literal | the opening delimiter | §2.7.4 |
+| E0019 | Unknown escape sequence | the escape | §2.7.5 |
+| E0020 | Invalid `\u{…}` escape | the escape | §2.7.5 |
+| E0021 | Invalid `\x` escape | the escape | §2.7.5 |
+| E0022 | Non-ASCII character in a byte string | the character | §2.7.4.5 |
+| E0023 | Opening `"""` not followed by a line break | the `"""` | §2.7.4.3 |
+| E0024 | Closing `"""` not on its own line | the `"""` | §2.7.4.3 |
+| E0025 | Line in a triple-quoted string lacks the indentation prefix | start of the line | §2.7.4.3 |
+| E0026 | Unterminated raw string | the opening `r` or `br` | §2.7.4.4 |
+| E0027 | `#![` at the start of a file is reserved | the `#` | §2.1.3 |
+
+### C.2 Syntax errors (§3–§11)
+
+| Code | Error | At |
+|---|---|---|
+| E0100 | Expected a different token (general syntax error) | the unexpected token |
+| E0101 | Unclosed delimiter `(`, `[`, `{` or `#{` | the opening delimiter |
+| E0102 | Missing `end` | the keyword that opened the block |
+| E0103 | Unexpected closing delimiter or `end` | the delimiter |
+| E0104 | Comparison operators cannot be chained | the second operator |
+| E0105 | Range operators cannot be chained | the second operator |
+| E0106 | Assignment is only allowed as a statement | the `=` or compound operator |
+| E0107 | Positional argument after a named argument | the positional argument |
+| E0108 | Inner doc comment (`##!`) after an item | the comment |
+| E0109 | `impl` without a trait; inherent methods belong in the type's body | the `impl` keyword |
+| E0110 | `else if` is written `elsif` | the `if` |
+| E0111 | Two statements on one line | the start of the second statement |
+| E0112 | Nesting too deep | the token where the limit was reached |
+| E0113 | Glob imports are not supported | the `*` |
+
+If a token is missing at the end of a line, E0100 points at the line terminator (or at
+end of file).
+
+### C.3 Warnings
+
+Warnings are named lints, not numbered codes.
+
+| Lint | Warning | Rule |
+|---|---|---|
+| `dangling_doc_comment` | Outer doc comment not followed by an item, field, variant or method | §2.4.2 |

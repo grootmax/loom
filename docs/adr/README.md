@@ -30,3 +30,4 @@ met us learns *why* Loom is the way it is ([ADR 0001](0001-record-decisions-as-a
 | [0015](0015-agent-workflow.md) | Agent workflow (Claude Code + Jules) | Accepted |
 | [0016](0016-rust-interop.md) | Rust interop | Accepted (provisional) |
 | [0017](0017-rust-as-the-base.md) | Rust as the base: matches and deliberate differences | Accepted (living document) |
+| [0018](0018-front-end-design.md) | Front-end design (Phase 1) | Accepted (provisional) |

@@ -1,6 +1,6 @@
 # spec: §3.1
 struct Counter
-  var count: Int
+  count: Int
 
   def self.new(initial: Int) -> Counter
     Counter(count: initial)

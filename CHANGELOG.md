@@ -8,6 +8,11 @@ All notable changes to the Loom toolchain are recorded here. The format follows
 ## [Unreleased]
 
 ### Added
+- Phase 1 begins: ADR 0018 (front-end design), spec Appendix C (diagnostic codes) and
+  disambiguation rules, `loom_span` (spans, line/column mapping, source map), and the
+  `loom_diagnostics` data model and code registry.
+- Lexer, lossless CST, parser with error recovery, typed AST, and the canonical formatter.
+- `loom check`, `loom fmt [--check]`, `loom explain`, and `cargo xtask conformance`.
 - Phase 0 foundations: repository layout, Cargo workspace with stub crates, `cargo xtask ci`,
   governance and contribution docs, ADRs 0001–0017, specification skeleton and grammar,
   example programs, CI on Linux/macOS/Windows, VS Code syntax highlighting, and the

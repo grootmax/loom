@@ -7,8 +7,6 @@ def main
   f1 = { |x: Int| x + 1 }
   puts apply(5, f1)
 
-  f2 = do |x: Int|
-    x * 2
-  end
+  f2 = { |x: Int| x * 2 }
   puts apply(5, f2)
 end

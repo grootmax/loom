@@ -30,6 +30,8 @@ ignore = true
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"
+# Workspace path dependencies between unpublished crates have no version; allow them.
+allow-wildcard-paths = true
 
 [sources]
 unknown-registry = "deny"

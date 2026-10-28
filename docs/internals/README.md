@@ -38,4 +38,6 @@ source ─► loom_lexer ─► loom_parser ─► loom_syntax (lossless CST) �
 | loom_runtime | runtime | 3–4 | Scheduler, memory, channels, I/O |
 | loom_fmt, loom_lint, loom_lsp, loom_doc, loom_pkg | tools/* | 1–6 | Tooling |
 
-Each subsystem gets its own page here as it is implemented.
+Each subsystem gets its own page here as it is implemented:
+
+- [The front end: lexer, CST, parser, AST, formatter](front-end.md)

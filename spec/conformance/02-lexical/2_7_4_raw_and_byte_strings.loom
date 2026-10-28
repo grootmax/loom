@@ -1,6 +1,6 @@
 # spec: §2.7.4 rules 4-5
 def main
   puts r"raw \n string"
-  puts r#"raw "# string"#
+  puts r##"raw "# string"##
   puts b"ascii" == b"ascii"
 end

@@ -1,9 +1,13 @@
 //! The `loom` command-line tool.
 //!
-//! Status: Phase 0 stub. Only `--version` and `help` work; every other command
+//! Status: Phase 1. `check` (syntax only), `fmt` and `explain` work; every other command
 //! reports which roadmap phase will implement it and exits with status 2.
 
+use std::io::Write as _;
+use std::path::PathBuf;
 use std::process::ExitCode;
+
+use loom_driver::Session;
 
 /// A `loom` subcommand and the roadmap phase that delivers it.
 struct Command {
@@ -17,7 +21,11 @@ const COMMANDS: &[Command] = &[
     cmd("init", "Create a project in the current directory", 5),
     cmd("run", "Build and run a program", 2),
     cmd("build", "Compile a program to a native binary", 3),
-    cmd("check", "Type-check without producing a binary", 2),
+    cmd(
+        "check",
+        "Check programs for errors (syntax only until phase 2)",
+        1,
+    ),
     cmd("test", "Run tests, including doc-tests", 2),
     cmd("bench", "Run benchmarks", 6),
     cmd("fmt", "Format source files in the canonical style", 1),
@@ -44,6 +52,9 @@ const fn cmd(name: &'static str, summary: &'static str, phase: u8) -> Command {
     }
 }
 
+/// Exit status for usage errors (unknown command or flag).
+const USAGE: u8 = 2;
+
 fn print_help() {
     println!(
         "loom {} — the Loom toolchain (pre-alpha)",
@@ -63,6 +74,10 @@ fn print_help() {
     println!();
     println!("OPTIONS:");
     println!("  -V, --version  Print the version");
+    println!();
+    println!("  loom check [--dump=cst] [--message-format=short] <paths>...");
+    println!("  loom fmt [--check] [<paths>...]");
+    println!("  loom explain <code>");
 }
 
 fn main() -> ExitCode {
@@ -71,7 +86,7 @@ fn main() -> ExitCode {
         print_help();
         return ExitCode::SUCCESS;
     };
-
+    let rest = &args[1..];
     match first.as_str() {
         "-V" | "--version" | "version" => {
             println!("loom {}", env!("CARGO_PKG_VERSION"));
@@ -81,6 +96,9 @@ fn main() -> ExitCode {
             print_help();
             ExitCode::SUCCESS
         }
+        "check" => check(rest),
+        "fmt" => fmt(rest),
+        "explain" => explain(rest),
         name => {
             if let Some(command) = COMMANDS.iter().find(|command| command.name == name) {
                 eprintln!(
@@ -92,9 +110,146 @@ fn main() -> ExitCode {
                     "loom: unknown command `{name}`. Run `loom help` for a list of commands."
                 );
             }
-            ExitCode::from(2)
+            ExitCode::from(USAGE)
         }
     }
+}
+
+/// Splits `--flag` / `--flag=value` options from paths.
+fn split_options(args: &[String]) -> (Vec<&str>, Vec<PathBuf>) {
+    let mut options = Vec::new();
+    let mut paths = Vec::new();
+    for arg in args {
+        if arg.starts_with("--") {
+            options.push(arg.as_str());
+        } else {
+            paths.push(PathBuf::from(arg));
+        }
+    }
+    (options, paths)
+}
+
+fn usage_error(message: &str) -> ExitCode {
+    eprintln!("loom: {message}");
+    ExitCode::from(USAGE)
+}
+
+/// Loads every `.loom` file under `paths` into a session.
+fn load(paths: &[PathBuf]) -> Result<Session, ExitCode> {
+    let files = loom_driver::collect_sources(paths).map_err(|error| {
+        eprintln!("loom: {error}");
+        ExitCode::from(USAGE)
+    })?;
+    let mut session = Session::new();
+    for file in files {
+        if let Err(error) = session.load(&file) {
+            eprintln!("loom: {error}");
+            return Err(ExitCode::FAILURE);
+        }
+    }
+    Ok(session)
+}
+
+fn print_diagnostics(session: &Session) {
+    let stderr = std::io::stderr();
+    let mut out = stderr.lock();
+    for diagnostic in session.diagnostics() {
+        let _ = writeln!(out, "{}", diagnostic.short(session.sources()));
+    }
+}
+
+/// `loom check`: reports lexical and syntax errors (Phase 1).
+fn check(args: &[String]) -> ExitCode {
+    let (options, paths) = split_options(args);
+    let mut dump_cst = false;
+    for option in options {
+        match option {
+            "--dump=cst" => dump_cst = true,
+            "--message-format=short" => {}
+            other => return usage_error(&format!("check: unknown option `{other}`")),
+        }
+    }
+    if paths.is_empty() {
+        return usage_error("check: expected at least one path");
+    }
+    let session = match load(&paths) {
+        Ok(session) => session,
+        Err(code) => return code,
+    };
+    if dump_cst {
+        for (_, path, parse) in session.files() {
+            println!("# {}", path.display());
+            print!("{}", parse.syntax().debug_dump());
+        }
+    }
+    print_diagnostics(&session);
+    if session.has_errors() {
+        ExitCode::FAILURE
+    } else {
+        ExitCode::SUCCESS
+    }
+}
+
+/// `loom fmt`: formats files in place, or with `--check` reports files that would change.
+fn fmt(args: &[String]) -> ExitCode {
+    let (options, mut paths) = split_options(args);
+    let mut check_only = false;
+    for option in options {
+        match option {
+            "--check" => check_only = true,
+            other => return usage_error(&format!("fmt: unknown option `{other}`")),
+        }
+    }
+    if paths.is_empty() {
+        paths.push(PathBuf::from("."));
+    }
+    let session = match load(&paths) {
+        Ok(session) => session,
+        Err(code) => return code,
+    };
+    if session.has_errors() {
+        print_diagnostics(&session);
+        eprintln!("loom fmt: not formatting files with errors");
+        return ExitCode::FAILURE;
+    }
+    let mut changed = 0;
+    for (file, path, parse) in session.files() {
+        let original = session.sources().file(file).text();
+        let formatted = loom_fmt::format_tree(&parse.syntax());
+        if formatted == original {
+            continue;
+        }
+        changed += 1;
+        if check_only {
+            println!("would reformat {}", path.display());
+        } else if let Err(error) = std::fs::write(path, formatted) {
+            eprintln!("loom fmt: {}: {error}", path.display());
+            return ExitCode::FAILURE;
+        } else {
+            println!("formatted {}", path.display());
+        }
+    }
+    if check_only && changed > 0 {
+        ExitCode::FAILURE
+    } else {
+        ExitCode::SUCCESS
+    }
+}
+
+/// `loom explain CODE`: prints what an error code means.
+fn explain(args: &[String]) -> ExitCode {
+    let [code] = args else {
+        return usage_error("explain: expected one error code, such as `loom explain E0007`");
+    };
+    let normalized = code.to_ascii_uppercase();
+    let Some(entry) = loom_diagnostics::codes::lookup(&normalized) else {
+        eprintln!("loom explain: `{code}` is not a Loom error code");
+        return ExitCode::FAILURE;
+    };
+    println!("{}: {}", entry.id, entry.title);
+    println!();
+    println!("See spec Appendix C (spec/loom-spec.md) for the rule this code belongs to.");
+    ExitCode::SUCCESS
 }
 
 #[cfg(test)]

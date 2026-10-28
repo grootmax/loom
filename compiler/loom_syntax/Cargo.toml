@@ -8,5 +8,8 @@ license.workspace = true
 repository.workspace = true
 publish = false
 
+[dependencies]
+loom_span = { path = "../loom_span" }
+
 [lints]
 workspace = true

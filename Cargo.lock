@@ -5,6 +5,11 @@ version = 4
 [[package]]
 name = "loom_ast"
 version = "0.0.0"
+dependencies = [
+ "loom_parser",
+ "loom_span",
+ "loom_syntax",
+]
 
 [[package]]
 name = "loom_check"
@@ -13,6 +18,12 @@ version = "0.0.0"
 [[package]]
 name = "loom_cli"
 version = "0.0.0"
+dependencies = [
+ "loom_diagnostics",
+ "loom_driver",
+ "loom_fmt",
+ "loom_span",
+]
 
 [[package]]
 name = "loom_codegen_cranelift"
@@ -21,6 +32,9 @@ version = "0.0.0"
 [[package]]
 name = "loom_diagnostics"
 version = "0.0.0"
+dependencies = [
+ "loom_span",
+]
 
 [[package]]
 name = "loom_doc"
@@ -29,10 +43,25 @@ version = "0.0.0"
 [[package]]
 name = "loom_driver"
 version = "0.0.0"
+dependencies = [
+ "loom_ast",
+ "loom_diagnostics",
+ "loom_lexer",
+ "loom_parser",
+ "loom_span",
+ "loom_syntax",
+]
 
 [[package]]
 name = "loom_fmt"
 version = "0.0.0"
+dependencies = [
+ "loom_ast",
+ "loom_diagnostics",
+ "loom_parser",
+ "loom_span",
+ "loom_syntax",
+]
 
 [[package]]
 name = "loom_hir"
@@ -45,6 +74,11 @@ version = "0.0.0"
 [[package]]
 name = "loom_lexer"
 version = "0.0.0"
+dependencies = [
+ "loom_diagnostics",
+ "loom_span",
+ "loom_syntax",
+]
 
 [[package]]
 name = "loom_lint"
@@ -65,6 +99,12 @@ version = "0.0.0"
 [[package]]
 name = "loom_parser"
 version = "0.0.0"
+dependencies = [
+ "loom_diagnostics",
+ "loom_lexer",
+ "loom_span",
+ "loom_syntax",
+]
 
 [[package]]
 name = "loom_pkg"
@@ -89,6 +129,9 @@ version = "0.0.0"
 [[package]]
 name = "loom_syntax"
 version = "0.0.0"
+dependencies = [
+ "loom_span",
+]
 
 [[package]]
 name = "loom_types"
