@@ -1,0 +1,4 @@
+# spec: §2.7.5
+def main
+  x = "\x80"
+end

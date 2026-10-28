@@ -1,0 +1,6 @@
+a2b
+outer inner 5
+escaped #{not_interp}
+line1 line2
+escapes 
+ 	 " \
