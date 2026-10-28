@@ -169,22 +169,20 @@ impl Solver<'_> {
         match &kind {
             TyKind::Error | TyKind::Never => return Ok(Selection::Builtin),
             TyKind::Infer(_, VarKind::General) => return Err(SelectError::Ambiguous),
-            TyKind::Infer(_, VarKind::Int) => {
-                return if matches!(
+            // Integer and float variables implement the structural traits; other traits
+            // are decided by the impls that can apply to some integer (or float) type.
+            TyKind::Infer(_, VarKind::Int)
+                if matches!(
                     lang.as_str(),
                     "Eq" | "Ord" | "Clone" | "Copy" | "Hash" | "Default"
-                ) {
-                    Ok(Selection::Builtin)
-                } else {
-                    Err(SelectError::Ambiguous)
-                };
+                ) =>
+            {
+                return Ok(Selection::Builtin);
             }
-            TyKind::Infer(_, VarKind::Float) => {
-                return if matches!(lang.as_str(), "Eq" | "Ord" | "Clone" | "Copy" | "Default") {
-                    Ok(Selection::Builtin)
-                } else {
-                    Err(SelectError::Ambiguous)
-                };
+            TyKind::Infer(_, VarKind::Float)
+                if matches!(lang.as_str(), "Eq" | "Ord" | "Clone" | "Copy" | "Default") =>
+            {
+                return Ok(Selection::Builtin);
             }
             TyKind::Param(_) | TyKind::Projection { .. } => {
                 for pred in &env.predicates {
