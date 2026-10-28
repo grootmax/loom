@@ -1,0 +1,21 @@
+# spec: §6.5
+trait Printable
+  def print_me -> String
+end
+
+struct Person
+  name: String
+end
+
+impl Printable for Person
+  def print_me -> String = self.name
+end
+
+def show(p: dyn Printable)
+  puts p.print_me()
+end
+
+def main
+  p = Person(name: "Alice")
+  show(p)
+end

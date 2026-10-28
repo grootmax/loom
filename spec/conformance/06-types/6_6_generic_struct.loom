@@ -1,0 +1,11 @@
+# spec: §6.6
+struct Pair[T]
+  first: T
+  second: T
+end
+
+def main
+  p = Pair(first: 10, second: 20)
+  puts p.first
+  puts p.second
+end

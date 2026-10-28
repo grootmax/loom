@@ -1,0 +1,5 @@
+# spec: §5.6
+def main
+  x: ref Int = 5
+  puts 1
+end

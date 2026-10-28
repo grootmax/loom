@@ -1,0 +1,13 @@
+# spec: §6.6
+enum Boxed[T]
+  Val(data: T)
+  Empty
+end
+
+def main
+  b: Boxed[String] = Boxed.Val(data: "inside box")
+  case b
+  in Val(data:) then puts data
+  in Empty then puts "empty"
+  end
+end

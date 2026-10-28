@@ -1,0 +1,12 @@
+# spec: §6.6
+trait Show
+  def show -> String
+end
+
+def render[T: Show](x: T)
+  puts x.show()
+end
+
+def main
+  render(123)
+end

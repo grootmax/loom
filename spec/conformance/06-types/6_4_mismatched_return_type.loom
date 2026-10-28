@@ -1,0 +1,8 @@
+# spec: §6.4
+def get_number() -> Int
+  "not a number"
+end
+
+def main
+  puts 1
+end

@@ -1,0 +1,15 @@
+# spec: §5.1 rule 1
+def main
+  a: U8 = 255
+  b: U16 = 65535
+  c: U32 = 4294967295
+  d: U64 = 18446744073709551615
+  e: U128 = 1000
+  f: USize = 123
+  puts a
+  puts b
+  puts c
+  puts d
+  puts e
+  puts f
+end

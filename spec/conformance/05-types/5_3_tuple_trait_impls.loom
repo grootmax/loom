@@ -1,0 +1,12 @@
+# spec: §5.3
+def main
+  t1 = (1, "a")
+  t2 = (1, "a")
+  t3 = (2, "b")
+  if t1 == t2
+    puts "equal"
+  end
+  if t1 < t3
+    puts "less"
+  end
+end

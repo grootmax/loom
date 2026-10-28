@@ -1,0 +1,9 @@
+# spec: §6.5
+def call_once(f: FnOnce(Int) -> Int, arg: Int) -> Int
+  f(arg)
+end
+
+def main
+  pure_fn: Fn(Int) -> Int = { |x| x + 10 }
+  puts call_once(pure_fn, 5)
+end

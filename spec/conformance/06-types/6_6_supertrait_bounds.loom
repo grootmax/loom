@@ -1,0 +1,30 @@
+# spec: §6.6
+trait Named
+  def name -> String
+end
+
+trait Greet: Named
+  def greet -> String
+end
+
+struct Person
+  n: String
+end
+
+impl Named for Person
+  def name -> String = self.n
+end
+
+impl Greet for Person
+  def greet -> String = "Hello, #{self.n}"
+end
+
+def run_greet[T: Greet](x: T)
+  puts x.name()
+  puts x.greet()
+end
+
+def main
+  p = Person(n: "Bob")
+  run_greet(p)
+end

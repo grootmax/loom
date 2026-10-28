@@ -1,0 +1,19 @@
+# spec: §6.6
+trait Container
+  type Item
+  def get -> Self.Item
+end
+
+struct Wrapper
+  val: Int
+end
+
+impl Container for Wrapper
+  type Item = Int
+  def get -> Int = @val
+end
+
+def main
+  w = Wrapper(val: 99)
+  puts w.get()
+end

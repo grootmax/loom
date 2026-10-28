@@ -1,0 +1,5 @@
+# spec: §6.4
+def main
+  arr: Array[F64] = [1.0, 2.0, 3.0]
+  puts arr.length
+end

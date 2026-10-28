@@ -1,0 +1,4 @@
+# spec: §6.6
+def main
+  x = Int.missing()
+end

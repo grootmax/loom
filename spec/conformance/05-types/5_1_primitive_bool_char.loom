@@ -1,0 +1,9 @@
+# spec: §5.1 rule 1
+def main
+  b1: Bool = true
+  b2: Bool = false
+  ch: Char = 'A'
+  puts b1
+  puts b2
+  puts ch
+end

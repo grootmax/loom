@@ -1,0 +1,8 @@
+# spec: §6.5
+def compute(b: Bool) -> Int
+  if b then 42 else panic("error") end
+end
+
+def main
+  puts compute(true)
+end

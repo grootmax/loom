@@ -1,0 +1,5 @@
+# spec: §6.2 rule 3
+def main
+  x = Option.None
+  puts 1
+end

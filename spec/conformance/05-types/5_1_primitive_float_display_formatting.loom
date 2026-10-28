@@ -1,0 +1,13 @@
+# spec: §5.1 rule 2
+def main
+  f1: Float = 7.0
+  f2: Float = 0.25
+  f3: Float = -0.0
+  f4: Float = 1e16
+  f5: Float = 1.5e-7
+  puts f1
+  puts f2
+  puts f3
+  puts f4
+  puts f5
+end

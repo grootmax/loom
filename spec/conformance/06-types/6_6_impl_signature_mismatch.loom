@@ -1,0 +1,14 @@
+# spec: §6.6
+trait Task
+  def run(x: Int) -> Int
+end
+
+struct Worker
+end
+
+impl Task for Worker
+  def run(x: String) -> Int = 1
+end
+
+def main
+end

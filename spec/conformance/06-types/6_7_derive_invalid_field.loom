@@ -1,0 +1,8 @@
+# spec: §6.7
+@[derive(Copy)]
+struct Person
+  name: String
+end
+
+def main
+end

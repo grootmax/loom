@@ -1,0 +1,18 @@
+# spec: §5.2
+def main
+  arr: Array[Int] = [10, 20, 30]
+  opt: Option[Int] = Option.Some(42)
+  res: Result[Int, String] = Result.Ok(100)
+  r: Range[Int] = 1..5
+
+  puts arr.length
+  case opt
+  in Some(v) then puts v
+  in None then puts 0
+  end
+  case res
+  in Ok(v) then puts v
+  in Err(_) then puts 0
+  end
+  puts r.start
+end

@@ -1,0 +1,7 @@
+# spec: §5.3
+def main
+  t1: (Int, Bool) = (10, true)
+  t2 = t1
+  puts t1.0
+  puts t2.0
+end

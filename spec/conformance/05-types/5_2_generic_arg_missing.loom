@@ -1,0 +1,6 @@
+# spec: §5.2
+def process(x: Option)
+end
+
+def main
+end

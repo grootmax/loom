@@ -1,0 +1,8 @@
+# spec: §5.2
+def main
+  var arr: Array[Int] = [10, 20]
+  arr.push(30)
+  puts arr[0]
+  puts arr[2]
+  puts arr.length
+end
