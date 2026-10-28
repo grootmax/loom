@@ -1,0 +1,2 @@
+# spec: §2.7.4 rule 4
+const S: String = r"hello

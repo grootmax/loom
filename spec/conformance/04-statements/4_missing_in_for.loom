@@ -1,0 +1,6 @@
+# spec: §7.8
+def main
+  for x [1, 2]
+    puts x
+  end
+end

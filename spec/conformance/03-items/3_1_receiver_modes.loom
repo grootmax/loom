@@ -1,0 +1,20 @@
+# spec: §3.1
+struct Counter
+  count: Int
+
+  def self.new(initial: Int) -> Counter
+    Counter(count: initial)
+  end
+
+  def mut increment(own delta: Int)
+    @count += delta
+  end
+
+  def value -> Int = @count
+end
+
+def main
+  var c = Counter.new(10)
+  c.increment(5)
+  puts c.value
+end

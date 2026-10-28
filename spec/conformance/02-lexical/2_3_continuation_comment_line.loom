@@ -1,0 +1,7 @@
+# spec: §2.3 rule 1
+def main
+  x = 10 +
+    # comment line
+    20
+  puts x
+end

@@ -1,0 +1,25 @@
+# spec: §7.11
+def check_positive(x: Int) -> Result[Int, String]
+  if x > 0
+    Ok(x)
+  else
+    Err("negative")
+  end
+end
+
+def process(x: Int) -> Result[Int, String]
+  val = check_positive(x)?
+  Ok(val * 2)
+end
+
+def main
+  case process(5)
+  in Ok(v) then puts v
+  in Err(e) then puts e
+  end
+
+  case process(-3)
+  in Ok(v) then puts v
+  in Err(e) then puts e
+  end
+end

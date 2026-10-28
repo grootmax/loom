@@ -1,0 +1,10 @@
+# spec: §3.1
+def greet(name: String, prefix: String = "Hello") -> String
+  "#{prefix}, #{name}"
+end
+
+def main
+  name = "Alice"
+  puts greet(name:)
+  puts greet(name: "Bob", prefix: "Hi")
+end

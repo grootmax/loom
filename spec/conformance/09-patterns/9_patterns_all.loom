@@ -1,0 +1,21 @@
+# spec: §9
+enum Val
+  Num(Int)
+  Pair(Int, Int)
+end
+
+def check(v: Val) -> Int
+  case v
+  in Val.Num(1 | 2 | 3) then 10
+  in Val.Num(4..10) then 20
+  in Val.Num(_) then 30
+  in Val.Pair(a, b) then a + b
+  end
+end
+
+def main
+  puts check(Val.Num(2))
+  puts check(Val.Num(5))
+  puts check(Val.Num(100))
+  puts check(Val.Pair(30, 40))
+end

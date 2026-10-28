@@ -1,0 +1,6 @@
+# spec: §3.8
+const MAX: Int = 100
+
+def main
+  puts MAX
+end

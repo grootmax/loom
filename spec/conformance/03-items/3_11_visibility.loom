@@ -1,0 +1,11 @@
+# spec: §3.11
+pub struct Item
+  pub(package) id: Int
+end
+
+pub def make_item(id: Int) -> Item = Item(id:)
+
+def main
+  item = make_item(123)
+  puts item.id
+end

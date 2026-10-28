@@ -4,6 +4,7 @@
 //! pinned toolchain does. See `CONTRIBUTING.md` for when to run each command.
 
 mod conformance;
+mod gen_unicode;
 mod spec_check;
 
 use std::path::{Path, PathBuf};
@@ -15,6 +16,7 @@ cargo xtask <command>
 COMMANDS:
   ci          Run every check CI runs: fmt, clippy, test, doc, deny, conformance
   conformance Run spec/conformance against the implementation
+  gen-unicode Generate Unicode tables from UCD 17.0.0
   spec-check  Check that grammar rules cite existing spec sections
   help        Print this help
 ";
@@ -24,6 +26,10 @@ fn main() -> ExitCode {
     let result = match command.as_deref() {
         Some("ci") => ci(),
         Some("conformance") => conformance::run(),
+        Some("gen-unicode") => match std::env::args().nth(2) {
+            Some(ucd_dir) => gen_unicode::run(Path::new(&ucd_dir)),
+            None => Err("usage: cargo xtask gen-unicode <UCD_DIR>".to_string()),
+        },
         Some("spec-check") => spec_check::run(),
         None | Some("help" | "-h" | "--help") => {
             print!("{HELP}");
@@ -107,7 +113,7 @@ fn has_cargo_subcommand(name: &str) -> bool {
 }
 
 /// The repository root: the parent of this crate's manifest directory.
-fn workspace_root() -> PathBuf {
+pub(crate) fn workspace_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .expect("xtask lives one directory below the workspace root")
