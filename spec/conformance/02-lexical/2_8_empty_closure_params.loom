@@ -1,0 +1,6 @@
+# spec: §2.8 rule 4
+def call_fn(f: Fn() -> Int) -> Int = f()
+
+def main
+  puts call_fn({ || 42 })
+end

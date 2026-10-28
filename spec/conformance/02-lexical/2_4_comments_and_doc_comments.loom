@@ -1,0 +1,13 @@
+##! Inner doc comment for module
+# spec: §2.4 rules 1-3
+
+## Outer doc comment for Point
+struct Point
+  x: Int
+end
+
+def main
+  # line comment
+  p = Point(x: 42)
+  puts p.x
+end
