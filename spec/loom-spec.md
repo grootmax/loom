@@ -94,6 +94,8 @@ the parser then ignores `NEWLINE`s in the contexts of rule 2.
    Because rule (a) ignores trivia, a comment-only or blank line inside a continued
    expression does not end it: every line terminator up to the next token is suppressed.
    A suppressed line terminator is trivia (`LINE_BREAK`, §2.9).
+   - (c) The line it ends contains no tokens (it is blank or holds only whitespace and
+     comments). By rule 3 such a `NEWLINE` would be redundant.
 2. **Bracketed contexts (syntactic).** Inside a parenthesized expression, an argument or
    parameter list, an array literal, a map literal, an index expression, or a generic
    argument list, the parser ignores `NEWLINE` tokens. A nested **block body** (§7.9 closure
@@ -386,7 +388,8 @@ Example: `puts "hi"`.
 
 Precisely: the statement starts with an `IDENT` that is followed by whitespace (not a line
 terminator) and then by a token that can begin a command argument: a literal, the start of
-a string, an `IDENT`, an `AT_IDENT`, `self` or `Self`. A label (`IDENT :`) also qualifies.
+a string, an `IDENT`, an `AT_IDENT`, `self`, `Self` or `not`. A label (`IDENT :`) also
+qualifies.
 `puts -1` and `puts [1]` are therefore binary and index expressions, not command calls.
 
 ## 5. Types

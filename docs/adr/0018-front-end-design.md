@@ -132,8 +132,9 @@ sections shown:
    token is `|`, and a map literal otherwise.
 3. **Command calls** (§4.4): a statement is a command call when it starts with an `IDENT`
    that is followed by whitespace (not a line break) and then by a token that can start a
-   command argument: a literal, `STRING_START`, `IDENT`, `AT_IDENT`, `self`, `Self` or a
-   label `IDENT :`.
+   command argument: a literal, `STRING_START`, `IDENT`, `AT_IDENT`, `self`, `Self`, `not`
+   or a label `IDENT :`. `not` is included because it has no binary reading, so
+   `puts not done` is unambiguous; `-`, `[`, `(` and `{` are excluded because they do.
 4. **Bindings and assignments** (§4.1–4.2): the parser produces `BIND_STMT` for
    `var x …`, `x: T = …` and plain `x = …`, and `ASSIGN_STMT` for compound operators and
    for any place other than a lone identifier. Name resolution decides whether a plain

@@ -127,6 +127,8 @@ pub(crate) struct Lexer<'a> {
     last_significant: Option<SyntaxKind>,
     /// The kind of the last token other than `WHITESPACE` (for the `||` rule, §2.8.4).
     last_non_whitespace: Option<SyntaxKind>,
+    /// Whether the current line has a token that is neither trivia nor a line terminator.
+    line_has_token: bool,
     /// The input was lossily decoded; U+FFFD has already been reported as E0001.
     replacement_reported: bool,
 }
@@ -142,6 +144,7 @@ impl<'a> Lexer<'a> {
             modes: Vec::new(),
             last_significant: None,
             last_non_whitespace: None,
+            line_has_token: false,
             replacement_reported,
         }
     }
@@ -208,8 +211,11 @@ impl<'a> Lexer<'a> {
         if kind != WHITESPACE {
             self.last_non_whitespace = Some(kind);
         }
-        if !kind.is_trivia() && kind != NEWLINE {
+        if matches!(kind, NEWLINE | LINE_BREAK) {
+            self.line_has_token = false;
+        } else if !kind.is_trivia() {
             self.last_significant = Some(kind);
+            self.line_has_token = true;
         }
     }
 
@@ -317,9 +323,9 @@ impl<'a> Lexer<'a> {
                 self.line_terminator(start);
             }
             '\r' => {
-                // Already reported by `scan_whole_file`.
+                // Already reported by `scan_whole_file`; recover as a line terminator.
                 self.pos += 1;
-                self.push(WHITESPACE, start);
+                self.line_terminator(start);
             }
             '#' => self.lex_comment(start),
             '"' => {
@@ -544,12 +550,16 @@ impl<'a> Lexer<'a> {
 
     // ----- line terminators (§2.3) --------------------------------------------------------
 
+    /// A line with no tokens (blank or comment-only) never produces `NEWLINE`: by §2.3
+    /// rule 3 it would be redundant, and as trivia it lets comments attach to the item
+    /// that follows them.
     fn line_terminator(&mut self, start: usize) {
-        let kind = if self.continues_after_line() || self.leading_dot_follows() {
-            LINE_BREAK
-        } else {
-            NEWLINE
-        };
+        let kind =
+            if !self.line_has_token || self.continues_after_line() || self.leading_dot_follows() {
+                LINE_BREAK
+            } else {
+                NEWLINE
+            };
         self.push(kind, start);
     }
 
