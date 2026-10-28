@@ -1,23 +1,82 @@
 //! Query database and compilation orchestration.
 //!
-//! In Phase 1 the driver loads files, parses them and collects diagnostics. Each file is
-//! independent, so there is nothing to memoize yet. The salsa query database arrives with
-//! name resolution in Phase 2 ([ADR 0018] §11).
+//! The driver loads files, parses them, and analyzes programs: lowering to HIR with the
+//! embedded core library, name resolution and type checking ([`Session::analyze`]). In
+//! Phase 2 each root file is its own program and nothing is memoized across programs;
+//! a query engine arrives with the language server ([ADR 0019] §1).
 //!
-//! [ADR 0018]: https://github.com/grootmax/loom/blob/main/docs/adr/0018-front-end-design.md
+//! [ADR 0019]: https://github.com/grootmax/loom/blob/main/docs/adr/0019-semantic-analysis-and-interpreter.md
 
 use std::fmt;
 use std::path::{Path, PathBuf};
 
+use loom_ast::AstNode;
+use loom_check::Checked;
 use loom_diagnostics::Diagnostic;
+use loom_hir::{DefId, DefKind, Hir, Package};
 use loom_parser::Parse;
+use loom_resolve::Resolution;
 use loom_span::{FileId, SourceMap};
+
+/// The core library's source files (ADR 0019 §4): `lib.loom` is the root module and each
+/// other file is a child module named after it.
+pub const CORE_FILES: &[(&str, &str)] = &[
+    ("lib", include_str!("../../../std/core/lib.loom")),
+    ("traits", include_str!("../../../std/core/traits.loom")),
+    (
+        "primitives",
+        include_str!("../../../std/core/primitives.loom"),
+    ),
+    ("option", include_str!("../../../std/core/option.loom")),
+    ("string", include_str!("../../../std/core/string.loom")),
+    ("array", include_str!("../../../std/core/array.loom")),
+    ("map", include_str!("../../../std/core/map.loom")),
+    ("iter", include_str!("../../../std/core/iter.loom")),
+    ("io", include_str!("../../../std/core/io.loom")),
+    ("prelude", include_str!("../../../std/core/prelude.loom")),
+];
+
+/// A program after semantic analysis.
+#[derive(Debug)]
+pub struct Analysis {
+    /// The program's HIR (core library included).
+    pub hir: Hir,
+    /// Name resolution.
+    pub resolution: Resolution,
+    /// Types.
+    pub checked: Checked,
+    /// The root module of the program.
+    pub root: DefId,
+    /// Parse, resolution and type errors, in source order.
+    pub diagnostics: Vec<Diagnostic>,
+}
+
+impl Analysis {
+    /// Whether any error was found.
+    #[must_use]
+    pub fn has_errors(&self) -> bool {
+        self.diagnostics.iter().any(Diagnostic::is_error)
+    }
+
+    /// The root module's `main` function, if it has one.
+    #[must_use]
+    pub fn main(&self) -> Option<DefId> {
+        let DefKind::Module(module) = &self.hir.def(self.root).kind else {
+            return None;
+        };
+        module.items.iter().copied().find(|&item| {
+            self.hir.def(item).name.as_str() == "main"
+                && matches!(self.hir.def(item).kind, DefKind::Fn(_))
+        })
+    }
+}
 
 /// One compilation session: the loaded files and their parses.
 #[derive(Debug, Default)]
 pub struct Session {
     sources: SourceMap,
     parses: Vec<(FileId, PathBuf, Parse)>,
+    core: Vec<(FileId, &'static str, Parse)>,
 }
 
 /// A file could not be loaded.
@@ -110,6 +169,74 @@ impl Session {
         self.parses
             .iter()
             .flat_map(|(_, _, parse)| parse.diagnostics())
+    }
+
+    /// Lowers, resolves and checks the program whose root is `file`, together with the
+    /// core library.
+    ///
+    /// # Panics
+    ///
+    /// If `file` was not loaded in this session.
+    pub fn analyze(&mut self, file: FileId) -> Analysis {
+        self.load_core();
+        let mut hir = Hir::new();
+        let mut diagnostics: Vec<Diagnostic> = Vec::new();
+        let mut core_root = None;
+        for (id, name, parse) in &self.core {
+            diagnostics.extend(parse.diagnostics().iter().cloned());
+            let tree = loom_ast::SourceFile::cast(parse.syntax())
+                .expect("a parse is rooted at SOURCE_FILE");
+            if *name == "lib" {
+                core_root = Some(loom_hir::lower_file(
+                    &mut hir,
+                    *id,
+                    &tree,
+                    Package::Core,
+                    None,
+                    "",
+                ));
+            } else {
+                let module =
+                    loom_hir::lower_file(&mut hir, *id, &tree, Package::Core, core_root, name);
+                if let Some(root) = core_root
+                    && let DefKind::Module(data) = &mut hir.defs[root.index()].kind
+                {
+                    data.items.push(module);
+                }
+            }
+        }
+        let parse = self.parse(file).expect("the file was loaded");
+        diagnostics.extend(parse.diagnostics().iter().cloned());
+        let tree =
+            loom_ast::SourceFile::cast(parse.syntax()).expect("a parse is rooted at SOURCE_FILE");
+        let root = loom_hir::lower_file(&mut hir, file, &tree, Package::Main, None, "");
+        let resolution = loom_resolve::resolve(&hir);
+        diagnostics.extend(resolution.diagnostics.iter().cloned());
+        let checked = loom_check::check(&hir, &resolution);
+        diagnostics.extend(checked.diagnostics.iter().cloned());
+        diagnostics.sort_by_key(|d| (d.primary.span.file, d.primary.span.range.start()));
+        diagnostics.dedup();
+        Analysis {
+            hir,
+            resolution,
+            checked,
+            root,
+            diagnostics,
+        }
+    }
+
+    fn load_core(&mut self) {
+        if !self.core.is_empty() {
+            return;
+        }
+        for (name, text) in CORE_FILES {
+            let path = format!("<core>/{name}.loom");
+            let Ok(id) = self.sources.add(path, (*text).to_owned()) else {
+                continue;
+            };
+            let parse = loom_parser::parse(text, id);
+            self.core.push((id, name, parse));
+        }
     }
 
     /// Whether any loaded file has an error.

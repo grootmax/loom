@@ -16,6 +16,7 @@ path = "src/main.rs"
 loom_span = { path = "../loom_span" }
 loom_diagnostics = { path = "../loom_diagnostics" }
 loom_driver = { path = "../loom_driver" }
+loom_hir = { path = "../loom_hir" }
 loom_fmt = { path = "../../tools/loom_fmt" }
 
 [lints]

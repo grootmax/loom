@@ -21,11 +21,7 @@ const COMMANDS: &[Command] = &[
     cmd("init", "Create a project in the current directory", 5),
     cmd("run", "Build and run a program", 2),
     cmd("build", "Compile a program to a native binary", 3),
-    cmd(
-        "check",
-        "Check programs for errors (syntax only until phase 2)",
-        1,
-    ),
+    cmd("check", "Check programs for errors", 1),
     cmd("test", "Run tests, including doc-tests", 2),
     cmd("bench", "Run benchmarks", 6),
     cmd("fmt", "Format source files in the canonical style", 1),
@@ -158,13 +154,16 @@ fn print_diagnostics(session: &Session) {
     }
 }
 
-/// `loom check`: reports lexical and syntax errors (Phase 1).
+/// `loom check`: reports every error the implemented phases can find. Each file is
+/// checked as the root of its own program.
 fn check(args: &[String]) -> ExitCode {
     let (options, paths) = split_options(args);
     let mut dump_cst = false;
+    let mut dump_hir = false;
     for option in options {
         match option {
             "--dump=cst" => dump_cst = true,
+            "--dump=hir" => dump_hir = true,
             "--message-format=short" => {}
             other => return usage_error(&format!("check: unknown option `{other}`")),
         }
@@ -172,18 +171,37 @@ fn check(args: &[String]) -> ExitCode {
     if paths.is_empty() {
         return usage_error("check: expected at least one path");
     }
-    let session = match load(&paths) {
+    let mut session = match load(&paths) {
         Ok(session) => session,
         Err(code) => return code,
     };
-    if dump_cst {
-        for (_, path, parse) in session.files() {
+    let files: Vec<(loom_span::FileId, PathBuf)> = session
+        .files()
+        .map(|(id, path, _)| (id, path.to_owned()))
+        .collect();
+    let mut failed = false;
+    let stderr = std::io::stderr();
+    for (file, path) in files {
+        if dump_cst && let Some(parse) = session.parse(file) {
             println!("# {}", path.display());
             print!("{}", parse.syntax().debug_dump());
         }
+        let analysis = session.analyze(file);
+        if dump_hir {
+            for body in &analysis.hir.bodies {
+                if analysis.hir.package_of(body.owner) == loom_hir::Package::Main {
+                    println!("# {}", analysis.hir.path_string(body.owner));
+                    print!("{}", loom_hir::dump_body(body));
+                }
+            }
+        }
+        let mut out = stderr.lock();
+        for diagnostic in &analysis.diagnostics {
+            let _ = writeln!(out, "{}", diagnostic.short(session.sources()));
+        }
+        failed |= analysis.has_errors();
     }
-    print_diagnostics(&session);
-    if session.has_errors() {
+    if failed {
         ExitCode::FAILURE
     } else {
         ExitCode::SUCCESS

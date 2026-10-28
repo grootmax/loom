@@ -684,7 +684,13 @@ fn lower_type(t: &ast::Type) -> TypeRef {
             };
             TypeRefKind::Fn {
                 kind,
-                params: f.types().map(|t| lower_type(&t)).collect(),
+                params: {
+                    let mut types: Vec<TypeRef> = f.types().map(|t| lower_type(&t)).collect();
+                    if f.ret_type().is_some() {
+                        types.pop();
+                    }
+                    types
+                },
                 ret: f.ret_type().map(|t| Box::new(lower_type(&t))),
             }
         }

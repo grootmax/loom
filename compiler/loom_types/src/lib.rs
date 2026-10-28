@@ -505,14 +505,14 @@ impl InferTable {
         match (interner.kind(a), interner.kind(b)) {
             (TyKind::Error, _) | (_, TyKind::Error) => Ok(()),
             (TyKind::Infer(va, ka), TyKind::Infer(vb, kb)) => {
-                let kind = match (ka, kb) {
-                    (VarKind::General, k) | (k, VarKind::General) => k,
-                    (x, y) if x == y => x,
+                // Bind the more general variable to the more specific one, so the
+                // representative carries the precise kind.
+                match (ka, kb) {
+                    (VarKind::General, _) => self.vars[va.0 as usize].1 = Some(b),
+                    (_, VarKind::General) => self.vars[vb.0 as usize].1 = Some(a),
+                    (x, y) if x == y => self.vars[vb.0 as usize].1 = Some(a),
                     _ => return Err(Mismatch),
-                };
-                self.vars[va.0 as usize].0 = kind;
-                self.vars[vb.0 as usize].0 = kind;
-                self.vars[vb.0 as usize].1 = Some(a);
+                }
                 Ok(())
             }
             (TyKind::Infer(var, kind), other) => self.bind_checked(interner, var, kind, &other, b),

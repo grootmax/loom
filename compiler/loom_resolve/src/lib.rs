@@ -11,7 +11,9 @@ mod body;
 mod defmap;
 
 pub use body::{BodyResolution, LocalRes};
-pub use defmap::{DefMap, Namespace, Res, TyParamId};
+pub use defmap::{
+    DefMap, Namespace, PathError, Res, TyParamId, find_generic_param, is_type_def, is_visible,
+};
 
 use loom_diagnostics::Diagnostic;
 use loom_hir::{BodyId, Hir};

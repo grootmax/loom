@@ -21,6 +21,7 @@ extern "intrinsic"
   def char_code(value: Char) -> U32
   def char_to_string(value: Char) -> String
   def int_zero[T] -> T
+  def int_add[T](left: T, right: T) -> T
 end
 
 ## A failure to parse a number.
@@ -306,7 +307,7 @@ end
 
 impl[T: Integer] Sum for T
   def self.zero -> T = int_zero()
-  def add(other: T) -> T = self + other
+  def add(other: T) -> T = int_add(self, other)
 end
 
 impl Display for F32

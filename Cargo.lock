@@ -14,6 +14,13 @@ dependencies = [
 [[package]]
 name = "loom_check"
 version = "0.0.0"
+dependencies = [
+ "loom_diagnostics",
+ "loom_hir",
+ "loom_resolve",
+ "loom_span",
+ "loom_types",
+]
 
 [[package]]
 name = "loom_cli"
@@ -22,6 +29,7 @@ dependencies = [
  "loom_diagnostics",
  "loom_driver",
  "loom_fmt",
+ "loom_hir",
  "loom_span",
 ]
 
@@ -45,11 +53,15 @@ name = "loom_driver"
 version = "0.0.0"
 dependencies = [
  "loom_ast",
+ "loom_check",
  "loom_diagnostics",
+ "loom_hir",
  "loom_lexer",
  "loom_parser",
+ "loom_resolve",
  "loom_span",
  "loom_syntax",
+ "loom_types",
 ]
 
 [[package]]

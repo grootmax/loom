@@ -52,7 +52,7 @@ pub trait Iterator
   ## Adds up the remaining values.
   default def own sum -> Self.Item where Self.Item: Sum
     var iter = self
-    var total = Sum.zero()
+    var total: Self.Item = Sum.zero()
     while iter.next_item in Some(value)
       total = total.add(value)
     end

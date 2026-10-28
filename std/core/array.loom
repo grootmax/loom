@@ -1,5 +1,7 @@
 ##! `Array[T]`: a growable sequence.
 
+use core.iter.Enumerated
+
 extern "intrinsic"
   def array_new[T] -> Array[T]
   def array_length[T](array: Array[T]) -> Int
@@ -66,7 +68,7 @@ pub struct Array[T]
   pub def iter -> ArrayIter[T] = ArrayIter(array: self, index: 0)
 
   ## An iterator over `(index, element)` pairs.
-  pub def enumerate -> EnumerateIter[ArrayIter[T]] = self.iter.enumerate
+  pub def enumerate -> Enumerated[ArrayIter[T]] = self.iter.enumerate
 
   ## Calls `f` on each element, in order.
   pub def each(f: FnMut(T))
@@ -275,7 +277,7 @@ pub struct Array[T]
 
   ## The sum of the elements.
   pub def sum -> T where T: Sum + Clone
-    var total = T.zero()
+    var total: T = T.zero()
     var index = 0
     while index < array_length(self)
       total = total.add(array_get(self, index).clone)
