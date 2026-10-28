@@ -1,6 +1,6 @@
 # ADR 0005: Ownership and borrowing model
 
-- **Status:** Accepted (provisional). **Owner review requested** on the points marked ⚑.
+- **Status:** Accepted (provisional). Owner decisions on the ⚑ points recorded on 2026-10-29.
 - **Date:** 2026-10-23
 - **Deciders:** lead architect; project owner for ⚑ items
 - **Related:** [spec §8](../../spec/loom-spec.md), [ADR 0004](0004-type-system-and-inference.md), [ADR 0006](0006-concurrency-model.md), [ADR 0016](0016-rust-interop.md), [ADR 0017](0017-rust-as-the-base.md)
@@ -52,7 +52,7 @@ Borrows exist at runtime, but are restricted so that lifetimes never need to be 
 1. A borrow may be **passed down** into calls and **used locally**.
 2. A borrow may **not be stored** in a struct or enum field, in a collection, or in a
    `Shared`/`Chan` value, and may not be captured by an escaping closure.
-3. ⚑ **A borrow may be returned** from a function only when Rust's *lifetime elision rules*
+3. ⚑ (approved by the owner, 2026-10-29) **A borrow may be returned** from a function only when Rust's *lifetime elision rules*
    pick its source unambiguously: a method returns a borrow of `self`, or a function has
    exactly one borrowed parameter. The return type says so with `ref T` or `mut ref T`,
    for example `def get(key: K) -> Option[ref V]` and `def first -> Option[ref T]`. When
@@ -139,11 +139,13 @@ inferred modes and inferred closure captures.
   happen on assignment and `own` parameters.
 - Some Rust designs (borrowing parsers, zero-copy structs) are not expressible in safe
   Loom. They need owned data, indices, or a Rust crate behind the bridge.
-- ⚑ **Owner decisions requested:**
-  1. Confirm rule 3 (elision-based borrow returns) instead of "never return references".
-  2. Confirm that opt-in explicit lifetimes (`ref['a] T`) remain *out* of the language until a
-     post-1.0 RFC demonstrates need. The keyword `ref` is reserved now so that remains possible.
-  3. If Phase 3 user testing shows ownership errors hurting readability too much, the
-     fallback is option B for *application* code, behind an edition. That would be a new ADR.
+- ⚑ **Owner decisions (2026-10-29):**
+  1. Rule 3 (elision-based borrow returns) is **confirmed**, instead of "never return
+     references".
+  2. Opt-in explicit lifetimes (`ref['a] T`) stay **out** of the language until a post-1.0
+     RFC demonstrates need. The keyword `ref` stays reserved so that remains possible.
+  3. Still open: if Phase 3 user testing shows ownership errors hurting readability too
+     much, the fallback is option B for *application* code, behind an edition. That would
+     be a new ADR and a new owner decision.
 - The borrow checker conformance suite (Phase 3) must cover accept *and* reject cases for
   every rule in this ADR.

@@ -78,7 +78,7 @@ benchmark harnesses, editor syntax files.
 
 ## Owner decisions (ask; don't decide alone)
 
-Final name and extension (ADR 0014); ownership fallbacks and opt-in lifetimes (ADR 0005 ⚑);
+Final name and extension (ADR 0014); the ownership fallback (ADR 0005 ⚑; lifetimes decided: out until an RFC);
 the Rust-emit backend (ADR 0009); repo visibility (currently **public**, by owner choice
 on 2026-10-22); license changes; anything that changes pillars, phase order or the
 compatibility promise; any spending.
