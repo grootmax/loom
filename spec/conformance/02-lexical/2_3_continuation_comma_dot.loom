@@ -1,0 +1,10 @@
+# spec: §2.3 rule 1
+def add(x: Int, y: Int) -> Int = x + y
+
+def main
+  x = add(
+    1,
+    2
+  )
+  puts x
+end

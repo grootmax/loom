@@ -1,0 +1,4 @@
+# spec: §2.6 rule 3
+def main
+  yield = 1
+end
