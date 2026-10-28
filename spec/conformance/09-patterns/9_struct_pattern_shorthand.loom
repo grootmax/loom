@@ -1,0 +1,14 @@
+# spec: §9
+struct Point
+  x: Int
+  y: Int
+  z: Int
+end
+
+def main
+  p = Point(x: 1, y: 2, z: 3)
+  val = case p
+  in Point(x:, ..) then x
+  end
+  puts val
+end

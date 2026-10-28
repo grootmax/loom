@@ -211,9 +211,13 @@ impl Session {
             loom_ast::SourceFile::cast(parse.syntax()).expect("a parse is rooted at SOURCE_FILE");
         let root = loom_hir::lower_file(&mut hir, file, &tree, Package::Main, None, "");
         let resolution = loom_resolve::resolve(&hir);
-        diagnostics.extend(resolution.diagnostics.iter().cloned());
         let checked = loom_check::check(&hir, &resolution);
-        diagnostics.extend(checked.diagnostics.iter().cloned());
+        // A program with lexical or syntax errors reports only those (spec Appendix C):
+        // later errors in such a program are mostly consequences of the first ones.
+        if !diagnostics.iter().any(Diagnostic::is_error) {
+            diagnostics.extend(resolution.diagnostics.iter().cloned());
+            diagnostics.extend(checked.diagnostics.iter().cloned());
+        }
         diagnostics.sort_by_key(|d| (d.primary.span.file, d.primary.span.range.start()));
         diagnostics.dedup();
         Analysis {

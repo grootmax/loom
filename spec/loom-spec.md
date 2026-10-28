@@ -1020,6 +1020,9 @@ syntax, E0200–E0299 names and modules, E0300–E0499 types and traits, E0500�
 ownership, E0600–E0699 concurrency. A code is never reused. The "At" column gives the
 primary position, which is where the diagnostic points.
 
+A program with lexical or syntax errors (C.1–C.2) is reported with those errors only;
+name, type and later errors are reported once the program parses.
+
 ### C.1 Lexical errors (§2)
 
 | Code | Error | At | Rule |

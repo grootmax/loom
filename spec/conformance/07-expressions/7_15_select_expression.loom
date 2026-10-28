@@ -1,0 +1,10 @@
+# spec: §11.3
+# phase: 4
+def main
+  ch = Ok(42)
+  res = select
+  when Ok(v) = ch then v
+  else 0
+  end
+  puts res
+end

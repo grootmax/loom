@@ -1,0 +1,21 @@
+# spec: §3.1
+trait Printable
+  def print_val -> String
+end
+
+struct Number
+  val: Int
+end
+
+impl Printable for Number
+  def print_val -> String = "#{@val}"
+end
+
+def show[T](item: T) -> String where T: Printable
+  item.print_val
+end
+
+def main
+  n = Number(val: 42)
+  puts show(n)
+end

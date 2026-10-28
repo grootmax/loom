@@ -1,0 +1,5 @@
+# spec: §2.7.2 rule 3
+def main
+  t = (1, (2, 3))
+  puts t.1.0
+end

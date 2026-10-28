@@ -1,0 +1,7 @@
+# spec: §7.5
+def main
+  a = 1
+  b = 2
+  puts not a == b
+  puts not false and true
+end

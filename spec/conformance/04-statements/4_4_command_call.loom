@@ -1,0 +1,8 @@
+# spec: §4.4
+def log(msg: String, count: Int)
+  puts "#{msg}: #{count}"
+end
+
+def main
+  log "count", 42
+end

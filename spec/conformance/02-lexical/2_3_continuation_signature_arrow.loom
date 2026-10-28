@@ -1,0 +1,9 @@
+# spec: §2.3 rule 1
+def greet(
+  name: String
+) ->
+  String = "hello #{name}"
+
+def main
+  puts greet("world")
+end

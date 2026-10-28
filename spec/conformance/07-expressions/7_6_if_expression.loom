@@ -1,0 +1,14 @@
+# spec: §7.6
+def main
+  x = 10
+  val = if x > 20 then 1 elsif x == 10 then 2 else 3 end
+  puts val
+
+  if x < 5
+    puts 100
+  elsif x == 10
+    puts 200
+  else
+    puts 300
+  end
+end

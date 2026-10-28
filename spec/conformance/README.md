@@ -21,7 +21,8 @@ spec/conformance/
 3. `.diag` files list one diagnostic per line as `LINE:COL CODE`, e.g. `3:5 E0012`, in
    source order. `LINE` and `COL` are 1-based; `COL` counts Unicode scalar values (a tab is
    one column). Codes are listed in spec Appendix C. Message text is **not** part of
-   conformance; error codes and primary positions are. Warnings are not listed.
+   conformance; error codes and primary positions are. Warnings are not listed. A program
+   with lexical or syntax errors lists only those (spec Appendix C).
 4. Tests must be deterministic: no time, randomness, network, or environment dependence.
 5. Tests are tagged by edition through their directory (`edition-preview/` once there are
    several editions).

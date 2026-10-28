@@ -1,0 +1,21 @@
+# spec: §3.4
+trait Container
+  type Item
+  def get -> Self.Item
+  default def is_present -> Bool = true
+end
+
+struct Box
+  val: Int
+end
+
+impl Container for Box
+  type Item = Int
+  def get -> Int = @val
+end
+
+def main
+  b = Box(val: 99)
+  puts b.get
+  puts b.is_present
+end

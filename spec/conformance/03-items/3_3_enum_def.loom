@@ -1,0 +1,23 @@
+# spec: §3.3
+enum Shape
+  UnitShape
+  Circle(Int)
+  Rect(w: Int, h: Int)
+
+  def area -> Int
+    case self
+    in UnitShape then 0
+    in Circle(r) then r * r
+    in Rect(w:, h:) then w * h
+    end
+  end
+end
+
+def main
+  s1 = Shape.UnitShape
+  s2 = Shape.Circle(5)
+  s3 = Shape.Rect(w: 4, h: 6)
+  puts s1.area
+  puts s2.area
+  puts s3.area
+end

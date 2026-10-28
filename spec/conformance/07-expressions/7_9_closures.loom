@@ -1,0 +1,12 @@
+# spec: §7.9
+def apply(x: Int, f: Fn(Int) -> Int) -> Int
+  f(x)
+end
+
+def main
+  f1 = { |x: Int| x + 1 }
+  puts apply(5, f1)
+
+  f2 = { |x: Int| x * 2 }
+  puts apply(5, f2)
+end

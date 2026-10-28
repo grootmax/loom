@@ -1,0 +1,14 @@
+# spec: §3.10
+@[derive(Copy)]
+struct Val
+  @[inline]
+  x: Int
+end
+
+@[inline]
+def get_x(v: Val) -> Int = v.x
+
+def main
+  v = Val(x: 7)
+  puts get_x(v)
+end

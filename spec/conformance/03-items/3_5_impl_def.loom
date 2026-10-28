@@ -1,0 +1,16 @@
+# spec: §3.5
+trait Identity[T]
+  def identity(val: T) -> T
+end
+
+struct IdentityImpl
+end
+
+impl[T] Identity[T] for IdentityImpl
+  def identity(val: T) -> T = val
+end
+
+def main
+  id = IdentityImpl()
+  puts id.identity(42)
+end

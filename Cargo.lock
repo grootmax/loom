@@ -152,6 +152,10 @@ name = "loom_runtime"
 version = "0.0.0"
 
 [[package]]
+name = "loom_snapshot"
+version = "0.0.0"
+
+[[package]]
 name = "loom_span"
 version = "0.0.0"
 
@@ -169,6 +173,10 @@ dependencies = [
  "loom_hir",
  "loom_resolve",
 ]
+
+[[package]]
+name = "loom_unicode"
+version = "0.0.0"
 
 [[package]]
 name = "xtask"
