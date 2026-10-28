@@ -238,7 +238,8 @@ fn is_continuation(first: &SyntaxToken, innermost_bracket: Option<&SyntaxNode>) 
     let mut cursor = first.prev_token();
     while let Some(token) = cursor {
         match token.kind() {
-            WHITESPACE | LINE_BREAK | COMMENT | DOC_COMMENT | INNER_DOC_COMMENT | ERROR_TOKEN => {
+            WHITESPACE | LINE_BREAK | COMMENT | DOC_COMMENT | INNER_DOC_COMMENT | SHEBANG
+            | ERROR_TOKEN => {
                 cursor = token.prev_token();
             }
             NEWLINE | L_PAREN | L_BRACKET | L_BRACE | AT_BRACKET | INTERP_START | DO_KW => {
