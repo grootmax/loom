@@ -2,8 +2,6 @@
 resolver = "3"
 members = [
     "compiler/loom_span",
-    "compiler/loom_unicode",
-    "compiler/loom_snapshot",
     "compiler/loom_diagnostics",
     "compiler/loom_lexer",
     "compiler/loom_syntax",

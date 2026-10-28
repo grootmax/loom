@@ -11,8 +11,5 @@ publish = false
 [dependencies]
 loom_span = { path = "../loom_span" }
 
-[dev-dependencies]
-loom_snapshot = { path = "../loom_snapshot" }
-
 [lints]
 workspace = true

@@ -15,8 +15,5 @@ loom_syntax = { path = "../../compiler/loom_syntax" }
 loom_parser = { path = "../../compiler/loom_parser" }
 loom_ast = { path = "../../compiler/loom_ast" }
 
-[dev-dependencies]
-loom_snapshot = { path = "../../compiler/loom_snapshot" }
-
 [lints]
 workspace = true

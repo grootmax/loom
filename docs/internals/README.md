@@ -20,8 +20,6 @@ source ─► loom_lexer ─► loom_parser ─► loom_syntax (lossless CST) �
 | Crate | Path | Phase | Role |
 |---|---|---|---|
 | loom_span | compiler/loom_span | 1 | Source files, spans, line maps |
-| loom_unicode | compiler/loom_unicode | 1 | Generated Unicode tables (XID, `White_Space`) |
-| loom_snapshot | compiler/loom_snapshot | 1 | Snapshot-test helper (dev-only) |
 | loom_diagnostics | compiler/loom_diagnostics | 1 | Error codes, labeled spans, rendering |
 | loom_lexer | compiler/loom_lexer | 1 | Tokens with trivia |
 | loom_syntax | compiler/loom_syntax | 1 | Lossless CST |
