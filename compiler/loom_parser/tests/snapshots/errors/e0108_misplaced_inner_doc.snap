@@ -1,0 +1,16 @@
+# loom-snapshot: errors/e0108_misplaced_inner_doc
+
+SOURCE_FILE@0..34
+  FN_DEF@0..9
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..6
+      NEWLINE@5..6 "\n"
+    END_KW@6..9 "end"
+  NEWLINE@9..10 "\n"
+  INNER_DOC_COMMENT@10..33 "##! misplaced inner doc"
+  LINE_BREAK@33..34 "\n"
+--- diagnostics ---
+E0108 10..33 inner doc comment (`##!`) after an item

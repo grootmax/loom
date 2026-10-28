@@ -1,0 +1,34 @@
+# loom-snapshot: strings/char_and_string
+
+SOURCE_FILE@0..44
+  FN_DEF@0..43
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..40
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      BIND_STMT@8..16
+        NAME@8..10
+          IDENT@8..10 "ch"
+        WHITESPACE@10..11 " "
+        EQ@11..12 "="
+        WHITESPACE@12..13 " "
+        LITERAL@13..16
+          CHAR_LIT@13..16 "'a'"
+      NEWLINE@16..17 "\n"
+      WHITESPACE@17..19 "  "
+      BIND_STMT@19..39
+        NAME@19..22
+          IDENT@19..22 "str"
+        WHITESPACE@22..23 " "
+        EQ@23..24 "="
+        WHITESPACE@24..25 " "
+        STRING@25..39
+          STRING_START@25..26 "\""
+          STRING_FRAGMENT@26..38 "hello\\nworld"
+          STRING_END@38..39 "\""
+      NEWLINE@39..40 "\n"
+    END_KW@40..43 "end"
+  NEWLINE@43..44 "\n"

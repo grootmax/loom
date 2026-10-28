@@ -1,0 +1,22 @@
+# loom-snapshot: strings/raw_string
+
+SOURCE_FILE@0..36
+  FN_DEF@0..35
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..32
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      BIND_STMT@8..31
+        NAME@8..9
+          IDENT@8..9 "r"
+        WHITESPACE@9..10 " "
+        EQ@10..11 "="
+        WHITESPACE@11..12 " "
+        LITERAL@12..31
+          RAW_STRING_LIT@12..31 "r#\"raw \"string\" #\"#"
+      NEWLINE@31..32 "\n"
+    END_KW@32..35 "end"
+  NEWLINE@35..36 "\n"

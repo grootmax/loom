@@ -1,0 +1,39 @@
+# loom-snapshot: expressions/leading_dot_chain
+
+SOURCE_FILE@0..46
+  FN_DEF@0..45
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..42
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      EXPR_STMT@8..41
+        METHOD_CALL_EXPR@8..41
+          METHOD_CALL_EXPR@8..32
+            PATH_EXPR@8..9
+              NAME_REF@8..9
+                IDENT@8..9 "x"
+            LINE_BREAK@9..10 "\n"
+            WHITESPACE@10..14 "    "
+            COMMENT@14..23 "# comment"
+            LINE_BREAK@23..24 "\n"
+            WHITESPACE@24..28 "    "
+            DOT@28..29 "."
+            NAME_REF@29..30
+              IDENT@29..30 "f"
+            ARG_LIST@30..32
+              L_PAREN@30..31 "("
+              R_PAREN@31..32 ")"
+          LINE_BREAK@32..33 "\n"
+          WHITESPACE@33..37 "    "
+          DOT@37..38 "."
+          NAME_REF@38..39
+            IDENT@38..39 "g"
+          ARG_LIST@39..41
+            L_PAREN@39..40 "("
+            R_PAREN@40..41 ")"
+      NEWLINE@41..42 "\n"
+    END_KW@42..45 "end"
+  NEWLINE@45..46 "\n"

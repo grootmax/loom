@@ -1,0 +1,35 @@
+# loom-snapshot: errors/e0106_assignment_in_expression
+
+SOURCE_FILE@0..32
+  FN_DEF@0..31
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..28
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      EXPR_STMT@8..27
+        IF_EXPR@8..27
+          IF_KW@8..10 "if"
+          WHITESPACE@10..11 " "
+          ASSIGN_STMT@11..16
+            PATH_EXPR@11..12
+              NAME_REF@11..12
+                IDENT@11..12 "x"
+            WHITESPACE@12..13 " "
+            EQ@13..14 "="
+            WHITESPACE@14..15 " "
+            LITERAL@15..16
+              INT_LIT@15..16 "1"
+          WHITESPACE@16..17 " "
+          THEN_KW@17..21 "then"
+          BLOCK@21..22
+            NEWLINE@21..22 "\n"
+          WHITESPACE@22..24 "  "
+          END_KW@24..27 "end"
+      NEWLINE@27..28 "\n"
+    END_KW@28..31 "end"
+  NEWLINE@31..32 "\n"
+--- diagnostics ---
+E0106 13..14 assignment is only allowed as a statement

@@ -1,0 +1,36 @@
+# loom-snapshot: items/fn_associated
+
+SOURCE_FILE@0..36
+  FN_DEF@0..35
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    SELF_KW@4..8 "self"
+    DOT@8..9 "."
+    NAME@9..12
+      IDENT@9..12 "new"
+    PARAM_LIST@12..14
+      L_PAREN@12..13 "("
+      R_PAREN@13..14 ")"
+    WHITESPACE@14..15 " "
+    RET_TYPE@15..22
+      ARROW@15..17 "->"
+      WHITESPACE@17..18 " "
+      PATH_TYPE@18..22
+        PATH@18..22
+          PATH_SEGMENT@18..22
+            NAME_REF@18..22
+              SELF_TYPE_KW@18..22 "Self"
+    BLOCK@22..32
+      NEWLINE@22..23 "\n"
+      WHITESPACE@23..25 "  "
+      EXPR_STMT@25..31
+        CALL_EXPR@25..31
+          PATH_EXPR@25..29
+            NAME_REF@25..29
+              SELF_TYPE_KW@25..29 "Self"
+          ARG_LIST@29..31
+            L_PAREN@29..30 "("
+            R_PAREN@30..31 ")"
+      NEWLINE@31..32 "\n"
+    END_KW@32..35 "end"
+  NEWLINE@35..36 "\n"

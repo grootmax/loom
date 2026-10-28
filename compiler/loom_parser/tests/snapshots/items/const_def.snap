@@ -1,0 +1,21 @@
+# loom-snapshot: items/const_def
+
+SOURCE_FILE@0..21
+  CONST_DEF@0..20
+    CONST_KW@0..5 "const"
+    WHITESPACE@5..6 " "
+    NAME@6..9
+      IDENT@6..9 "MAX"
+    COLON@9..10 ":"
+    WHITESPACE@10..11 " "
+    PATH_TYPE@11..14
+      PATH@11..14
+        PATH_SEGMENT@11..14
+          NAME_REF@11..14
+            IDENT@11..14 "Int"
+    WHITESPACE@14..15 " "
+    EQ@15..16 "="
+    WHITESPACE@16..17 " "
+    LITERAL@17..20
+      INT_LIT@17..20 "100"
+  NEWLINE@20..21 "\n"

@@ -1,0 +1,24 @@
+# loom-snapshot: strings/triple_quote_string
+
+SOURCE_FILE@0..44
+  FN_DEF@0..43
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..40
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      BIND_STMT@8..39
+        NAME@8..9
+          IDENT@8..9 "s"
+        WHITESPACE@9..10 " "
+        EQ@10..11 "="
+        WHITESPACE@11..12 " "
+        STRING@12..39
+          STRING_START@12..15 "\"\"\""
+          STRING_FRAGMENT@15..36 "\n  line 1\n  line 2\n  "
+          STRING_END@36..39 "\"\"\""
+      NEWLINE@39..40 "\n"
+    END_KW@40..43 "end"
+  NEWLINE@43..44 "\n"

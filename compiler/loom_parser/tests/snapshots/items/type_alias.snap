@@ -1,0 +1,23 @@
+# loom-snapshot: items/type_alias
+
+SOURCE_FILE@0..20
+  TYPE_ALIAS@0..19
+    TYPE_KW@0..4 "type"
+    WHITESPACE@4..5 " "
+    NAME@5..10
+      IDENT@5..10 "MyInt"
+    GENERIC_PARAM_LIST@10..13
+      L_BRACKET@10..11 "["
+      GENERIC_PARAM@11..12
+        NAME@11..12
+          IDENT@11..12 "T"
+      R_BRACKET@12..13 "]"
+    WHITESPACE@13..14 " "
+    EQ@14..15 "="
+    WHITESPACE@15..16 " "
+    PATH_TYPE@16..19
+      PATH@16..19
+        PATH_SEGMENT@16..19
+          NAME_REF@16..19
+            IDENT@16..19 "Int"
+  NEWLINE@19..20 "\n"

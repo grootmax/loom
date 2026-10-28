@@ -1,0 +1,33 @@
+# loom-snapshot: expressions/control_flow_jump
+
+SOURCE_FILE@0..38
+  FN_DEF@0..37
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..34
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      EXPR_STMT@8..16
+        RETURN_EXPR@8..16
+          RETURN_KW@8..14 "return"
+          WHITESPACE@14..15 " "
+          LITERAL@15..16
+            INT_LIT@15..16 "1"
+      NEWLINE@16..17 "\n"
+      WHITESPACE@17..19 "  "
+      EXPR_STMT@19..26
+        BREAK_EXPR@19..26
+          BREAK_KW@19..24 "break"
+          WHITESPACE@24..25 " "
+          LITERAL@25..26
+            INT_LIT@25..26 "2"
+      NEWLINE@26..27 "\n"
+      WHITESPACE@27..29 "  "
+      EXPR_STMT@29..33
+        NEXT_EXPR@29..33
+          NEXT_KW@29..33 "next"
+      NEWLINE@33..34 "\n"
+    END_KW@34..37 "end"
+  NEWLINE@37..38 "\n"
