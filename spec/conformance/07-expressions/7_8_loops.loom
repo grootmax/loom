@@ -1,0 +1,22 @@
+# spec: §7.8
+def main
+  var i = 0
+  val = loop do
+    i += 1
+    if i == 5
+      break i * 10
+    end
+  end
+  puts val
+
+  var count = 0
+  while count < 3
+    count += 1
+  end
+  puts count
+
+  pairs = [(1, 10), (2, 20)]
+  for (a, b) in pairs
+    puts a + b
+  end
+end

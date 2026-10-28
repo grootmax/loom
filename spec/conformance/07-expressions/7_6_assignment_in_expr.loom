@@ -1,0 +1,7 @@
+# spec: §7.5 rule 14
+def main
+  var a = 1
+  if a = 2
+    puts 1
+  end
+end

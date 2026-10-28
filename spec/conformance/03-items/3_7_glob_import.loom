@@ -1,0 +1,5 @@
+# spec: §3.7
+use math.*
+
+def main
+end

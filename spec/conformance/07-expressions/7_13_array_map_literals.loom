@@ -1,0 +1,7 @@
+# spec: §7.13
+def main
+  arr = [10, 20, 30]
+  for x in arr
+    puts x
+  end
+end

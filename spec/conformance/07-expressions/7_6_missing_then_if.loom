@@ -1,0 +1,4 @@
+# spec: §7.6
+def main
+  if true puts 1 end
+end

@@ -1,0 +1,18 @@
+# spec: §2.3 rule 2
+def add(
+  a: Int,
+  b: Int
+) -> Int = a + b
+
+def main
+  arr = [
+    1,
+    2,
+    3
+  ]
+  var sum = 0
+  for x in arr
+    sum += x
+  end
+  puts sum
+end

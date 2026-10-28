@@ -1,0 +1,7 @@
+# spec: §7.13
+def main
+  t = ((10, 20), 30)
+  puts t.0.0
+  puts t.0.1
+  puts t.1
+end
