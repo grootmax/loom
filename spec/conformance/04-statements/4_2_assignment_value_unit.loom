@@ -1,0 +1,10 @@
+# spec: §4.2 rule 4
+def do_assignment -> Unit
+  var x = 0
+  x = 5
+end
+
+def main
+  do_assignment()
+  puts "done"
+end

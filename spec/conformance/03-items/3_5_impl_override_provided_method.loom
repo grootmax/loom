@@ -1,0 +1,20 @@
+# spec: §3.5 rule 1
+trait Greeter
+  default def greet -> String
+    "hello"
+  end
+end
+
+struct CustomGreeter
+end
+
+impl Greeter for CustomGreeter
+  def greet -> String
+    "custom hello"
+  end
+end
+
+def main
+  g = CustomGreeter()
+  puts g.greet()
+end

@@ -1,0 +1,7 @@
+# spec: §4.1
+def main
+  var x = 10
+  puts x
+  x = 20
+  puts x
+end

@@ -1,0 +1,9 @@
+# spec: §3.1 rule 1
+def identity[T](own val: T) -> T
+  val
+end
+
+def main
+  puts identity(42)
+  puts identity("hello")
+end

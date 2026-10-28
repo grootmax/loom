@@ -1,0 +1,8 @@
+# spec: §3.9
+type Point2D = (Int, Int)
+
+def main
+  p: Point2D = (10, 20)
+  puts p.0
+  puts p.1
+end

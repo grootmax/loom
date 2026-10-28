@@ -1,0 +1,17 @@
+# spec: §12.2 rule 1
+module helper
+  pub struct Info
+    pub id: Int
+  end
+
+  pub def make_info(id: Int) -> Info
+    Info(id:)
+  end
+end
+
+use helper.{Info, make_info}
+
+def main
+  info = make_info(42)
+  puts info.id
+end

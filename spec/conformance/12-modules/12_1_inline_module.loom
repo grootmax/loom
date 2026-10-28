@@ -1,0 +1,12 @@
+# spec: §12.1 rule 1
+module math
+  pub def add(a: Int, b: Int) -> Int
+    a + b
+  end
+end
+
+use math.add
+
+def main
+  puts add(10, 20)
+end

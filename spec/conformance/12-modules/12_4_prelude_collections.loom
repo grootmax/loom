@@ -1,0 +1,10 @@
+# spec: §12.4
+def main
+  var arr: Array[Int] = [1, 2, 3]
+  puts arr.length
+  var opt: Option[Int] = Some(42)
+  case opt
+  in Some(v) then puts v
+  in None then puts 0
+  end
+end

@@ -1,0 +1,15 @@
+# spec: §3.8
+struct Pair
+  first: Int
+  second: Int
+end
+
+const MY_PAIR: Pair = Pair(first: 10, second: 20)
+const MY_TUPLE: (Int, Int) = (30, 40)
+
+def main
+  puts MY_PAIR.first
+  puts MY_PAIR.second
+  puts MY_TUPLE.0
+  puts MY_TUPLE.1
+end

@@ -1,0 +1,15 @@
+# spec: §12.1 rule 1
+module first
+  pub def val1 -> Int = 10
+end
+
+module second
+  pub def val2 -> Int = 20
+end
+
+use first.val1
+use second.val2
+
+def main
+  puts val1() + val2()
+end

@@ -1,0 +1,12 @@
+# spec: §3.2 rule 2
+module data
+  pub struct Secret
+    code: Int
+  end
+end
+
+use data.Secret
+
+def main
+  s = Secret(code: 123)
+end

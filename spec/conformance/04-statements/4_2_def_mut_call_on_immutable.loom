@@ -1,0 +1,13 @@
+# spec: §4.2 rule 1
+struct Counter
+  val: Int
+
+  def mut increment
+    @val = @val + 1
+  end
+end
+
+def main
+  c = Counter(val: 0)
+  c.increment()
+end

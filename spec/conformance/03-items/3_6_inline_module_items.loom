@@ -1,0 +1,14 @@
+# spec: §3.6
+module outer
+  pub module inner
+    pub def hello -> String
+      "hello from inner"
+    end
+  end
+end
+
+use outer.inner.hello
+
+def main
+  puts hello()
+end
