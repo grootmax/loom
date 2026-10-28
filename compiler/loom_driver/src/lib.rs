@@ -45,6 +45,8 @@ pub struct Analysis {
     pub resolution: Resolution,
     /// Types.
     pub checked: Checked,
+    /// MIR of every body (built only when there are no errors).
+    pub mir: Option<loom_mir::Mir>,
     /// The root module of the program.
     pub root: DefId,
     /// Parse, resolution and type errors, in source order.
@@ -220,10 +222,17 @@ impl Session {
         }
         diagnostics.sort_by_key(|d| (d.primary.span.file, d.primary.span.range.start()));
         diagnostics.dedup();
+        let mir = (!diagnostics.iter().any(Diagnostic::is_error))
+            .then(|| loom_mir::build_program(&hir, &checked));
+        if let Some(mir) = &mir {
+            diagnostics.extend(loom_mir::borrowck::check_program(&hir, &checked, mir));
+            diagnostics.sort_by_key(|d| (d.primary.span.file, d.primary.span.range.start()));
+        }
         Analysis {
             hir,
             resolution,
             checked,
+            mir,
             root,
             diagnostics,
         }

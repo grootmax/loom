@@ -391,7 +391,7 @@ impl<'a> InferCtxt<'a> {
                 let trait_ref = TraitRef { trait_, args };
                 if !matches!(interner.kind(a), TyKind::Error) {
                     if self.implements(a, &trait_ref) {
-                        self.coercions.insert(expr, Coercion::Unsize);
+                        self.coercions.insert(expr, Coercion::Unsize(expected));
                         self.require_trait(a, trait_ref, self.span(expr));
                     } else {
                         self.mismatch(self.span(expr), expected, actual);

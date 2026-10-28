@@ -131,8 +131,8 @@ pub enum Coercion {
     Deref,
     /// A place used where a `ref T` is expected: it is borrowed.
     Autoref,
-    /// A value converted to `dyn Trait`.
-    Unsize,
+    /// A value converted to `dyn Trait` (the target type).
+    Unsize(Ty),
 }
 
 /// What a path pattern refers to.

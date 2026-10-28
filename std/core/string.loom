@@ -39,6 +39,11 @@ pub struct String
     string_push_str(self, other)
   end
 
+  ## Appends `other` (the same as `push_str`).
+  pub def mut append(other: String)
+    string_push_str(self, other)
+  end
+
   ## Appends one character.
   pub def mut push(c: Char)
     string_push_char(self, c)
