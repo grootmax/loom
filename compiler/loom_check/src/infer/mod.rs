@@ -9,7 +9,7 @@ use crate::exhaustive;
 use crate::items::{Predicate, TraitRef};
 use crate::lower::TyLowerer;
 use crate::traits::{Env, SelectError, Solver};
-use crate::{Ctx, ExprInfo, PatInfo, TypedBody};
+use crate::{Coercion, Ctx, ExprInfo, PatInfo, TypedBody};
 use loom_diagnostics::{Diagnostic, codes};
 use loom_hir::{BindingId, Body, BodyId, DefId, DefKind, ExprId, FnKind, Mode, PatId, TypeRef};
 use loom_resolve::BodyResolution;
@@ -72,6 +72,9 @@ pub(crate) struct InferCtxt<'a> {
     binding_tys: Vec<Option<Ty>>,
     exprs: HashMap<ExprId, ExprInfo>,
     pats: HashMap<PatId, PatInfo>,
+    coercions: HashMap<ExprId, Coercion>,
+    /// Inside a pattern matched against a `ref` value: bindings borrow (spec §8.3 rule 6).
+    binding_ref: Option<bool>,
     return_tys: Vec<Ty>,
     loops: Vec<LoopFrame>,
     closures: Vec<ClosureFrame>,
@@ -113,6 +116,8 @@ pub(crate) fn infer_body(cx: &Ctx<'_>, id: BodyId, diagnostics: &mut Vec<Diagnos
         binding_tys: vec![None; body.bindings.len()],
         exprs: HashMap::new(),
         pats: HashMap::new(),
+        coercions: HashMap::new(),
+        binding_ref: None,
         return_tys: Vec::new(),
         loops: Vec::new(),
         closures: Vec::new(),
@@ -221,6 +226,13 @@ impl<'a> InferCtxt<'a> {
         let result = self.solver().normalize(ty, &env);
         self.env = env;
         result
+    }
+
+    /// The resolved, normalized shape of `ty` with outer `ref` layers removed: what an
+    /// operator, method call, field access or pattern sees (spec §8.3 rule 2).
+    fn deref(&mut self, ty: Ty) -> Ty {
+        let ty = self.structurally(ty);
+        self.cx.interner.strip_refs(ty)
     }
 
     /// The resolved, normalized shape of `ty`.
@@ -338,8 +350,32 @@ impl<'a> InferCtxt<'a> {
 
     fn coerce(&mut self, expr: ExprId, actual: Ty, expected: Ty) -> Ty {
         let interner = self.cx.interner;
-        let a = self.structurally(actual);
+        let mut a = self.structurally(actual);
         let e = self.structurally(expected);
+        // `ref T` where a `T` is expected, and a place where a `ref T` is expected
+        // (spec §8.3 rule 2). Ownership rules on these are the borrow checker's.
+        match (interner.kind(a), interner.kind(e)) {
+            (TyKind::Ref { .. }, other)
+                if !matches!(
+                    other,
+                    TyKind::Ref { .. } | TyKind::Infer(_, VarKind::General) | TyKind::Error
+                ) =>
+            {
+                a = interner.strip_refs(a);
+                self.coercions.insert(expr, Coercion::Deref);
+            }
+            (other, TyKind::Ref { inner, .. })
+                if !matches!(
+                    other,
+                    TyKind::Ref { .. } | TyKind::Never | TyKind::Infer(..) | TyKind::Error
+                ) =>
+            {
+                self.coercions.insert(expr, Coercion::Autoref);
+                self.unify_at(expr, a, inner);
+                return expected;
+            }
+            _ => {}
+        }
         match (interner.kind(a), interner.kind(e)) {
             (TyKind::Never, _) => {
                 self.record(expr, expected);
@@ -355,6 +391,7 @@ impl<'a> InferCtxt<'a> {
                 let trait_ref = TraitRef { trait_, args };
                 if !matches!(interner.kind(a), TyKind::Error) {
                     if self.implements(a, &trait_ref) {
+                        self.coercions.insert(expr, Coercion::Unsize);
                         self.require_trait(a, trait_ref, self.span(expr));
                     } else {
                         self.mismatch(self.span(expr), expected, actual);
@@ -597,6 +634,7 @@ impl<'a> InferCtxt<'a> {
             binding_tys,
             exprs,
             pats: std::mem::take(&mut self.pats),
+            coercions: std::mem::take(&mut self.coercions),
             assignments: self.res.assignments.clone(),
             aliases: self.res.aliases.clone(),
         };

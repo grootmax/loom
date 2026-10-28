@@ -549,7 +549,9 @@ an error.
 ### 5.6 Reference types (`ref T`)
 
 `ref T` and `mut ref T` may be written only in a function's return type, including inside
-a generic argument of it (`Option[ref V]`). They denote a borrow of the function's elided
+a generic argument of it (`Option[ref V]`), and in the associated type definitions of an
+`impl` (`type Item = ref T`); the core library also uses them in the fields of view types
+(§8.3 rule 5). They denote a borrow of the function's elided
 source (§8.3 rule 3). Generic parameters may be instantiated with them, and the uses and
 conversions of their values are given in §8.3 rule 2.
 

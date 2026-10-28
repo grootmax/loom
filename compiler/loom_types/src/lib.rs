@@ -222,6 +222,13 @@ pub enum TyKind {
     },
     /// `dyn Trait[args]` (args exclude the self type).
     Dyn(DefId, Vec<Ty>),
+    /// `ref T` or `mut ref T` (spec §5.6, §8.3).
+    Ref {
+        /// `mut ref`.
+        mutable: bool,
+        /// The borrowed type.
+        inner: Ty,
+    },
     /// An inference variable.
     Infer(InferVar, VarKind),
     /// An error has been reported; unifies with everything.
@@ -325,6 +332,10 @@ impl Interner {
                 ret: f(ret),
             },
             TyKind::Dyn(def, args) => TyKind::Dyn(def, args.into_iter().map(&mut *f).collect()),
+            TyKind::Ref { mutable, inner } => TyKind::Ref {
+                mutable,
+                inner: f(inner),
+            },
             _ => return ty,
         };
         self.intern(mapped)
@@ -368,8 +379,18 @@ impl Interner {
             TyKind::Callable { params, ret, .. } => {
                 params.into_iter().any(|t| self.any(t, pred)) || self.any(ret, pred)
             }
+            TyKind::Ref { inner, .. } => self.any(inner, pred),
             _ => false,
         }
+    }
+
+    /// `ty` without any outer `ref` layers.
+    #[must_use]
+    pub fn strip_refs(&self, mut ty: Ty) -> Ty {
+        while let TyKind::Ref { inner, .. } = self.kind(ty) {
+            ty = inner;
+        }
+        ty
     }
 }
 
@@ -521,6 +542,16 @@ impl InferTable {
             (TyKind::Adt(dx, x), TyKind::Adt(dy, y)) if dx == dy => {
                 self.unify_all(interner, &x, &y)
             }
+            (
+                TyKind::Ref {
+                    mutable: mx,
+                    inner: ix,
+                },
+                TyKind::Ref {
+                    mutable: my,
+                    inner: iy,
+                },
+            ) if mx == my => self.unify(interner, ix, iy),
             (TyKind::Dyn(dx, x), TyKind::Dyn(dy, y)) if dx == dy => {
                 self.unify_all(interner, &x, &y)
             }
@@ -599,6 +630,7 @@ impl InferTable {
                 params.into_iter().any(|t| self.occurs(interner, var, t))
                     || self.occurs(interner, var, ret)
             }
+            TyKind::Ref { inner, .. } => self.occurs(interner, var, inner),
             _ => false,
         }
     }

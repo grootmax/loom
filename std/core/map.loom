@@ -4,9 +4,9 @@ extern "intrinsic"
   def map_new[K, V] -> Map[K, V]
   def map_length[K, V](map: Map[K, V]) -> Int
   def map_insert[K, V](mut map: Map[K, V], own key: K, own value: V) -> Option[V]
-  def map_get[K, V](map: Map[K, V], key: K) -> Option[V]
+  def map_get[K, V](map: Map[K, V], key: K) -> Option[ref V]
   def map_remove[K, V](mut map: Map[K, V], key: K) -> Option[V]
-  def map_entry_at[K, V](map: Map[K, V], index: Int) -> (K, V)
+  def map_entry_at[K, V](map: Map[K, V], index: Int) -> (ref K, ref V)
   def map_update[K, V](mut map: Map[K, V], own key: K, own default: V, f: FnMut(V))
 end
 
@@ -42,33 +42,34 @@ pub struct Map[K, V]
   end
 
   ## The keys, in iteration order.
-  pub def keys -> Array[K]
+  pub def keys -> Array[K] where K: Clone
     var result = Array.new
     var index = 0
     while index < map_length(self)
-      result.push(map_entry_at(self, index).0)
+      result.push(map_entry_at(self, index).0.clone)
       index += 1
     end
     result
   end
 
   ## The values, in iteration order.
-  pub def values -> Array[V]
+  pub def values -> Array[V] where V: Clone
     var result = Array.new
     var index = 0
     while index < map_length(self)
-      result.push(map_entry_at(self, index).1)
+      result.push(map_entry_at(self, index).1.clone)
       index += 1
     end
     result
   end
 
   ## The entries as `(key, value)` pairs, in iteration order.
-  pub def to_array -> Array[(K, V)]
+  pub def to_array -> Array[(K, V)] where K: Clone, V: Clone
     var result = Array.new
     var index = 0
     while index < map_length(self)
-      result.push(map_entry_at(self, index))
+      entry = map_entry_at(self, index)
+      result.push((entry.0.clone, entry.1.clone))
       index += 1
     end
     result
@@ -85,15 +86,16 @@ impl[K, V] Iterable for Map[K, V]
 end
 
 ## An iterator over the entries of a map.
+@[view]
 pub struct MapIter[K, V]
-  map: Map[K, V]
+  map: ref Map[K, V]
   index: Int
 end
 
 impl[K, V] Iterator for MapIter[K, V]
-  type Item = (K, V)
+  type Item = (ref K, ref V)
 
-  def mut next_item -> Option[(K, V)]
+  def mut next_item -> Option[(ref K, ref V)]
     if @index < map_length(@map)
       entry = map_entry_at(@map, @index)
       @index += 1
@@ -128,7 +130,7 @@ pub struct Set[T]
   pub def contains(value: T) -> Bool where T: Eq + Hash = map_get(@map, value).is_some
 
   ## The elements, in insertion order.
-  pub def to_array -> Array[T] = @map.keys
+  pub def to_array -> Array[T] where T: Clone = @map.keys
 end
 
 impl[K, V] Default for Map[K, V]

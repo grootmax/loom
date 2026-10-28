@@ -379,12 +379,18 @@ pub fn collect(
         match &data.kind {
             DefKind::Struct(s) => {
                 let lowerer = TyLowerer::new(hir, def_map, &items, interner, def);
+                // A core view type's fields may hold borrows (spec §8.3 rule 5).
+                let view = data.attr("view").is_some() && data.package == Package::Core;
                 let fields = s
                     .fields
                     .iter()
                     .map(|f| FieldTy {
                         name: f.name.clone(),
-                        ty: lowerer.lower(&f.ty, diagnostics),
+                        ty: if view {
+                            lowerer.lower_return(&f.ty, diagnostics)
+                        } else {
+                            lowerer.lower(&f.ty, diagnostics)
+                        },
                         vis: f.vis,
                     })
                     .collect();
@@ -550,7 +556,8 @@ fn collect_impls(
                             methods.insert(m.name.clone(), member);
                         }
                         DefKind::TypeAlias(alias) => {
-                            let ty = lowerer.lower(&alias.ty, diagnostics);
+                            // An associated type says what methods return, so it may be a borrow.
+                            let ty = lowerer.lower_return(&alias.ty, diagnostics);
                             if let Some(&assoc) = trait_info.assoc_types.get(&m.name) {
                                 assoc_types.insert(assoc, ty);
                             }

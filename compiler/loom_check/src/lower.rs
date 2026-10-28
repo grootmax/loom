@@ -128,7 +128,7 @@ impl<'a> TyLowerer<'a> {
                     None => interner.error(),
                 }
             }
-            TypeRefKind::Ref { inner, .. } => {
+            TypeRefKind::Ref { mutable, inner } => {
                 if !in_return {
                     diagnostics.push(
                         Diagnostic::error(
@@ -142,8 +142,15 @@ impl<'a> TyLowerer<'a> {
                         ),
                     );
                 }
-                // Phase 2 checks `ref T` as `T` (ADR 0019 §3 rule 2).
-                self.lower_inner(inner, in_return, diagnostics)
+                let inner_ty = self.lower_inner(inner, in_return, diagnostics);
+                if in_return {
+                    interner.intern(TyKind::Ref {
+                        mutable: *mutable,
+                        inner: inner_ty,
+                    })
+                } else {
+                    inner_ty
+                }
             }
             TypeRefKind::Path(path) => self.lower_path(ty, path, in_return, diagnostics),
         }

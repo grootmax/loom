@@ -60,6 +60,9 @@ pub fn ty_to_string(hir: &Hir, items: &Items, interner: &Interner, ty: Ty) -> St
                 format!("dyn {name}[{}]", list(&args))
             }
         }
+        TyKind::Ref { mutable, inner } => {
+            format!("{}ref {}", if mutable { "mut " } else { "" }, show(inner))
+        }
         TyKind::Infer(_, VarKind::Int) => "{integer}".to_owned(),
         TyKind::Infer(_, VarKind::Float) => "{float}".to_owned(),
         TyKind::Infer(_, VarKind::General) => "_".to_owned(),
