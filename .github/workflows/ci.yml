@@ -62,3 +62,14 @@ jobs:
         with:
           tool: mdbook
       - run: mdbook build docs/book
+
+  miri:
+    name: miri
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install nightly toolchain with miri
+        run: rustup toolchain install nightly --component miri
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo miri test
+        run: cargo +nightly miri test -p loom_runtime

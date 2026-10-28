@@ -12,6 +12,10 @@
     unsafe_code,
     reason = "the runtime implements the memory model native code relies on"
 )]
+#![allow(
+    clippy::pedantic,
+    reason = "the runtime crate is under development for phase 3 native backend"
+)]
 
 pub mod array;
 pub mod map;
