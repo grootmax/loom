@@ -1,0 +1,5 @@
+# spec: §6.2 rule 2
+def main
+  small: I8 = 128
+  puts small
+end

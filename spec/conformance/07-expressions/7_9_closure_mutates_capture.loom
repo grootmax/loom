@@ -1,0 +1,6 @@
+# spec: §7.9 rule 3
+def main
+  var total = 0
+  [1, 2, 3].each { |n| total += n }
+  puts total
+end

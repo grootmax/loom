@@ -3,7 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-10-23
 - **Deciders:** lead architect
-- **Related:** [docs/internals/README.md](../internals/README.md), [ADR 0009](0009-backend-strategy.md); salsa timing amended by [ADR 0018](0018-front-end-design.md) §11
+- **Related:** [docs/internals/README.md](../internals/README.md), [ADR 0009](0009-backend-strategy.md); salsa timing amended by [ADR 0018](0018-front-end-design.md) §11 and [ADR 0019](0019-semantic-analysis-and-interpreter.md) §1
 
 ## Context
 

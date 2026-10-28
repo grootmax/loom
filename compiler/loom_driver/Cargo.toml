@@ -15,6 +15,10 @@ loom_syntax = { path = "../loom_syntax" }
 loom_lexer = { path = "../loom_lexer" }
 loom_parser = { path = "../loom_parser" }
 loom_ast = { path = "../loom_ast" }
+loom_hir = { path = "../loom_hir" }
+loom_resolve = { path = "../loom_resolve" }
+loom_types = { path = "../loom_types" }
+loom_check = { path = "../loom_check" }
 
 [lints]
 workspace = true

@@ -94,6 +94,58 @@ codes! {
     STATEMENTS_ON_ONE_LINE = "E0111", "Two statements on one line";
     NESTING_TOO_DEEP = "E0112", "Nesting too deep";
     GLOB_IMPORT = "E0113", "Glob imports are not supported";
+
+    // Name and module errors (spec Appendix C.4).
+    UNRESOLVED_NAME = "E0200", "Unresolved name";
+    UNKNOWN_VARIANT = "E0201", "Unknown variant or unqualified variant without an enum type";
+    DUPLICATE_DEFINITION = "E0202", "Name declared twice in one namespace";
+    ASSIGN_TO_IMMUTABLE = "E0203", "Assignment to an immutable binding";
+    BINDING_PATTERN_TEST = "E0204", "Pattern test binds names outside a condition";
+    PRIVATE_ITEM = "E0205", "Item, field or method is not visible here";
+    UNRESOLVED_IMPORT = "E0206", "Unresolved import";
+    SELF_OUTSIDE_METHOD = "E0207", "`self` or `@field` outside a method";
+    BREAK_OUTSIDE_LOOP = "E0208", "`break` or `next` outside a loop";
+    WRONG_NAME_KIND = "E0209", "Name of the wrong kind (a type where a value is expected, or the reverse)";
+    BINDING_REDECLARED = "E0210", "Binding declared again in the same function";
+    INVALID_MAIN = "E0211", "Missing or invalid `main` function";
+    INVALID_INTRINSIC = "E0212", "Intrinsic declared outside the core library, or unknown intrinsic";
+    UNKNOWN_ATTRIBUTE = "E0213", "Unknown attribute";
+    TYPE_ANNOTATIONS_NEEDED = "E0282", "Type annotations needed";
+
+    // Type, trait and pattern errors (spec Appendix C.5).
+    MISMATCHED_TYPES = "E0300", "Mismatched types";
+    WRONG_ARGUMENT_COUNT = "E0301", "Wrong number of arguments, or a missing argument";
+    REF_OUTSIDE_RETURN = "E0302", "`ref` type outside a function's return type";
+    WRONG_GENERIC_COUNT = "E0303", "Wrong number of generic arguments";
+    UNKNOWN_FIELD = "E0304", "Unknown field";
+    BAD_CONSTRUCTION_FIELDS = "E0305", "Missing or repeated field in a construction";
+    NO_SUCH_METHOD = "E0306", "No method with this name for this type";
+    BAD_NAMED_ARGUMENT = "E0307", "Unknown or repeated named argument";
+    NOT_CALLABLE = "E0308", "Value is not callable";
+    NOT_INDEXABLE = "E0309", "Type cannot be indexed";
+    LITERAL_OUT_OF_RANGE = "E0310", "Literal out of range for its type";
+    UNSUPPORTED_OPERATOR = "E0311", "Operator not supported for these operand types";
+    MUTATE_IMMUTABLE = "E0312", "Cannot mutate an immutable place";
+    INVALID_TRY = "E0313", "`?` used on a value or in a function that does not support it";
+    BREAK_VALUE_OUTSIDE_LOOP = "E0314", "`break` with a value outside `loop`";
+    UNSATISFIED_BOUND = "E0320", "Trait bound not satisfied";
+    MISSING_IMPL_ITEM = "E0321", "Missing item in an implementation";
+    AMBIGUOUS_METHOD = "E0322", "Ambiguous method";
+    NOT_A_TRAIT_MEMBER = "E0323", "Item is not a member of the trait";
+    IMPL_SIGNATURE_MISMATCH = "E0324", "Method does not match the trait's declaration";
+    EXPECTED_TRAIT = "E0325", "Expected a trait";
+    CONFLICTING_IMPLS = "E0326", "Conflicting implementations";
+    ORPHAN_IMPL = "E0327", "Implementation violates the orphan rule";
+    NOT_OBJECT_SAFE = "E0328", "Trait is not object-safe";
+    INVALID_DERIVE = "E0329", "Trait cannot be derived for this type";
+    UNKNOWN_ASSOCIATED_ITEM = "E0330", "Unknown associated item";
+    NOT_IMPLEMENTED_YET = "E0398", "Feature not implemented yet in this phase";
+    NON_EXHAUSTIVE_CASE = "E0400", "Non-exhaustive `case`";
+    REFUTABLE_PATTERN = "E0401", "Refutable pattern where an irrefutable one is required";
+    OR_PATTERN_BINDINGS = "E0402", "Or-pattern alternatives bind different names";
+    DUPLICATE_PATTERN_BINDING = "E0403", "Name bound twice in one pattern";
+    PATTERN_TYPE_MISMATCH = "E0404", "Pattern does not fit the matched type";
+    INVALID_RANGE_PATTERN = "E0405", "Invalid range pattern";
 }
 
 /// Outer doc comment not followed by an item, field, variant or method (spec §2.4.2).
@@ -102,8 +154,20 @@ pub const DANGLING_DOC_COMMENT: Lint = Lint {
     title: "Outer doc comment not followed by an item, field, variant or method",
 };
 
+/// `case` arm that can never match (spec §9.4).
+pub const UNREACHABLE_PATTERN: Lint = Lint {
+    name: "unreachable_pattern",
+    title: "`case` arm that can never match",
+};
+
+/// Unused value of type `Result` (spec §10.6).
+pub const UNUSED_RESULT: Lint = Lint {
+    name: "unused_result",
+    title: "Unused value of type `Result`",
+};
+
 /// Every lint, in alphabetical order.
-pub const ALL_LINTS: &[Lint] = &[DANGLING_DOC_COMMENT];
+pub const ALL_LINTS: &[Lint] = &[DANGLING_DOC_COMMENT, UNREACHABLE_PATTERN, UNUSED_RESULT];
 
 /// Looks up an error code by its id, such as `"E0007"`.
 #[must_use]

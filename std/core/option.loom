@@ -1,0 +1,159 @@
+##! `Option` and `Result` (spec §10).
+
+extern "intrinsic"
+  def panic_with(message: String) -> Never
+end
+
+## An optional value: `Some(value)` or `None`. There is no null (ADR 0007).
+@[lang("Option"), derive(Clone, Eq, Ord, Hash)]
+pub enum Option[T]
+  Some(T)
+  None
+
+  ## Whether this is `Some`.
+  pub def is_some -> Bool = self in Some(_)
+
+  ## Whether this is `None`.
+  pub def is_none -> Bool = self in None
+
+  ## The value. Panics if this is `None`.
+  pub def own unwrap -> T
+    case self
+    in Some(value) then value
+    in None then panic_with("called `unwrap` on `None`")
+    end
+  end
+
+  ## The value. Panics with `message` if this is `None`.
+  pub def own expect(message: String) -> T
+    case self
+    in Some(value) then value
+    in None then panic_with(message.clone)
+    end
+  end
+
+  ## The value, or `default` if this is `None`.
+  pub def own unwrap_or(own default: T) -> T
+    case self
+    in Some(value) then value
+    in None then default
+    end
+  end
+
+  ## The value, or the result of `make` if this is `None`.
+  pub def own unwrap_or_else(make: Fn() -> T) -> T
+    case self
+    in Some(value) then value
+    in None then make()
+    end
+  end
+
+  ## Applies `f` to the value, if any.
+  pub def own map[U](f: Fn(T) -> U) -> Option[U]
+    case self
+    in Some(value) then Some(f(value))
+    in None then None
+    end
+  end
+
+  ## Applies `f` to the value, if any, and flattens the result.
+  pub def own and_then[U](f: Fn(T) -> Option[U]) -> Option[U]
+    case self
+    in Some(value) then f(value)
+    in None then None
+    end
+  end
+
+  ## Converts to a `Result`, with `error` for `None`.
+  pub def own ok_or[E](own error: E) -> Result[T, E]
+    case self
+    in Some(value) then Ok(value)
+    in None then Err(error)
+    end
+  end
+
+  ## The value if it satisfies `predicate`.
+  pub def own filter(predicate: Fn(T) -> Bool) -> Option[T]
+    case self
+    in Some(value) then if predicate(value) then Some(value) else None end
+    in None then None
+    end
+  end
+end
+
+## The outcome of an operation that can fail: `Ok(value)` or `Err(error)`.
+@[lang("Result"), derive(Clone, Eq, Ord, Hash)]
+pub enum Result[T, E]
+  Ok(T)
+  Err(E)
+
+  ## Whether this is `Ok`.
+  pub def is_ok -> Bool = self in Ok(_)
+
+  ## Whether this is `Err`.
+  pub def is_err -> Bool = self in Err(_)
+
+  ## The value. Panics if this is `Err`.
+  pub def own unwrap -> T
+    case self
+    in Ok(value) then value
+    in Err(_) then panic_with("called `unwrap` on an `Err` value")
+    end
+  end
+
+  ## The value. Panics with `message` if this is `Err`.
+  pub def own expect(message: String) -> T
+    case self
+    in Ok(value) then value
+    in Err(_) then panic_with(message.clone)
+    end
+  end
+
+  ## The error. Panics if this is `Ok`.
+  pub def own unwrap_err -> E
+    case self
+    in Ok(_) then panic_with("called `unwrap_err` on an `Ok` value")
+    in Err(error) then error
+    end
+  end
+
+  ## The value, or `default` if this is `Err`.
+  pub def own unwrap_or(own default: T) -> T
+    case self
+    in Ok(value) then value
+    in Err(_) then default
+    end
+  end
+
+  ## Applies `f` to the value, if `Ok`.
+  pub def own map[U](f: Fn(T) -> U) -> Result[U, E]
+    case self
+    in Ok(value) then Ok(f(value))
+    in Err(error) then Err(error)
+    end
+  end
+
+  ## Applies `f` to the error, if `Err`.
+  pub def own map_err[F](f: Fn(E) -> F) -> Result[T, F]
+    case self
+    in Ok(value) then Ok(value)
+    in Err(error) then Err(f(error))
+    end
+  end
+
+  ## Applies `f` to the value, if `Ok`, and flattens the result.
+  pub def own and_then[U](f: Fn(T) -> Result[U, E]) -> Result[U, E]
+    case self
+    in Ok(value) then f(value)
+    in Err(error) then Err(error)
+    end
+  end
+
+  ## The value as an `Option`, discarding the error.
+  pub def own ok -> Option[T]
+    case self
+    in Ok(value) then Some(value)
+    in Err(_) then None
+    end
+  end
+end

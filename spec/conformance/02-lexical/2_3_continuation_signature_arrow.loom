@@ -2,7 +2,7 @@
 def greet(
   name: String
 ) ->
-  String = "hello " + name
+  String = "hello #{name}"
 
 def main
   puts greet("world")

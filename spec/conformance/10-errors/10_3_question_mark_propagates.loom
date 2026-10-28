@@ -1,0 +1,17 @@
+# spec: §10.3 rule 1
+def half(n: Int) -> Result[Int, String]
+  if n % 2 == 0 then Ok(n / 2) else Err("odd: #{n}") end
+end
+
+def quarter(n: Int) -> Result[Int, String]
+  h = half(n)?
+  half(h)
+end
+
+def main
+  puts quarter(8).unwrap
+  case quarter(6)
+  in Ok(v) then puts v
+  in Err(message) then puts message
+  end
+end

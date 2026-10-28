@@ -1,0 +1,5 @@
+# spec: §6.4
+def main
+  name: String = 42
+  puts name
+end
