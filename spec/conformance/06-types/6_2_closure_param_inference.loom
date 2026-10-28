@@ -1,0 +1,9 @@
+# spec: §6.2 rule 4
+def apply(val: Int, f: Fn(Int) -> Int) -> Int
+  f(val)
+end
+
+def main
+  res = apply(10) { |x| x * 2 }
+  puts res
+end

@@ -1,0 +1,13 @@
+# spec: §6.6
+def print_equal[T: Eq + Display](a: T, b: T)
+  if a == b then
+    puts "equal"
+  else
+    puts "not equal"
+  end
+end
+
+def main
+  print_equal(42, 42)
+  print_equal("a", "b")
+end

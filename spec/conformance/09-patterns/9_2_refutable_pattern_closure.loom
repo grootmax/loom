@@ -1,0 +1,5 @@
+# spec: §9.2
+def main
+  f: Fn(Option[Int]) -> Int = { |Some(x)| x }
+  puts f(Some(1))
+end

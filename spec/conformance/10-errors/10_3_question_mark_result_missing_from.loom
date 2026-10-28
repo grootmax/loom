@@ -1,0 +1,19 @@
+# spec: §10.3 rule 1
+struct ErrA
+  msg: String
+end
+
+struct ErrB
+  msg: String
+end
+
+def fn_a -> Result[Int, ErrA] = Err(ErrA(msg: "a"))
+
+def fn_b -> Result[Int, ErrB]
+  v = fn_a()?
+  Ok(v)
+end
+
+def main
+  fn_b()
+end

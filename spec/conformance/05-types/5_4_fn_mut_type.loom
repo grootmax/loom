@@ -1,0 +1,14 @@
+# spec: §5.4
+def mutate_each(arr: Array[Int], f: FnMut(Int) -> Int) -> Array[Int]
+  var res: Array[Int] = []
+  for x in arr
+    res.push(f(x))
+  end
+  res
+end
+
+def main
+  var factor = 2
+  var doubled = mutate_each([1, 2, 3]) { |x| x * factor }
+  puts doubled.length
+end

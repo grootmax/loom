@@ -1,0 +1,13 @@
+# spec: §10.2
+def main
+  ok_res: Result[Int, String] = Ok(100)
+  err_res: Result[Int, String] = Err("failed")
+  case ok_res
+  in Ok(v) then puts "ok: #{v}"
+  in Err(e) then puts "err: #{e}"
+  end
+  case err_res
+  in Ok(v) then puts "ok: #{v}"
+  in Err(e) then puts "err: #{e}"
+  end
+end

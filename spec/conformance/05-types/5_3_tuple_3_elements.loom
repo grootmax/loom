@@ -1,0 +1,7 @@
+# spec: §5.3
+def main
+  t: (Int, String, Bool) = (100, "loom", true)
+  puts t.0
+  puts t.1
+  puts t.2
+end

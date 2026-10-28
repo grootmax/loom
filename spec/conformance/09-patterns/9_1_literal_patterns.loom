@@ -1,0 +1,22 @@
+# spec: §9.1
+def main
+  case 5
+  in 5 then puts "int 5"
+  in _ then puts "other"
+  end
+
+  case true
+  in true then puts "bool true"
+  in false then puts "bool false"
+  end
+
+  case 'a'
+  in 'a' then puts "char a"
+  in _ then puts "other"
+  end
+
+  case "hello"
+  in "hello" then puts "str hello"
+  in _ then puts "other"
+  end
+end

@@ -1,0 +1,6 @@
+# spec: §7.9 rule 4
+def main
+  loop do
+    f: Fn() -> Unit = { || break }
+  end
+end

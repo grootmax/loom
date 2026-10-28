@@ -1,0 +1,19 @@
+# spec: §5.5
+trait Speaker
+  def speak -> String
+end
+
+struct Dog
+end
+
+impl Speaker for Dog
+  def speak -> String = "woof"
+end
+
+def announce(s: dyn Speaker)
+  puts s.speak()
+end
+
+def main
+  announce(Dog())
+end

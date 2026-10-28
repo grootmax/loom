@@ -1,0 +1,9 @@
+# spec: §10.6
+def produce -> Result[Int, String]
+  Ok(42)
+end
+
+def main
+  produce()
+  puts "ok"
+end

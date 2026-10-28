@@ -1,0 +1,22 @@
+# spec: §6.1
+const LIMIT: Int = 100
+
+struct Point
+  x: Int
+  y: Int
+end
+
+enum Item
+  Val(amount: Int)
+  None
+end
+
+def add(a: Int, b: Int) -> Int
+  a + b
+end
+
+def main
+  p = Point(x: 10, y: 20)
+  item = Item.Val(amount: 30)
+  puts add(p.x, LIMIT)
+end

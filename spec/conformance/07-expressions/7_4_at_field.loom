@@ -1,0 +1,11 @@
+# spec: §7.4 rule 1
+struct Counter
+  value: Int
+
+  def get_value() -> Int = @value
+end
+
+def main
+  c = Counter(value: 42)
+  puts c.get_value()
+end

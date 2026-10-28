@@ -1,0 +1,7 @@
+# spec: §9.3
+def main
+  opt = Some(42)
+  if opt in Some(x) and x > 40
+    puts "matched in condition: #{x}"
+  end
+end

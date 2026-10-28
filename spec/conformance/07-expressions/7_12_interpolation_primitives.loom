@@ -1,0 +1,8 @@
+# spec: §7.12 rule 1
+def main
+  i = 42
+  b = true
+  c = 'Z'
+  s = "hello"
+  puts "#{i} #{b} #{c} #{s}"
+end

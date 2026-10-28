@@ -1,0 +1,8 @@
+# spec: §9.1
+def main
+  val = Some((10, "nest"))
+  case val
+  in Some((x, "nest")) then puts "nested x = #{x}"
+  in _ then puts "other"
+  end
+end

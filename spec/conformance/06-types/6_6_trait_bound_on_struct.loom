@@ -1,0 +1,22 @@
+# spec: §6.6
+trait Identifiable
+  def id -> Int
+end
+
+struct Container[T: Identifiable]
+  item: T
+end
+
+struct User
+  u_id: Int
+end
+
+impl Identifiable for User
+  def id -> Int = self.u_id
+end
+
+def main
+  u = User(u_id: 100)
+  c = Container(item: u)
+  puts c.item.id()
+end

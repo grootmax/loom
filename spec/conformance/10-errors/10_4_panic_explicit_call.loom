@@ -1,0 +1,5 @@
+# spec: §10.4
+def main
+  puts "before panic"
+  panic("explicit panic triggered")
+end

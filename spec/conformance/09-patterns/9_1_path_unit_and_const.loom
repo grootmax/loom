@@ -1,0 +1,10 @@
+# spec: §9.1 rule 1
+const MAX: Int = 100
+
+def main
+  x = 100
+  case x
+  in MAX then puts "matched MAX constant"
+  in _ then puts "other"
+  end
+end

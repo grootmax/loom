@@ -1,0 +1,9 @@
+# spec: §7.2 rule 1
+struct Point
+  x: Int
+  y: Int
+end
+
+def main
+  p = Point.unknown_fn()
+end

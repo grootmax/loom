@@ -1,0 +1,26 @@
+# spec: §10.3 rule 1
+struct InnerErr
+  msg: String
+end
+
+struct OuterErr
+  msg: String
+end
+
+impl From[InnerErr] for OuterErr
+  def self.from(own value: InnerErr) -> OuterErr = OuterErr(msg: "outer: #{value.msg}")
+end
+
+def inner_fn -> Result[Int, InnerErr] = Err(InnerErr(msg: "something failed"))
+
+def outer_fn -> Result[Int, OuterErr]
+  v = inner_fn()?
+  Ok(v)
+end
+
+def main
+  case outer_fn()
+  in Err(e) then puts e.msg
+  in Ok(_) then puts "ok"
+  end
+end

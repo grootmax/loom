@@ -1,0 +1,11 @@
+# spec: §7.4 rule 1
+struct Circle
+  radius: Int
+
+  def area(multiplier: Int = 1) -> Int = self.radius * self.radius * multiplier
+end
+
+def main
+  c = Circle(radius: 5)
+  puts c.area
+end

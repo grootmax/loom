@@ -1,0 +1,7 @@
+# spec: §6.6
+impl Display for Int
+  def to_string -> String = "int"
+end
+
+def main
+end

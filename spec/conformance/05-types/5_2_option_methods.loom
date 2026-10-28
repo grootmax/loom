@@ -1,0 +1,10 @@
+# spec: §5.2
+def main
+  opt: Option[Int] = Option.Some(5)
+  puts opt.is_some()
+  puts opt.unwrap_or(0)
+
+  none_opt: Option[Int] = Option.None
+  puts none_opt.is_none()
+  puts none_opt.unwrap_or(42)
+end

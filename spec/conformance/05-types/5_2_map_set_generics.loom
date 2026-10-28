@@ -1,0 +1,10 @@
+# spec: §5.2
+def main
+  var m: Map[String, Int] = Map.new
+  m.insert("apple", 5)
+  puts m.length
+
+  var s: Set[Int] = Set.new
+  s.insert(10)
+  puts s.length
+end

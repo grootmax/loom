@@ -1,0 +1,6 @@
+# spec: §7.8 rule 4
+def main
+  while true
+    break 42
+  end
+end

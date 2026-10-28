@@ -1,0 +1,9 @@
+# spec: §10.3 rule 3
+def foo(opt: Option[Int]) -> Result[Int, String]
+  v = opt?
+  Ok(v)
+end
+
+def main
+  _ = foo(Some(1))
+end

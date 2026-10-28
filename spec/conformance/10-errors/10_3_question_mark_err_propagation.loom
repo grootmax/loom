@@ -1,0 +1,12 @@
+# spec: §10.3 rule 1
+def propagate_err(res: Result[Int, String]) -> Result[Int, String]
+  val = res?
+  Ok(val * 2)
+end
+
+def main
+  case propagate_err(Err("failure"))
+  in Err(e) then puts "propagated err: #{e}"
+  in Ok(_) then puts "ok"
+  end
+end

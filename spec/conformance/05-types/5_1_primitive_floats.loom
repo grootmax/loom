@@ -1,0 +1,9 @@
+# spec: §5.1 rule 1
+def main
+  a: F32 = 1.5
+  b: F64 = 2.25
+  c: Float = 3.125
+  puts a
+  puts b
+  puts c
+end

@@ -1,0 +1,8 @@
+# spec: §7.5 rule 3
+def main
+  nan = 0.0 / 0.0
+  puts nan == nan
+  puts nan != nan
+  puts 1.0 < nan
+  puts 1.0 / 0.0
+end

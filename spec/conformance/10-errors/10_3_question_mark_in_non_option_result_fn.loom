@@ -1,0 +1,10 @@
+# spec: §10.3 rule 3
+def foo -> Option[Int]
+  res: Result[Int, String] = Ok(10)
+  val = res?
+  Some(val)
+end
+
+def main
+  foo()
+end

@@ -1,0 +1,7 @@
+# spec: §9.1 rule 1
+def main
+  x = 10
+  case x
+  in y then puts "bound y = #{y}"
+  end
+end

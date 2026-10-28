@@ -1,0 +1,8 @@
+# spec: §9.1
+def main
+  val = 42
+  case val
+  in _ then puts "matched wildcard"
+  end
+  _ = 100
+end

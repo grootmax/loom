@@ -1,0 +1,14 @@
+# spec: §6.7
+@[derive(Clone, Copy, Eq)]
+struct Point
+  x: Int
+  y: Int
+end
+
+def main
+  p1 = Point(x: 10, y: 20)
+  p2 = p1
+  if p1 == p2 then
+    puts p1.x
+  end
+end

@@ -1,0 +1,5 @@
+# spec: §5.1 rule 1
+def main
+  s: String = r"raw string with \n no escapes"
+  puts s
+end

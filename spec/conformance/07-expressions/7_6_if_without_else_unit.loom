@@ -1,0 +1,8 @@
+# spec: §7.6 rule 2
+def main
+  var executed = false
+  if true then
+    executed = true
+  end
+  puts executed
+end

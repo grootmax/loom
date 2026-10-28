@@ -1,0 +1,8 @@
+# spec: §6.4
+def take_int(x: Int)
+  puts x
+end
+
+def main
+  take_int("hello")
+end

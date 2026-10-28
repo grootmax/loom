@@ -1,0 +1,15 @@
+# spec: §7.5 rule 1
+def main
+  puts 10 + 5
+  puts 10 - 3
+  puts 4 * 3
+  puts 20 / 4
+  puts 17 % 5
+  puts(-42)
+  f1: Float = 3.5
+  f2: Float = 2.5
+  puts f1 + f2
+  puts f1 - f2
+  puts f1 * f2
+  puts 9.0 / 3.0
+end

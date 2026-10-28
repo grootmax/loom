@@ -1,0 +1,15 @@
+# spec: §5.2
+def parse_positive(n: Int) -> Result[Int, String]
+  if n > 0 then Result.Ok(n) else Result.Err("negative") end
+end
+
+def main
+  case parse_positive(10)
+  in Ok(v) then puts v
+  in Err(e) then puts e
+  end
+  case parse_positive(-5)
+  in Ok(v) then puts v
+  in Err(e) then puts e
+  end
+end

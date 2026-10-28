@@ -1,0 +1,12 @@
+# spec: §10.3 rule 2
+def propagate_none(opt: Option[Int]) -> Option[Int]
+  val = opt?
+  Some(val + 10)
+end
+
+def main
+  case propagate_none(None)
+  in None then puts "propagated none"
+  in Some(_) then puts "some"
+  end
+end

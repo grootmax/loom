@@ -1,0 +1,14 @@
+# spec: §7.13 rule 1
+def main
+  arr = [
+    1,
+    2,
+    3,
+  ]
+  m = {
+    "x" => 10,
+    "y" => 20,
+  }
+  puts arr[2]
+  puts m["y"]
+end

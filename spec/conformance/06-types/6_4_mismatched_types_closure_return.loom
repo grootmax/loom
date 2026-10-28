@@ -1,0 +1,4 @@
+# spec: §6.4
+def main
+  f: Fn() -> Int = { || "hello" }
+end

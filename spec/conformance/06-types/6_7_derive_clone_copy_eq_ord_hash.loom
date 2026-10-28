@@ -1,0 +1,18 @@
+# spec: §6.7
+@[derive(Clone, Copy, Eq, Ord, Hash)]
+struct Point
+  x: Int
+  y: Int
+end
+
+def main
+  p1 = Point(x: 1, y: 2)
+  p2 = Point(x: 1, y: 2)
+  p3 = Point(x: 2, y: 0)
+  if p1 == p2
+    puts "equal"
+  end
+  if p1 < p3
+    puts "less"
+  end
+end

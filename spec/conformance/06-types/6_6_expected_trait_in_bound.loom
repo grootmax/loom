@@ -1,0 +1,7 @@
+# spec: §6.6
+def process[T: Int](x: T)
+  puts 1
+end
+
+def main
+end

@@ -1,0 +1,4 @@
+# spec: §6.2 rule 2
+def main
+  x: I8 = 200
+end

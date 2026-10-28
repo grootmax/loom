@@ -1,0 +1,8 @@
+# spec: §5.1 rule 1
+def main
+  c1: Char = 'x'
+  c2: Char = '\n'
+  c3: Char = 'A'
+  puts c1
+  puts c3
+end

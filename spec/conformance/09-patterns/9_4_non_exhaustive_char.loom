@@ -1,0 +1,8 @@
+# spec: §9.4
+def main
+  ch = 'a'
+  case ch
+  in 'a' then puts "a"
+  in 'b' then puts "b"
+  end
+end

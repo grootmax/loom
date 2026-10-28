@@ -1,0 +1,15 @@
+# spec: §7.7 rule 1
+def classify(n: Int) -> String
+  case n
+  in x if x < 0 then "negative"
+  in x if x == 0 then "zero"
+  in x if x > 0 then "positive"
+  else "unknown"
+  end
+end
+
+def main
+  puts classify(-5)
+  puts classify(0)
+  puts classify(10)
+end

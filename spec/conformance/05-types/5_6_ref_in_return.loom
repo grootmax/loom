@@ -1,0 +1,8 @@
+# spec: §5.6
+def get_val(x: Int) -> ref Int
+  x
+end
+
+def main
+  puts get_val(42)
+end

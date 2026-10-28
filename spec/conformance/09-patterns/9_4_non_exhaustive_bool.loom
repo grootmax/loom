@@ -1,0 +1,7 @@
+# spec: §9.4
+def main
+  b = true
+  case b
+  in true then puts "true"
+  end
+end

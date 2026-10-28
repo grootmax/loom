@@ -1,0 +1,9 @@
+# spec: §5.1
+def produce_never() -> Never
+  panic("unreachable")
+end
+
+def main
+  x: Int = if true then 42 else produce_never() end
+  puts x
+end

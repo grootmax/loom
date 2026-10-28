@@ -1,0 +1,5 @@
+# spec: §10.3 rule 3
+def main
+  x = 10?
+  puts x
+end

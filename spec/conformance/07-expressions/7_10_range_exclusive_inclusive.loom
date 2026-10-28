@@ -1,0 +1,14 @@
+# spec: §7.10 rule 1
+def main
+  var sum1 = 0
+  for x in 1..5
+    sum1 += x
+  end
+  puts sum1
+
+  var sum2 = 0
+  for x in 1..=5
+    sum2 += x
+  end
+  puts sum2
+end

@@ -1,0 +1,11 @@
+# spec: §7.4 rule 1
+struct Rectangle
+  width: Int
+  height: Int
+end
+
+def main
+  r = Rectangle(width: 10, height: 20)
+  puts r.width
+  puts r.height
+end

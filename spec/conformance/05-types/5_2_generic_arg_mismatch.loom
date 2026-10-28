@@ -1,0 +1,5 @@
+# spec: §5.2
+def main
+  x: Option[Int, Int] = Option.None
+  puts 1
+end

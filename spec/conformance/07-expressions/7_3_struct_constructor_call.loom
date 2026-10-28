@@ -1,0 +1,11 @@
+# spec: §7.3 rule 1
+struct Pair
+  first: Int
+  second: String
+end
+
+def main
+  p = Pair(first: 10, second: "ok")
+  puts p.first
+  puts p.second
+end

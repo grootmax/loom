@@ -1,0 +1,4 @@
+# spec: §7.9 rule 1
+def main
+  f = { |x| x }
+end
