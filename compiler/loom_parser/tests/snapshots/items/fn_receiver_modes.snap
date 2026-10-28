@@ -1,0 +1,36 @@
+# loom-snapshot: items/fn_receiver_modes
+
+SOURCE_FILE@0..54
+  FN_DEF@0..25
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    MUT_KW@4..7 "mut"
+    WHITESPACE@7..8 " "
+    SELF_KW@8..12 "self"
+    DOT@12..13 "."
+    NAME@13..19
+      IDENT@13..19 "update"
+    PARAM_LIST@19..21
+      L_PAREN@19..20 "("
+      R_PAREN@20..21 ")"
+    BLOCK@21..22
+      NEWLINE@21..22 "\n"
+    END_KW@22..25 "end"
+  NEWLINE@25..26 "\n"
+  LINE_BREAK@26..27 "\n"
+  FN_DEF@27..53
+    DEF_KW@27..30 "def"
+    WHITESPACE@30..31 " "
+    OWN_KW@31..34 "own"
+    WHITESPACE@34..35 " "
+    SELF_KW@35..39 "self"
+    DOT@39..40 "."
+    NAME@40..47
+      IDENT@40..47 "consume"
+    PARAM_LIST@47..49
+      L_PAREN@47..48 "("
+      R_PAREN@48..49 ")"
+    BLOCK@49..50
+      NEWLINE@49..50 "\n"
+    END_KW@50..53 "end"
+  NEWLINE@53..54 "\n"

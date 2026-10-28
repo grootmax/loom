@@ -130,6 +130,7 @@ version = "0.0.0"
 dependencies = [
  "loom_diagnostics",
  "loom_lexer",
+ "loom_snapshot",
  "loom_span",
  "loom_syntax",
 ]

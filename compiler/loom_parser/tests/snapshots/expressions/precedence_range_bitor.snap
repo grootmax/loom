@@ -1,0 +1,39 @@
+# loom-snapshot: expressions/precedence_range_bitor
+
+SOURCE_FILE@0..27
+  FN_DEF@0..26
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..23
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      EXPR_STMT@8..22
+        RANGE_EXPR@8..22
+          BINARY_EXPR@8..13
+            PATH_EXPR@8..9
+              NAME_REF@8..9
+                IDENT@8..9 "a"
+            WHITESPACE@9..10 " "
+            PIPE@10..11 "|"
+            WHITESPACE@11..12 " "
+            PATH_EXPR@12..13
+              NAME_REF@12..13
+                IDENT@12..13 "b"
+          WHITESPACE@13..14 " "
+          DOT2@14..16 ".."
+          WHITESPACE@16..17 " "
+          BINARY_EXPR@17..22
+            PATH_EXPR@17..18
+              NAME_REF@17..18
+                IDENT@17..18 "c"
+            WHITESPACE@18..19 " "
+            PIPE@19..20 "|"
+            WHITESPACE@20..21 " "
+            PATH_EXPR@21..22
+              NAME_REF@21..22
+                IDENT@21..22 "d"
+      NEWLINE@22..23 "\n"
+    END_KW@23..26 "end"
+  NEWLINE@26..27 "\n"

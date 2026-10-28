@@ -1,0 +1,49 @@
+# loom-snapshot: items/fn_param_default
+
+SOURCE_FILE@0..40
+  FN_DEF@0..39
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    PARAM_LIST@5..35
+      L_PAREN@5..6 "("
+      PARAM@6..16
+        NAME@6..7
+          IDENT@6..7 "a"
+        COLON@7..8 ":"
+        WHITESPACE@8..9 " "
+        PATH_TYPE@9..12
+          PATH@9..12
+            PATH_SEGMENT@9..12
+              NAME_REF@9..12
+                IDENT@9..12 "Int"
+        WHITESPACE@12..13 " "
+        EQ@13..14 "="
+        WHITESPACE@14..15 " "
+        LITERAL@15..16
+          INT_LIT@15..16 "0"
+      COMMA@16..17 ","
+      WHITESPACE@17..18 " "
+      PARAM@18..34
+        NAME@18..19
+          IDENT@18..19 "b"
+        COLON@19..20 ":"
+        WHITESPACE@20..21 " "
+        PATH_TYPE@21..27
+          PATH@21..27
+            PATH_SEGMENT@21..27
+              NAME_REF@21..27
+                IDENT@21..27 "String"
+        WHITESPACE@27..28 " "
+        EQ@28..29 "="
+        WHITESPACE@29..30 " "
+        STRING@30..34
+          STRING_START@30..31 "\""
+          STRING_FRAGMENT@31..33 "hi"
+          STRING_END@33..34 "\""
+      R_PAREN@34..35 ")"
+    BLOCK@35..36
+      NEWLINE@35..36 "\n"
+    END_KW@36..39 "end"
+  NEWLINE@39..40 "\n"

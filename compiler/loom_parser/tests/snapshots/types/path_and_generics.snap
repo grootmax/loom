@@ -1,0 +1,41 @@
+# loom-snapshot: types/path_and_generics
+
+SOURCE_FILE@0..34
+  FN_DEF@0..33
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    PARAM_LIST@5..29
+      L_PAREN@5..6 "("
+      PARAM@6..28
+        NAME@6..7
+          IDENT@6..7 "x"
+        COLON@7..8 ":"
+        WHITESPACE@8..9 " "
+        PATH_TYPE@9..28
+          PATH@9..23
+            PATH_SEGMENT@9..12
+              NAME_REF@9..12
+                IDENT@9..12 "std"
+            DOT@12..13 "."
+            PATH_SEGMENT@13..16
+              NAME_REF@13..16
+                IDENT@13..16 "vec"
+            DOT@16..17 "."
+            PATH_SEGMENT@17..23
+              NAME_REF@17..23
+                IDENT@17..23 "Vector"
+          GENERIC_ARG_LIST@23..28
+            L_BRACKET@23..24 "["
+            PATH_TYPE@24..27
+              PATH@24..27
+                PATH_SEGMENT@24..27
+                  NAME_REF@24..27
+                    IDENT@24..27 "Int"
+            R_BRACKET@27..28 "]"
+      R_PAREN@28..29 ")"
+    BLOCK@29..30
+      NEWLINE@29..30 "\n"
+    END_KW@30..33 "end"
+  NEWLINE@33..34 "\n"

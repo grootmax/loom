@@ -1,0 +1,39 @@
+# loom-snapshot: errors/e0105_chained_range
+
+SOURCE_FILE@0..30
+  FN_DEF@0..29
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..26
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      BIND_STMT@8..25
+        NAME@8..11
+          IDENT@8..11 "res"
+        WHITESPACE@11..12 " "
+        EQ@12..13 "="
+        WHITESPACE@13..14 " "
+        RANGE_EXPR@14..25
+          RANGE_EXPR@14..20
+            PATH_EXPR@14..15
+              NAME_REF@14..15
+                IDENT@14..15 "a"
+            WHITESPACE@15..16 " "
+            DOT2@16..18 ".."
+            WHITESPACE@18..19 " "
+            PATH_EXPR@19..20
+              NAME_REF@19..20
+                IDENT@19..20 "b"
+          WHITESPACE@20..21 " "
+          DOT2@21..23 ".."
+          WHITESPACE@23..24 " "
+          PATH_EXPR@24..25
+            NAME_REF@24..25
+              IDENT@24..25 "c"
+      NEWLINE@25..26 "\n"
+    END_KW@26..29 "end"
+  NEWLINE@29..30 "\n"
+--- diagnostics ---
+E0105 21..23 range operators cannot be chained

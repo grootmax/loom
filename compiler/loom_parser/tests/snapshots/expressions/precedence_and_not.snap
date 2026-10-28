@@ -1,0 +1,28 @@
+# loom-snapshot: expressions/precedence_and_not
+
+SOURCE_FILE@0..24
+  FN_DEF@0..23
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..20
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      EXPR_STMT@8..19
+        BINARY_EXPR@8..19
+          PATH_EXPR@8..9
+            NAME_REF@8..9
+              IDENT@8..9 "a"
+          WHITESPACE@9..10 " "
+          AND_KW@10..13 "and"
+          WHITESPACE@13..14 " "
+          PREFIX_EXPR@14..19
+            NOT_KW@14..17 "not"
+            WHITESPACE@17..18 " "
+            PATH_EXPR@18..19
+              NAME_REF@18..19
+                IDENT@18..19 "b"
+      NEWLINE@19..20 "\n"
+    END_KW@20..23 "end"
+  NEWLINE@23..24 "\n"

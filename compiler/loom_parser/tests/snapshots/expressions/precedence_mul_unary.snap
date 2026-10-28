@@ -1,0 +1,27 @@
+# loom-snapshot: expressions/precedence_mul_unary
+
+SOURCE_FILE@0..19
+  FN_DEF@0..18
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    NAME@4..5
+      IDENT@4..5 "f"
+    BLOCK@5..15
+      NEWLINE@5..6 "\n"
+      WHITESPACE@6..8 "  "
+      EXPR_STMT@8..14
+        BINARY_EXPR@8..14
+          PREFIX_EXPR@8..10
+            MINUS@8..9 "-"
+            PATH_EXPR@9..10
+              NAME_REF@9..10
+                IDENT@9..10 "a"
+          WHITESPACE@10..11 " "
+          STAR@11..12 "*"
+          WHITESPACE@12..13 " "
+          PATH_EXPR@13..14
+            NAME_REF@13..14
+              IDENT@13..14 "b"
+      NEWLINE@14..15 "\n"
+    END_KW@15..18 "end"
+  NEWLINE@18..19 "\n"
