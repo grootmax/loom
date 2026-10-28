@@ -93,3 +93,26 @@ What we learned:
 7. **Tool facts:** Jules PRs come from the `google-labs-stitch` app on `stitch/…` branches,
    with DCO-signed commits by `google-labs-jules[bot]`. `jules tasks get` needs
    `-w <workspace>`.
+
+### Phase 1, wave 1 (2026-10-28): tasks 0004–0008
+
+| Task | Result |
+|---|---|
+| 0004 `loom_snapshot` | PR #7 (with the 0008 batch); acceptable, small doc nits |
+| 0005 `loom_unicode` + `gen-unicode` | PR #10; tables reproducible, cross-checked against `std` |
+| 0006 lexical conformance | PR #6; 2 of 50 cases wrong (raw-string end, byte vs. char column) |
+| 0007 explanations | PR #8; style issues (`def main()`), one invalid fix (E0109), one example without the bad character (E0002) |
+| 0008 syntax conformance | PR #9; 3 of 52 cases used syntax the spec doesn't have |
+
+What we learned:
+
+1. **Conformance written before the implementation is a real cross-check.** The parser
+   matched 97 of 102 blind-written cases, and every mismatch was a test bug. That is why
+   we write conformance cases in parallel with the implementation.
+2. **Agents invent plausible syntax when they can't run a checker.** Now that `loom check`
+   exists, AGENTS.md learned rule 4 requires running it on every `.loom` file.
+3. **A completed Jules task can't receive messages** (the API returns 404). Fixes go into
+   reviewer commits or a follow-up task, so keep follow-ups small and precise.
+4. **Repository access is a single point of failure.** A personal access token without
+   `contents: write` blocked every push and merge while agents kept producing PRs. Check
+   push access at the start of each session.

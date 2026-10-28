@@ -64,3 +64,9 @@ Rules added after reviewing agent work. Each one cites the task where the proble
 3. **Name outside dependencies.** If your change relies on something you cannot change
    (labels, secrets, repository settings), list it in the PR description under
    "Needs maintainer action". *(Task 0003 used labels that did not exist.)*
+4. **Check every Loom file you write with the real front end.** Run
+   `cargo run -q -p loom_cli -- check <file>` on each `.loom` file you add. Accept cases must
+   report nothing, and reject cases must report exactly the lines in their `.diag` file.
+   Use only syntax from `spec/grammar.ebnf` and `examples/`. Don't invent features (such as
+   `var` on struct fields). *(Tasks 0006 and 0008: invented syntax, a raw string that
+   ended early, and a column counted in bytes instead of characters.)*
