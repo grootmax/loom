@@ -1,0 +1,9 @@
+# spec: §14.4
+@[test]
+def test_something
+  assert(true)
+end
+
+def main
+  puts "tests declared"
+end

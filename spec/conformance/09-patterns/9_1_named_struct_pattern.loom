@@ -1,0 +1,12 @@
+# spec: §9.1 rule 3
+struct Point
+  x: Int
+  y: Int
+end
+
+def main
+  p = Point(x: 10, y: 20)
+  case p
+  in Point(x:, y:) then puts "x = #{x}, y = #{y}"
+  end
+end

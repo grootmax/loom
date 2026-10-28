@@ -1,0 +1,7 @@
+# spec: §14.3
+def main
+  puts(123)
+  puts(true)
+  puts('z')
+  puts("hello world")
+end

@@ -1,0 +1,8 @@
+# spec: §9.4
+def main
+  x = 10
+  case x
+  in 0 then puts "zero"
+  in _ then puts "nonzero"
+  end
+end

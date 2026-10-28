@@ -1,0 +1,8 @@
+# spec: §9.1 rule 4
+def main
+  s = "hello"
+  case s
+  in 1..10 then puts "bad"
+  in _ then puts "ok"
+  end
+end

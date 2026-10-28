@@ -1,0 +1,4 @@
+# spec: §14.1
+def main
+  puts "main execution started"
+end

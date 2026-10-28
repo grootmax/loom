@@ -1,0 +1,8 @@
+# spec: §9.1
+def main
+  x = -5
+  case x
+  in -5 then puts "matched negative literal"
+  in _ then puts "other"
+  end
+end

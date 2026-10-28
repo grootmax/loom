@@ -1,0 +1,6 @@
+# spec: §14.3
+def main
+  x = 42
+  s = "answer"
+  puts "#{s} is #{x}"
+end

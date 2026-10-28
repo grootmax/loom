@@ -1,0 +1,4 @@
+# spec: §14.1 rule 1
+def main -> Unit
+  puts "unit main"
+end

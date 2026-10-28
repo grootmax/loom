@@ -1,0 +1,13 @@
+# spec: §9.1 rule 2
+enum Status
+  Active
+  Inactive
+end
+
+def main
+  s: Status = Status.Active
+  case s
+  in Active then puts "active status"
+  in Inactive then puts "inactive status"
+  end
+end

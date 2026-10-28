@@ -1,0 +1,9 @@
+# spec: §9.2
+def main
+  x = 5
+  f: Fn((Int, Int)) -> Int = { |pair| pair.0 + pair.1 }
+  puts f((3, 4))
+  for i in [1, 2]
+    puts i
+  end
+end

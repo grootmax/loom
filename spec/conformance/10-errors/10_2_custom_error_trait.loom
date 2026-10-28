@@ -1,0 +1,13 @@
+# spec: §10.2
+struct CustomErr
+  msg: String
+end
+
+impl Error for CustomErr
+  def message -> String = self.msg
+end
+
+def main
+  err = CustomErr(msg: "custom failure")
+  puts err.message
+end

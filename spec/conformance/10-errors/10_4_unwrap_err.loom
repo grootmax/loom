@@ -1,0 +1,6 @@
+# spec: §10.4
+def main
+  puts "before unwrap err"
+  res: Result[Int, String] = Err("failed result")
+  puts res.unwrap
+end

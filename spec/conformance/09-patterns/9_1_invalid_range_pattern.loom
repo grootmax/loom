@@ -1,0 +1,8 @@
+# spec: §9.1 rule 4
+def main
+  x = 1.5
+  case x
+  in 1.0..2.0 then puts "bad"
+  in _ then puts "ok"
+  end
+end

@@ -1,0 +1,11 @@
+# spec: §9.1 rule 3
+enum Point
+  Pt(Int, Int)
+end
+
+def main
+  p = Point.Pt(1, 2)
+  case p
+  in Point.Pt(x) then puts "bad"
+  end
+end

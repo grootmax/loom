@@ -1,0 +1,8 @@
+# spec: §9.3
+def main
+  opt = Some(5)
+  is_five = opt in Some(5)
+  if is_five
+    puts "is five"
+  end
+end
