@@ -7,6 +7,15 @@ All notable changes to the Loom toolchain are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+- Phase 3 part 1: `ref T` types, MIR (`loom check --dump=mir`) and the ownership and
+  borrow checker (E0500–E0504), ADR 0020 and normative spec §8.
+- Phase reports for Phases 1 and 2 (`docs/reports/`).
+
+### Changed
+- Programs that return a field of a borrowed value now need `.clone` (spec §8); `Option`,
+  `Result` and `Range` are `Copy` when their contents are.
+
 ### Fixed
 - `loom fmt`: a line break inside brackets after which a `.` is followed by a space no
   longer changes indentation on the second run (found by fuzzing).
