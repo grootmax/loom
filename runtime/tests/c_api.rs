@@ -761,7 +761,7 @@ fn test_array_sort_clone_eq_cmp_hash_drops() {
 }
 
 #[test]
-#[ignore = "runtime bug: loom_array_debug holds &mut *out while passing out to element debug glue"]
+
 fn test_array_debug_with_element_glue() {
     let arr = loom_array_new(&raw const I64_INFO);
     let v1: i64 = 10;
@@ -898,7 +898,7 @@ fn test_map_insert_get_index_remove_len() {
     }
 }
 
-unsafe extern "C" fn update_add_five(_env: *mut u8, val: *mut u8) {
+unsafe extern "C" fn update_add_five(_result: *mut u8, _env: *mut u8, val: *mut u8) {
     // SAFETY: val points to i64 in map.
     let current = unsafe { val.cast::<i64>().read_unaligned() };
     // SAFETY: write updated value.

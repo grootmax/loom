@@ -348,14 +348,14 @@ pub unsafe extern "C" fn loom_array_sort_by(a: *mut LoomArray, code: CompareFn, 
                 array.element(source),
                 sorted.as_mut_ptr().add(target * size),
                 size,
-            )
-        };
+            );
+        }
     }
     for i in 0..array.len {
         // SAFETY: `i` is in bounds; elements are moved back in their new order.
         unsafe {
-            std::ptr::copy_nonoverlapping(sorted.as_ptr().add(i * size), array.element(i), size)
-        };
+            std::ptr::copy_nonoverlapping(sorted.as_ptr().add(i * size), array.element(i), size);
+        }
     }
 }
 
@@ -403,15 +403,15 @@ pub unsafe extern "C" fn loom_array_drop(a: *mut LoomArray) {
 /// Both must be live arrays of the same element type with eq glue.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn loom_array_eq(a: *mut LoomArray, b: *mut LoomArray) -> u8 {
-    // SAFETY: both are live.
-    let (x, y) = (unsafe { get(a) }, unsafe { &*b });
-    if x.len != y.len {
+    // SAFETY: both are live; they are only read, so they may be the same array.
+    let (left, right) = (unsafe { &*a }, unsafe { &*b });
+    if left.len != right.len {
         return 0;
     }
-    let Some(eq) = x.info().eq else { return 0 };
-    for i in 0..x.len {
-        // SAFETY: `i` is in bounds of both.
-        if unsafe { eq(x.element(i), y.element(i)) } == 0 {
+    let Some(eq) = left.info().eq else { return 0 };
+    for index in 0..left.len {
+        // SAFETY: `index` is in bounds of both.
+        if unsafe { eq(left.element(index), right.element(index)) } == 0 {
             return 0;
         }
     }
@@ -425,17 +425,17 @@ pub unsafe extern "C" fn loom_array_eq(a: *mut LoomArray, b: *mut LoomArray) -> 
 /// Both must be live arrays of the same element type with cmp glue.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn loom_array_cmp(a: *mut LoomArray, b: *mut LoomArray) -> i8 {
-    // SAFETY: both are live.
-    let (x, y) = (unsafe { get(a) }, unsafe { &*b });
-    let Some(cmp) = x.info().cmp else { return 0 };
-    for i in 0..x.len.min(y.len) {
-        // SAFETY: `i` is in bounds of both.
-        let c = unsafe { cmp(x.element(i), y.element(i)) };
-        if c != 0 {
-            return c;
+    // SAFETY: both are live; they are only read, so they may be the same array.
+    let (left, right) = (unsafe { &*a }, unsafe { &*b });
+    let Some(cmp) = left.info().cmp else { return 0 };
+    for index in 0..left.len.min(right.len) {
+        // SAFETY: `index` is in bounds of both.
+        let order = unsafe { cmp(left.element(index), right.element(index)) };
+        if order != 0 {
+            return order;
         }
     }
-    match x.len.cmp(&y.len) {
+    match left.len.cmp(&right.len) {
         std::cmp::Ordering::Less => -1,
         std::cmp::Ordering::Equal => 0,
         std::cmp::Ordering::Greater => 1,
@@ -451,7 +451,7 @@ pub unsafe extern "C" fn loom_array_cmp(a: *mut LoomArray, b: *mut LoomArray) ->
 pub unsafe extern "C" fn loom_array_hash(a: *mut LoomArray) -> u64 {
     // SAFETY: `a` is live.
     let array = unsafe { get(a) };
-    let mut h = 0xcbf2_9ce4_8422_2325u64 ^ array.len as u64;
+    let mut h = 0xcbf2_9ce4_8422_2325u64 ^ u64::try_from(array.len).unwrap_or(u64::MAX);
     if let Some(hash) = array.info().hash {
         for i in 0..array.len {
             // SAFETY: `i` is in bounds.
@@ -468,17 +468,20 @@ pub unsafe extern "C" fn loom_array_hash(a: *mut LoomArray) -> u64 {
 /// `a` and `out` must be live.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn loom_array_debug(a: *mut LoomArray, out: *mut LoomString) {
-    // SAFETY: both are live and distinct objects.
-    let (array, out_ref) = (unsafe { get(a) }, unsafe { &mut *out });
-    out_ref.push_str("[");
-    for i in 0..array.len {
-        if i > 0 {
-            out_ref.push_str(", ");
+    // SAFETY: `a` is live; it is only read.
+    let array = unsafe { &*a };
+    // Each append reborrows `out` briefly: the element glue appends to it too.
+    // SAFETY: `out` is live and distinct from the array.
+    let push = |text: &str| unsafe { (*out).push_str(text) };
+    push("[");
+    for index in 0..array.len {
+        if index > 0 {
+            push(", ");
         }
         if let Some(debug) = array.info().debug {
-            // SAFETY: `i` is in bounds; `out` is live.
-            unsafe { debug(array.element(i), out) };
+            // SAFETY: `index` is in bounds; no borrow of `out` is live during the call.
+            unsafe { debug(array.element(index), out) };
         }
     }
-    out_ref.push_str("]");
+    push("]");
 }
