@@ -1199,8 +1199,33 @@ impl<'a> Builder<'a> {
     // ----- expressions -----------------------------------------------------------------------
 
     /// Evaluates `expr` (with its coercion) into `dest`, for an owning position.
+    /// Whether `expr`'s value must be discarded because it flows into a `()` place (the
+    /// last expression of a function or block whose value is not used).
+    fn discards(&self, dest: &Place, expr: ExprId) -> bool {
+        let interner = self.interner();
+        let dest_ty = crate::place_ty(self.cx.hir, self.items(), interner, &self.mir, dest);
+        let ty = self.coerced_ty(expr);
+        matches!(interner.kind(dest_ty), TyKind::Unit)
+            && !matches!(
+                interner.kind(ty),
+                TyKind::Unit | TyKind::Never | TyKind::Error
+            )
+    }
+
+    /// Evaluates `expr` into a temporary that is dropped, and stores `()` in `dest`.
+    fn discard_into(&mut self, dest: &Place, expr: ExprId) {
+        let span = self.span(expr);
+        let tmp = self.temp(self.coerced_ty(expr), span);
+        self.expr_into_owning(&Place::local(tmp), expr);
+        let unit = self.unit_operand();
+        self.assign(dest, Rvalue::Use(unit), span);
+    }
+
     fn expr_into_owning(&mut self, dest: &Place, expr: ExprId) {
         let span = self.span(expr);
+        if self.discards(dest, expr) {
+            return self.discard_into(dest, expr);
+        }
         if self.typed.coercions.contains_key(&expr) || self.place_of_is_simple(expr) {
             let op = self.as_operand(expr);
             self.assign(dest, Rvalue::Use(op), span);

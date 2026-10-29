@@ -26,6 +26,15 @@ use std::sync::Mutex;
 /// The functions defined at the crate root, for the code generator's symbol table.
 pub mod root {
     pub use super::ops::{loom_int_arith, loom_int_pow, loom_name_code};
+    pub use super::sched::abi::{
+        loom_atomic_clone, loom_atomic_drop, loom_atomic_new, loom_atomic_op, loom_chan_clone,
+        loom_chan_close, loom_chan_drop, loom_chan_new, loom_chan_recv, loom_chan_send,
+        loom_mutex_clone, loom_mutex_drop, loom_mutex_lock, loom_mutex_new, loom_run_main,
+        loom_scope_cancel, loom_scope_cancelled, loom_scope_run, loom_scope_spawn, loom_select,
+        loom_shared_clone, loom_shared_count, loom_shared_drop, loom_shared_get, loom_shared_new,
+        loom_sleep, loom_task_detach, loom_task_drop, loom_task_join, loom_task_yield,
+        loom_time_now,
+    };
     pub use super::{
         loom_alloc, loom_exit_error, loom_flush, loom_free, loom_panic, loom_panic_string,
     };
@@ -236,7 +245,7 @@ pub fn run_jit_entry(code: *const u8) -> i32 {
     // SAFETY: the JIT passes the address of `loom_main`, generated as
     // `extern "C" fn() -> i32` and kept alive by its module for the duration of the call.
     let entry: extern "C" fn() -> i32 = unsafe { std::mem::transmute(code) };
-    let status = entry();
+    let status = sched::abi::run_native_main(entry);
     flush_stdout();
     status
 }

@@ -10,6 +10,7 @@
 //! and keeps virtual time. Parallel mode uses several workers with local queues, a global
 //! queue and stealing, and real time.
 
+pub mod abi;
 pub mod chan;
 pub mod context;
 pub mod stack;
