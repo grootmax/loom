@@ -1,0 +1,7 @@
+# spec: §3.10
+@[invalid_attr]
+def foo
+end
+
+def main
+end

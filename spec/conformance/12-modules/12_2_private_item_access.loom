@@ -1,0 +1,9 @@
+# spec: §12.2 rule 1
+module secret
+  def hidden -> Int = 42
+end
+
+use secret.hidden
+
+def main
+end

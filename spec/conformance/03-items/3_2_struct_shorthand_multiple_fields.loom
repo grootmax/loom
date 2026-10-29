@@ -1,0 +1,13 @@
+# spec: §3.2 rule 2
+struct Vector2
+  x: Int
+  y: Int
+end
+
+def main
+  x = 100
+  y = 200
+  v = Vector2(x:, y:)
+  puts v.x
+  puts v.y
+end

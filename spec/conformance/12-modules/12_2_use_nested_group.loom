@@ -1,0 +1,12 @@
+# spec: §3.7 rule 1
+module math
+  pub def add(a: Int, b: Int) -> Int = a + b
+  pub def sub(a: Int, b: Int) -> Int = a - b
+end
+
+use math.{add, sub}
+
+def main
+  puts add(10, 5)
+  puts sub(10, 5)
+end

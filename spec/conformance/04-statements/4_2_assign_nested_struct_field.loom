@@ -1,0 +1,14 @@
+# spec: §4.2 rule 1
+struct Inner
+  val: Int
+end
+
+struct Outer
+  inner: Inner
+end
+
+def main
+  var o = Outer(inner: Inner(val: 5))
+  o.inner.val = 10
+  puts o.inner.val
+end

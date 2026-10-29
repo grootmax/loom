@@ -1,0 +1,18 @@
+# spec: §3.1 rule 5
+struct Rectangle
+  width: Int
+  height: Int
+
+  def self.square(size: Int) -> Rectangle
+    Rectangle(width: size, height: size)
+  end
+
+  def area -> Int
+    @width * @height
+  end
+end
+
+def main
+  r = Rectangle.square(5)
+  puts r.area()
+end

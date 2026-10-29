@@ -1,0 +1,9 @@
+# spec: §12.1 rule 2
+struct Foo
+end
+
+struct Foo
+end
+
+def main
+end

@@ -1,0 +1,10 @@
+# spec: §3.7 rule 1
+module calc
+  pub def multiply(a: Int, b: Int) -> Int = a * b
+end
+
+use calc.multiply as mul
+
+def main
+  puts mul(6, 7)
+end

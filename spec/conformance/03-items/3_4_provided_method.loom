@@ -1,0 +1,18 @@
+# spec: §3.4 rule 1
+trait Greeter
+  def name -> String
+  default def greet -> String = "Hello, #{self.name()}"
+end
+
+struct Person
+  n: String
+end
+
+impl Greeter for Person
+  def name -> String = @n.clone()
+end
+
+def main
+  p = Person(n: "Alice")
+  puts p.greet()
+end

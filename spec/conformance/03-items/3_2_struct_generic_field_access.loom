@@ -1,0 +1,9 @@
+# spec: §3.2 rule 1
+struct Container[T]
+  value: T
+end
+
+def main
+  c = Container(value: 42)
+  puts c.value
+end

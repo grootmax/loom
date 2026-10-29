@@ -1,0 +1,15 @@
+# spec: §3.4 rule 1
+trait Describe
+  default def describe -> String = "default description"
+end
+
+struct Item
+end
+
+impl Describe for Item
+end
+
+def main
+  it = Item()
+  puts it.describe()
+end
