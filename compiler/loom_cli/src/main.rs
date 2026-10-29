@@ -3,13 +3,51 @@
 //! Status: Phase 1. `check` (syntax only), `fmt` and `explain` work; every other command
 //! reports which roadmap phase will implement it and exits with status 2.
 
+mod link;
+
 use std::io::Write as _;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+use loom_diagnostics::Diagnostic;
 use loom_driver::Session;
 
 mod explain;
+
+/// Output format for diagnostics.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+enum MessageFormat {
+    /// Rendered rustc-style snippets with summary line.
+    #[default]
+    Rendered,
+    /// One-line diagnostic output (`file:line:col: severity[code]: message`).
+    Short,
+}
+
+/// Control whether color escape codes are emitted.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+enum ColorChoice {
+    /// Auto-detect based on stderr terminal and `NO_COLOR` environment variable.
+    #[default]
+    Auto,
+    /// Always emit color escape codes.
+    Always,
+    /// Never emit color escape codes.
+    Never,
+}
+
+impl ColorChoice {
+    fn should_color(self) -> bool {
+        match self {
+            ColorChoice::Always => true,
+            ColorChoice::Never => false,
+            ColorChoice::Auto => {
+                std::env::var_os("NO_COLOR").is_none()
+                    && std::io::IsTerminal::is_terminal(&std::io::stderr())
+            }
+        }
+    }
+}
 
 /// A `loom` subcommand and the roadmap phase that delivers it.
 struct Command {
@@ -97,6 +135,7 @@ fn main() -> ExitCode {
         "check" => check(rest),
         "run" => run(rest, false),
         "test" => run(rest, true),
+        "build" => build(rest),
         "fmt" => fmt(rest),
         "explain" => explain(rest),
         name => {
@@ -150,11 +189,96 @@ fn load(paths: &[PathBuf]) -> Result<Session, ExitCode> {
     Ok(session)
 }
 
-fn print_diagnostics(session: &Session) {
+fn summary_line(file_path: &Path, errors: usize, warnings: usize, color: bool) -> Option<String> {
+    if errors == 0 && warnings == 0 {
+        return None;
+    }
+
+    let (bold_red, bold, reset) = if color {
+        ("\x1b[1;31m", "\x1b[1m", "\x1b[0m")
+    } else {
+        ("", "", "")
+    };
+
+    if errors > 0 {
+        let error_text = if errors == 1 {
+            "1 previous error".to_string()
+        } else {
+            format!("{errors} previous errors")
+        };
+        let warning_text = if warnings == 0 {
+            String::new()
+        } else if warnings == 1 {
+            "; 1 warning emitted".to_string()
+        } else {
+            format!("; {warnings} warnings emitted")
+        };
+        Some(format!(
+            "{bold_red}error{reset}{bold}: could not check `{}` due to {error_text}{warning_text}{reset}",
+            file_path.display()
+        ))
+    } else {
+        let (bold_yellow, reset) = if color {
+            ("\x1b[1;33m", "\x1b[0m")
+        } else {
+            ("", "")
+        };
+        let warning_text = if warnings == 1 {
+            "1 warning emitted".to_string()
+        } else {
+            format!("{warnings} warnings emitted")
+        };
+        Some(format!(
+            "{bold_yellow}warning{reset}{bold}: {warning_text}{reset}"
+        ))
+    }
+}
+
+fn print_diagnostics_for_file(
+    diagnostics: &[Diagnostic],
+    sources: &loom_span::SourceMap,
+    path: &Path,
+    format: MessageFormat,
+    color: ColorChoice,
+) {
+    if diagnostics.is_empty() {
+        return;
+    }
     let stderr = std::io::stderr();
     let mut out = stderr.lock();
-    for diagnostic in session.diagnostics() {
-        let _ = writeln!(out, "{}", diagnostic.short(session.sources()));
+    if format == MessageFormat::Short {
+        for diagnostic in diagnostics {
+            let _ = writeln!(out, "{}", diagnostic.short(sources));
+        }
+        return;
+    }
+
+    let use_color = color.should_color();
+    let render_options = loom_diagnostics::render::RenderOptions { color: use_color };
+
+    let errors = diagnostics.iter().filter(|d| d.is_error()).count();
+    let warnings = diagnostics
+        .iter()
+        .filter(|d| d.severity == loom_diagnostics::Severity::Warning)
+        .count();
+
+    for diagnostic in diagnostics {
+        let rendered = loom_diagnostics::render::render(diagnostic, sources, &render_options);
+        let _ = write!(out, "{rendered}");
+        let _ = writeln!(out);
+    }
+
+    if let Some(summary) = summary_line(path, errors, warnings, use_color) {
+        let _ = writeln!(out, "{summary}");
+    }
+}
+
+fn print_diagnostics_for_session(session: &Session, format: MessageFormat, color: ColorChoice) {
+    for (_, path, parse) in session.files() {
+        let diagnostics = parse.diagnostics();
+        if !diagnostics.is_empty() {
+            print_diagnostics_for_file(diagnostics, session.sources(), path, format, color);
+        }
     }
 }
 
@@ -166,12 +290,25 @@ fn check(args: &[String]) -> ExitCode {
     let mut dump_cst = false;
     let mut dump_hir = false;
     let mut dump_mir = false;
+    let mut dump_core = false;
+    let mut format = MessageFormat::Rendered;
+    let mut color = ColorChoice::Auto;
     for option in options {
         match option {
             "--dump=cst" => dump_cst = true,
             "--dump=hir" => dump_hir = true,
             "--dump=mir" => dump_mir = true,
-            "--message-format=short" => {}
+            "--dump=mir-all" => {
+                dump_mir = true;
+                dump_core = true;
+            }
+            "--message-format=short" => format = MessageFormat::Short,
+            "--message-format=rendered" | "--message-format=human" => {
+                format = MessageFormat::Rendered;
+            }
+            "--color=always" => color = ColorChoice::Always,
+            "--color=never" => color = ColorChoice::Never,
+            "--color=auto" => color = ColorChoice::Auto,
             other => return usage_error(&format!("check: unknown option `{other}`")),
         }
     }
@@ -187,7 +324,6 @@ fn check(args: &[String]) -> ExitCode {
         .map(|(id, path, _)| (id, path.to_owned()))
         .collect();
     let mut failed = false;
-    let stderr = std::io::stderr();
     for (file, path) in files {
         if dump_cst && let Some(parse) = session.parse(file) {
             println!("# {}", path.display());
@@ -204,7 +340,7 @@ fn check(args: &[String]) -> ExitCode {
         }
         if dump_mir && let Some(mir) = &analysis.mir {
             for body in &mir.bodies {
-                if analysis.hir.package_of(body.owner) == loom_hir::Package::Main {
+                if dump_core || analysis.hir.package_of(body.owner) == loom_hir::Package::Main {
                     print!(
                         "{}",
                         loom_mir::dump_body(
@@ -217,10 +353,13 @@ fn check(args: &[String]) -> ExitCode {
                 }
             }
         }
-        let mut out = stderr.lock();
-        for diagnostic in &analysis.diagnostics {
-            let _ = writeln!(out, "{}", diagnostic.short(session.sources()));
-        }
+        print_diagnostics_for_file(
+            &analysis.diagnostics,
+            session.sources(),
+            &path,
+            format,
+            color,
+        );
         failed |= analysis.has_errors();
     }
     if failed {
@@ -230,13 +369,51 @@ fn check(args: &[String]) -> ExitCode {
     }
 }
 
-/// `loom run <file> [-- args]` and `loom test <file>`: checks the program, then
-/// interprets `main` or the `@[test]` functions (ADR 0019 §8–§9).
+/// Options of `loom run` and `loom test`.
+#[derive(Clone, Copy)]
+struct RunOptions {
+    tests: bool,
+    engine: Engine,
+    verbose: bool,
+    format: MessageFormat,
+    color: ColorChoice,
+}
+
+/// How `loom run` executes a program.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Engine {
+    /// Native code if the backend supports the program, otherwise the interpreter.
+    Auto,
+    /// The reference interpreter (`--interp`).
+    Interp,
+    /// Native code only (`--native`); unsupported programs are an error.
+    Native,
+}
+
+/// `loom run [--interp|--native] [--verbose] <file> [-- args]` and `loom test <file>`:
+/// checks the program, then runs `main` natively with the JIT (ADR 0021 §1) or in the
+/// interpreter, or runs the `@[test]` functions (ADR 0019 §8–§9).
 fn run(args: &[String], tests: bool) -> ExitCode {
     let split = args.iter().position(|a| a == "--").unwrap_or(args.len());
     let (options, paths) = split_options(&args[..split]);
-    if let Some(option) = options.first() {
-        return usage_error(&format!("unknown option `{option}`"));
+    let mut engine = if tests { Engine::Interp } else { Engine::Auto };
+    let mut verbose = false;
+    let mut format = MessageFormat::Rendered;
+    let mut color = ColorChoice::Auto;
+    for option in options {
+        match option {
+            "--interp" => engine = Engine::Interp,
+            "--native" if !tests => engine = Engine::Native,
+            "--verbose" => verbose = true,
+            "--message-format=short" => format = MessageFormat::Short,
+            "--message-format=rendered" | "--message-format=human" => {
+                format = MessageFormat::Rendered;
+            }
+            "--color=always" => color = ColorChoice::Always,
+            "--color=never" => color = ColorChoice::Never,
+            "--color=auto" => color = ColorChoice::Auto,
+            other => return usage_error(&format!("unknown option `{other}`")),
+        }
     }
     let [path] = paths.as_slice() else {
         return usage_error(if tests {
@@ -246,10 +423,19 @@ fn run(args: &[String], tests: bool) -> ExitCode {
         });
     };
     let path = path.clone();
-    // Deep recursion in the interpreted program needs a large native stack.
+    // Deep recursion in the program needs a large native stack.
     let worker = std::thread::Builder::new()
         .stack_size(1 << 30)
-        .spawn(move || run_on_this_thread(&path, tests));
+        .spawn(move || {
+            let engine = RunOptions {
+                tests,
+                engine,
+                verbose,
+                format,
+                color,
+            };
+            run_on_this_thread(&path, engine)
+        });
     if let Ok(Ok(code)) = worker.map(std::thread::JoinHandle::join) {
         ExitCode::from(code)
     } else {
@@ -258,29 +444,150 @@ fn run(args: &[String], tests: bool) -> ExitCode {
     }
 }
 
-fn run_on_this_thread(path: &std::path::Path, tests: bool) -> u8 {
+/// Loads and checks one file, printing diagnostics; `None` if it has errors.
+fn analyze_file(
+    path: &std::path::Path,
+    format: MessageFormat,
+    color: ColorChoice,
+) -> Option<(Session, loom_driver::Analysis)> {
     let mut session = Session::new();
     let file = match session.load(path) {
         Ok(file) => file,
         Err(error) => {
             eprintln!("loom: {error}");
-            return 1;
+            return None;
         }
     };
     let analysis = session.analyze(file);
-    {
-        let stderr = std::io::stderr();
-        let mut out = stderr.lock();
-        for diagnostic in &analysis.diagnostics {
-            let _ = writeln!(out, "{}", diagnostic.short(session.sources()));
+    print_diagnostics_for_file(
+        &analysis.diagnostics,
+        session.sources(),
+        path,
+        format,
+        color,
+    );
+    if analysis.has_errors() {
+        return None;
+    }
+    Some((session, analysis))
+}
+
+/// `loom build [-o <output>] <file>`: compiles a program to a native executable with the
+/// Cranelift backend and the system linker (ADR 0021 §1).
+fn build(args: &[String]) -> ExitCode {
+    let mut output: Option<PathBuf> = None;
+    let mut inputs = Vec::new();
+    let mut iter = args.iter();
+    while let Some(arg) = iter.next() {
+        match arg.as_str() {
+            "-o" => match iter.next() {
+                Some(o) => output = Some(PathBuf::from(o)),
+                None => return usage_error("build: `-o` needs a file name"),
+            },
+            other if other.starts_with('-') => {
+                return usage_error(&format!("build: unknown option `{other}`"));
+            }
+            other => inputs.push(PathBuf::from(other)),
         }
     }
-    if analysis.has_errors() {
+    let [path] = inputs.as_slice() else {
+        return usage_error("build: expected one file");
+    };
+    let Some((session, analysis)) = analyze_file(path, MessageFormat::Rendered, ColorChoice::Auto)
+    else {
+        return ExitCode::from(1);
+    };
+    let Some(main) = analysis.main() else {
+        eprintln!(
+            "{}: error[E0211]: a program needs a `main` function",
+            path.display()
+        );
+        return ExitCode::from(1);
+    };
+    let Some(mir) = analysis.mir.as_ref() else {
+        return ExitCode::from(1);
+    };
+    let program = loom_codegen_cranelift::Program {
+        hir: &analysis.hir,
+        checked: &analysis.checked,
+        mir,
+        sources: session.sources(),
+    };
+    let stem = path
+        .file_stem()
+        .map_or_else(|| "main".to_owned(), |s| s.to_string_lossy().into_owned());
+    let output = output.unwrap_or_else(|| {
+        PathBuf::from(if cfg!(windows) {
+            format!("{stem}.exe")
+        } else {
+            stem.clone()
+        })
+    });
+    let object = match loom_codegen_cranelift::build_object(program, main, &stem) {
+        Ok(bytes) => bytes,
+        Err(error) => {
+            eprintln!("loom: {error}");
+            return ExitCode::from(1);
+        }
+    };
+    match link::link(&object, &output) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(error) => {
+            eprintln!("loom: {error}");
+            ExitCode::from(1)
+        }
+    }
+}
+
+fn run_on_this_thread(path: &std::path::Path, options: RunOptions) -> u8 {
+    let RunOptions {
+        tests,
+        engine,
+        verbose,
+        format,
+        color,
+    } = options;
+    let Some((session, analysis)) = analyze_file(path, format, color) else {
         return 1;
+    };
+    if !tests {
+        let Some(main) = analysis.main() else {
+            eprintln!(
+                "{}: error[E0211]: a program needs a `main` function",
+                path.display()
+            );
+            return 1;
+        };
+        if engine != Engine::Interp
+            && let Some(mir) = analysis.mir.as_ref()
+        {
+            let program = loom_codegen_cranelift::Program {
+                hir: &analysis.hir,
+                checked: &analysis.checked,
+                mir,
+                sources: session.sources(),
+            };
+            match loom_codegen_cranelift::run_jit(program, main) {
+                Ok(status) => return u8::try_from(status).unwrap_or(1),
+                Err(error) if engine == Engine::Native => {
+                    eprintln!("loom: {error}");
+                    return 1;
+                }
+                Err(error) => {
+                    if verbose {
+                        eprintln!("loom: running in the interpreter: {error}");
+                    }
+                }
+            }
+        }
     }
     let stdout = std::io::stdout();
     let out = Box::new(std::io::BufWriter::new(stdout.lock()));
-    let interp = loom_interp::Interp::new(&analysis.hir, &analysis.checked, session.sources(), out);
+    let mut interp =
+        loom_interp::Interp::new(&analysis.hir, &analysis.checked, session.sources(), out);
+    if let Some(mir) = analysis.mir.as_ref() {
+        interp = interp.with_mir(mir);
+    }
     if tests {
         return if interp.run_tests(analysis.root) {
             0
@@ -289,10 +596,6 @@ fn run_on_this_thread(path: &std::path::Path, tests: bool) -> u8 {
         };
     }
     let Some(main) = analysis.main() else {
-        eprintln!(
-            "{}: error[E0211]: a program needs a `main` function",
-            path.display()
-        );
         return 1;
     };
     let outcome = interp.run_main(main);
@@ -310,9 +613,18 @@ fn run_on_this_thread(path: &std::path::Path, tests: bool) -> u8 {
 fn fmt(args: &[String]) -> ExitCode {
     let (options, mut paths) = split_options(args);
     let mut check_only = false;
+    let mut format = MessageFormat::Rendered;
+    let mut color = ColorChoice::Auto;
     for option in options {
         match option {
             "--check" => check_only = true,
+            "--message-format=short" => format = MessageFormat::Short,
+            "--message-format=rendered" | "--message-format=human" => {
+                format = MessageFormat::Rendered;
+            }
+            "--color=always" => color = ColorChoice::Always,
+            "--color=never" => color = ColorChoice::Never,
+            "--color=auto" => color = ColorChoice::Auto,
             other => return usage_error(&format!("fmt: unknown option `{other}`")),
         }
     }
@@ -324,7 +636,7 @@ fn fmt(args: &[String]) -> ExitCode {
         Err(code) => return code,
     };
     if session.has_errors() {
-        print_diagnostics(&session);
+        print_diagnostics_for_session(&session, format, color);
         eprintln!("loom fmt: not formatting files with errors");
         return ExitCode::FAILURE;
     }

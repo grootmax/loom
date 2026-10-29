@@ -1,0 +1,13 @@
+# spec: §8.4 rule 3
+def get_ref(s: String) -> ref String = s
+
+def call_own(own f: Fn())
+  f()
+end
+
+def main
+  s = "hello"
+  r = get_ref(s)
+  closure = { || puts r }
+  call_own(closure)
+end

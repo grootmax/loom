@@ -1,0 +1,14 @@
+# spec: §8.3 rule 1
+struct Holder
+  name: String
+
+  def get_ref -> ref String
+    self.name
+  end
+end
+
+def main
+  h = Holder(name: "Loom")
+  r = h.get_ref
+  puts r
+end

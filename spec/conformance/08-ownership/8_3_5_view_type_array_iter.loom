@@ -1,0 +1,7 @@
+# spec: §8.3 rule 5
+def main
+  words = ["one", "two"]
+  for w in words
+    puts w
+  end
+end

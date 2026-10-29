@@ -1,0 +1,14 @@
+# spec: §8.3 rule 2
+struct Holder
+  text: String
+
+  def text_ref -> ref String
+    self.text
+  end
+end
+
+def main
+  h = Holder(text: "world")
+  r = h.text_ref
+  puts "hello #{r}"
+end

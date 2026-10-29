@@ -1,0 +1,11 @@
+# spec: §8.1 rule 3
+struct Pair
+  first: String
+  second: String
+end
+
+def main
+  s = "hello"
+  p = Pair(first: s, second: "world")
+  puts s
+end

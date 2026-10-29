@@ -1,0 +1,17 @@
+# spec: §8.3 rule 6
+struct Inner
+  val: String
+end
+
+struct Outer
+  inner: Inner
+end
+
+def main
+  o = Outer(inner: Inner(val: "nested"))
+  case o
+  in Outer(inner:)
+    puts inner.val
+  end
+  puts o.inner.val
+end

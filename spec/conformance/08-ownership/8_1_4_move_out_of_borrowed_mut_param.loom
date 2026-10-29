@@ -1,0 +1,4 @@
+# spec: §8.1 rule 4
+def take_mut_borrow(mut s: String)
+  s2 = s
+end

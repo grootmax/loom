@@ -38,12 +38,10 @@ _Last updated: 2026-10-29_
 
 ## In progress
 
-- Phase 3 part 2: the Cranelift backend and the C-ABI runtime (ADR 0021). The runtime
-  library exists on the `phase3/native` branch; the code generator, `loom build`, drops and the
-  differential test are being written.
-- Conformance for §8 ownership, error explanations for E02xx–E05xx, and rich CLI
-  diagnostics (Jules PRs #25–#27); runtime tests under Miri (task 0022); nightly fuzzing
-  (task 0023); items and statements conformance (task 0014).
+- Phase 3 exit: native executables checked on every Tier 1 host in CI (Windows links with
+  MSVC's `link.exe`), Valgrind over native executables, the Phase 3 report.
+- Conformance for §8 ownership and rich CLI diagnostics (Jules PRs #25, #27); the nightly
+  fuzz workflow is fixed in #34.
 
 ## Known limitations
 

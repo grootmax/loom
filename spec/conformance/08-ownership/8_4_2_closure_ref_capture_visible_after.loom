@@ -1,0 +1,10 @@
+# spec: §8.4 rule 2
+def run_borrow(f: Fn())
+  f()
+end
+
+def main
+  x = "hello"
+  run_borrow({ || puts x })
+  puts x
+end

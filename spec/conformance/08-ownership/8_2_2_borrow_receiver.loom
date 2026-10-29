@@ -1,0 +1,14 @@
+# spec: §8.2 rule 2
+struct Greeter
+  greeting: String
+
+  def greet
+    puts @greeting
+  end
+end
+
+def main
+  g = Greeter(greeting: "hi")
+  g.greet
+  puts g.greeting
+end

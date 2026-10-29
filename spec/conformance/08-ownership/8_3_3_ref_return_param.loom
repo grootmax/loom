@@ -1,0 +1,8 @@
+# spec: §8.3 rule 3
+def pass_through(s: String) -> ref String = s
+
+def main
+  msg = "pass"
+  r = pass_through(msg)
+  puts r
+end
