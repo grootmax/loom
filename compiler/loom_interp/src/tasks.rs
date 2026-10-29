@@ -260,8 +260,19 @@ impl Interp<'_> {
     }
 }
 
+/// An evaluated `select` arm.
+enum Operand {
+    Recv(Rc<Handle>, Ty),
+    Send(Rc<Handle>, Value),
+    Timer(u64),
+}
+
 impl Interp<'_> {
     /// Evaluates `select` (spec §11.3).
+    #[allow(
+        clippy::too_many_lines,
+        reason = "evaluation, waiting and the chosen arm"
+    )]
     pub(crate) fn eval_select(
         &self,
         frame: &mut Frame<'_>,
@@ -280,11 +291,6 @@ impl Interp<'_> {
         }
         let ops = frame.typed.selects.get(&id).cloned().unwrap_or_default();
         // Evaluate every operand first, in order (rule 2).
-        enum Operand {
-            Recv(Rc<Handle>, Ty),
-            Send(Rc<Handle>, Value),
-            Timer(u64),
-        }
         let mut operands = Vec::new();
         for (arm, op) in arms.iter().zip(&ops) {
             operands.push(match *op {

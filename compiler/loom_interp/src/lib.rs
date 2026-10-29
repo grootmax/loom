@@ -227,18 +227,16 @@ impl<'a> Interp<'a> {
         self.run_scheduled(move |me| me.run_tests(root))
     }
 
-    fn run_scheduled<T: 'static>(
+    fn run_scheduled<T: Default + 'static>(
         &'static self,
         work: impl FnOnce(&'static Self) -> T + 'static,
-    ) -> T
-    where
-        T: Default,
-    {
+    ) -> T {
         use loom_runtime::sched::{Mode, run};
         let _ = self.this.set(self);
+        // The interpreter's values stay on one thread: always deterministic mode.
         let mode = match Mode::from_env(Mode::Deterministic { seed: 0 }) {
             Mode::Parallel { .. } => Mode::Deterministic { seed: 0 },
-            m => m,
+            deterministic @ Mode::Deterministic { .. } => deterministic,
         };
         let result: Rc<RefCell<Option<T>>> = Rc::new(RefCell::new(None));
         let out = Rc::clone(&result);

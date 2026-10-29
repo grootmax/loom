@@ -8,6 +8,10 @@ use loom_hir::{DefId, Mode};
 use loom_mir::{Constant, Operand, Place};
 use loom_types::{FloatTy, IntTy, Subst, Ty, TyKind};
 
+/// One arm of a native `select`: kind, channel handle, value buffer, timer nanoseconds,
+/// and for a receive arm its output `Option` and that type.
+type SelectArmCode = (i64, Value, Value, Value, Option<(Value, Ty)>);
+
 impl BodyTx<'_, '_, '_, '_, '_> {
     /// The address of intrinsic argument `i`: an owned copy for an `own` parameter, the
     /// borrowed value's address otherwise.
@@ -890,8 +894,7 @@ impl BodyTx<'_, '_, '_, '_, '_> {
             _ => -1,
         };
         let has_else = constant(&args[0]) != 0;
-        // (kind, channel handle, data buffer, nanos, receive output and its type)
-        let mut arms: Vec<(i64, Value, Value, Value, Option<(Value, Ty)>)> = Vec::new();
+        let mut arms: Vec<SelectArmCode> = Vec::new();
         let mut i = 1;
         while i < args.len() {
             let kind = constant(&args[i]);
@@ -956,12 +959,12 @@ impl BodyTx<'_, '_, '_, '_, '_> {
                 chosen,
                 i64::try_from(k).unwrap_or(0),
             );
-            let got = self.fx.load(types::I8, received, 0);
-            let both = self.fx.b.ins().band(is_this, got);
-            let fill = self.fx.b.create_block();
-            let cont = self.fx.b.create_block();
-            self.fx.b.ins().brif(both, fill, &[], cont, &[]);
-            self.fx.b.switch_to_block(fill);
+            let value_arrived = self.fx.load(types::I8, received, 0);
+            let both = self.fx.b.ins().band(is_this, value_arrived);
+            let fill_block = self.fx.b.create_block();
+            let next_block = self.fx.b.create_block();
+            self.fx.b.ins().brif(both, fill_block, &[], next_block, &[]);
+            self.fx.b.switch_to_block(fill_block);
             let some = self.fx.lang_tag("Option", "Some")?;
             let payload = self
                 .fx
@@ -973,8 +976,8 @@ impl BodyTx<'_, '_, '_, '_, '_> {
             self.fx.copy_ty(payload, *buf, elem);
             let tag = self.fx.b.ins().iconst(types::I32, i64::from(some));
             self.fx.store(tag, *out, 0);
-            self.fx.b.ins().jump(cont, &[]);
-            self.fx.b.switch_to_block(cont);
+            self.fx.b.ins().jump(next_block, &[]);
+            self.fx.b.switch_to_block(next_block);
         }
         Ok(())
     }

@@ -405,6 +405,10 @@ impl Interp<'_> {
     }
 
     /// Calls what `target` designates.
+    #[allow(
+        clippy::too_many_lines,
+        reason = "receivers, arguments, defaults and targets"
+    )]
     fn call_target(
         &self,
         frame: &mut Frame<'_>,

@@ -1,6 +1,6 @@
 //! Switching between execution contexts (ADR 0022 §1).
 //!
-//! A suspended context is a stack pointer: [`switch`] pushes the callee-saved registers
+//! A suspended context is a stack pointer: [`loom_context_switch`] pushes the callee-saved registers
 //! of the running context on its stack, stores its stack pointer, loads another one and
 //! pops that context's registers. A new context gets an initial frame ([`prepare`]) whose
 //! "return address" is a trampoline that calls the task's entry function.

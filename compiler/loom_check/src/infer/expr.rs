@@ -214,8 +214,7 @@ impl InferCtxt<'_> {
                     let op = self.select_op(arm.operation);
                     match (op, arm.pat) {
                         (Some(crate::SelectOp::Recv { .. }), Some(p)) => self.check_pat(p, op_ty),
-                        (Some(crate::SelectOp::Recv { .. }), None) | (None, _) => {}
-                        (Some(_), Some(p)) => {
+                        (Some(crate::SelectOp::Send { .. } | crate::SelectOp::Timer), Some(p)) => {
                             self.error(
                                 Diagnostic::error(
                                     codes::SELECT_ARM,
@@ -225,7 +224,7 @@ impl InferCtxt<'_> {
                                 .with_label("remove the pattern and `=`"),
                             );
                         }
-                        (Some(_), None) => {}
+                        _ => {}
                     }
                     if op.is_none() {
                         self.error(

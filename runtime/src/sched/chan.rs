@@ -1,6 +1,6 @@
 //! Channels and `select` (spec §11.2–§11.3, ADR 0022 §4).
 //!
-//! A waiting operation is a [`Waiter`] queued on a channel. Every waiter has a token
+//! A waiting operation is a waiter queued on a channel. Every waiter has a token
 //! shared by the operations of one `select` (a plain `send`/`recv` has its own): an
 //! operation completes a waiter only after claiming its token, so exactly one arm of a
 //! `select` fires.
