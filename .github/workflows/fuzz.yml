@@ -34,7 +34,8 @@ jobs:
         run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2
       - name: Print seed to step summary
-        run: echo "Seed: ${{ github.run_id }}${{ matrix.index }}" >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          echo "Seed: ${{ github.run_id }}${{ matrix.index }}" >> "$GITHUB_STEP_SUMMARY"
       - name: Run fuzzer
         # The dispatch input reaches the shell only as a validated number.
         env:
