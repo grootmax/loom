@@ -17,6 +17,7 @@ pub mod array;
 pub mod map;
 pub mod num;
 pub mod ops;
+pub mod sched;
 pub mod string;
 
 use std::io::Write;
