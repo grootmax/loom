@@ -213,11 +213,11 @@ fn check_same(engine: &str, expected: &Output, native: &Output) -> Result<(), St
             stderr.trim()
         ));
     }
-    if expected.stdout != native.stdout {
+    let expected_stdout = String::from_utf8_lossy(&expected.stdout).replace("\r\n", "\n");
+    let native_stdout = String::from_utf8_lossy(&native.stdout).replace("\r\n", "\n");
+    if expected_stdout != native_stdout {
         return Err(format!(
-            "{engine}: output differs\n--- interpreter\n{}--- native\n{}",
-            String::from_utf8_lossy(&expected.stdout),
-            String::from_utf8_lossy(&native.stdout)
+            "{engine}: output differs\n--- interpreter\n{expected_stdout}--- native\n{native_stdout}"
         ));
     }
     Ok(())
