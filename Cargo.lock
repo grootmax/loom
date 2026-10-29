@@ -438,6 +438,7 @@ dependencies = [
  "loom_check",
  "loom_driver",
  "loom_hir",
+ "loom_mir",
  "loom_resolve",
  "loom_span",
  "loom_types",

@@ -412,7 +412,11 @@ fn run_on_this_thread(path: &std::path::Path, tests: bool, engine: Engine, verbo
     }
     let stdout = std::io::stdout();
     let out = Box::new(std::io::BufWriter::new(stdout.lock()));
-    let interp = loom_interp::Interp::new(&analysis.hir, &analysis.checked, session.sources(), out);
+    let mut interp =
+        loom_interp::Interp::new(&analysis.hir, &analysis.checked, session.sources(), out);
+    if let Some(mir) = analysis.mir.as_ref() {
+        interp = interp.with_mir(mir);
+    }
     if tests {
         return if interp.run_tests(analysis.root) {
             0

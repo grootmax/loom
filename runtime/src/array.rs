@@ -94,6 +94,7 @@ fn index_panic(
 /// A new empty array of elements described by `info`.
 #[unsafe(no_mangle)]
 pub extern "C" fn loom_array_new(info: *const TypeInfo) -> *mut LoomArray {
+    crate::track(1);
     Box::into_raw(Box::new(LoomArray {
         info,
         data: std::ptr::null_mut(),
@@ -382,6 +383,7 @@ pub unsafe extern "C" fn loom_array_drop(a: *mut LoomArray) {
     if a.is_null() {
         return;
     }
+    crate::track(-1);
     // SAFETY: the caller transfers ownership of the handle.
     let array = unsafe { Box::from_raw(a) };
     if let Some(drop_fn) = array.info().drop {

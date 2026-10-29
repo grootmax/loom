@@ -1,0 +1,11 @@
+# spec: §8.4 rule 1
+def main
+  var total = 0
+  add = { |n: Int| total += n }
+  add(5)
+  add(6)
+  puts total
+  var sum = 0
+  [1, 2, 3].each { |n| sum += n }
+  puts sum
+end

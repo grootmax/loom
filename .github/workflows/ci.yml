@@ -37,6 +37,12 @@ jobs:
           tool: cargo-deny
       - name: cargo xtask ci
         run: cargo xtask ci
+      # `loom build` links with the system linker; on Windows that is MSVC's link.exe.
+      - name: Set up the MSVC environment
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: Native executables match the interpreter (loom build)
+        run: cargo xtask differential --aot
 
   musl:
     name: test (x86_64-unknown-linux-musl)
@@ -73,3 +79,16 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: cargo miri test
         run: cargo +nightly miri test -p loom_runtime
+
+  valgrind:
+    name: native code under Valgrind
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install pinned toolchain
+        run: rustup toolchain install
+      - name: Install Valgrind
+        run: sudo apt-get update && sudo apt-get install -y valgrind
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo xtask differential --valgrind
+        run: cargo xtask differential --valgrind

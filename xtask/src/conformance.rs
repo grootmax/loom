@@ -22,7 +22,7 @@ use crate::workspace_root;
 const IMPLEMENTED_UP_TO: u32 = 499;
 
 /// The current roadmap phase.
-pub const CURRENT_PHASE: u32 = 2;
+pub const CURRENT_PHASE: u32 = 3;
 
 /// Runs the suite and fails if any case does not match.
 pub fn run() -> Result<(), String> {
@@ -120,7 +120,16 @@ pub fn build_loom(root: &Path) -> Result<PathBuf, String> {
     crate::run(
         root,
         "cargo",
-        &["build", "--quiet", "--locked", "-p", "loom_cli"],
+        // The runtime's static library is linked into `loom build` executables.
+        &[
+            "build",
+            "--quiet",
+            "--locked",
+            "-p",
+            "loom_cli",
+            "-p",
+            "loom_runtime",
+        ],
         &[],
     )?;
     let target =
@@ -161,7 +170,7 @@ struct Runner<'a> {
 }
 
 /// The phase a case declares on its second line (`# phase: N`), if any.
-fn declared_phase(case: &Path) -> Option<u32> {
+pub fn declared_phase(case: &Path) -> Option<u32> {
     let text = std::fs::read_to_string(case).ok()?;
     let line = text.lines().nth(1)?;
     line.strip_prefix("# phase:")?.trim().parse().ok()

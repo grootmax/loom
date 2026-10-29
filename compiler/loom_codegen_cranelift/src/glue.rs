@@ -1,6 +1,11 @@
 //! Per-type glue (drop, clone, equality, comparison, hashing, debug text), the type
 //! descriptors the runtime's collections use, and `dyn` vtables (ADR 0021 §3, §4).
 
+#![allow(
+    clippy::many_single_char_names,
+    reason = "glue compares values `a` and `b` (or copies `s` to `d`) at every level"
+)]
+
 use crate::func::{Fx, panic_trap};
 use crate::{
     Cx, DataKey, Gen, GlueKind, Instance, Resolved, Result, internal, subst_key, unsupported,
@@ -769,6 +774,7 @@ fn field_debug(fx: &mut Fx<'_, '_, '_, '_>, ty: Ty, a: Value, out: Value) -> Res
     Ok(())
 }
 
+#[allow(clippy::too_many_lines, reason = "one case per shape")]
 fn debug_glue(fx: &mut Fx<'_, '_, '_, '_>, ty: Ty, a: Value, out: Value) -> Result<()> {
     let ptr = fx.ptr();
     match shape(fx.cx(), ty) {
@@ -823,21 +829,18 @@ fn debug_glue(fx: &mut Fx<'_, '_, '_, '_>, ty: Ty, a: Value, out: Value) -> Resu
             field_debug(fx, inner, p, out)?;
         }
         Shape::Record(fields, def) => {
-            let names: Vec<String> = match def {
-                Some(d) => {
-                    let name = fx.cx().hir.def(d).name.to_string();
-                    fx.push_text(out, &format!("{name}("))?;
-                    fx.cx()
-                        .items()
-                        .fields
-                        .get(&d)
-                        .map(|fs| fs.iter().map(|f| format!("{}: ", f.name)).collect())
-                        .unwrap_or_default()
-                }
-                None => {
-                    fx.push_text(out, "(")?;
-                    Vec::new()
-                }
+            let names: Vec<String> = if let Some(d) = def {
+                let name = fx.cx().hir.def(d).name.to_string();
+                fx.push_text(out, &format!("{name}("))?;
+                fx.cx()
+                    .items()
+                    .fields
+                    .get(&d)
+                    .map(|fs| fs.iter().map(|f| format!("{}: ", f.name)).collect())
+                    .unwrap_or_default()
+            } else {
+                fx.push_text(out, "(")?;
+                Vec::new()
             };
             for (i, (offset, t)) in fields.into_iter().enumerate() {
                 let mut prefix = if i > 0 {

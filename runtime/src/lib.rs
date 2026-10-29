@@ -57,6 +57,31 @@ pub struct TypeInfo {
 
 static STDOUT: Mutex<Vec<u8>> = Mutex::new(Vec::new());
 
+/// The number of live runtime objects (strings, arrays, maps, closure environments and
+/// boxed `dyn` values), for leak checks (`LOOM_LEAK_CHECK=1`).
+static LIVE: std::sync::atomic::AtomicIsize = std::sync::atomic::AtomicIsize::new(0);
+
+/// Records the creation (`1`) or destruction (`-1`) of a runtime object.
+pub(crate) fn track(delta: isize) {
+    LIVE.fetch_add(delta, std::sync::atomic::Ordering::Relaxed);
+}
+
+/// The number of live runtime objects.
+#[must_use]
+pub fn live_objects() -> isize {
+    LIVE.load(std::sync::atomic::Ordering::Relaxed)
+}
+
+/// With `LOOM_LEAK_CHECK` set, reports live objects at the end of the program.
+fn report_leaks() {
+    if std::env::var_os("LOOM_LEAK_CHECK").is_some() {
+        let live = live_objects();
+        if live != 0 {
+            eprintln!("loom: {live} runtime objects leaked");
+        }
+    }
+}
+
 /// Appends `bytes` to standard output, flushing when the buffer is large.
 pub fn write_stdout(bytes: &[u8]) {
     let mut buffer = STDOUT
@@ -84,6 +109,7 @@ pub fn flush_stdout() {
 #[unsafe(no_mangle)]
 pub extern "C" fn loom_flush() {
     flush_stdout();
+    report_leaks();
 }
 
 /// Reads `len` bytes at `ptr` as UTF-8 text.
@@ -167,6 +193,7 @@ pub extern "C" fn loom_alloc(size: usize, align: usize) -> *mut u8 {
     if ptr.is_null() {
         std::alloc::handle_alloc_error(layout);
     }
+    track(1);
     ptr
 }
 
@@ -182,16 +209,27 @@ pub unsafe extern "C" fn loom_free(ptr: *mut u8, size: usize, align: usize) {
     }
     let layout = std::alloc::Layout::from_size_align(size.max(1), align.max(1))
         .unwrap_or(std::alloc::Layout::new::<u8>());
+    track(-1);
     // SAFETY: the caller guarantees `ptr` was allocated with this layout.
     unsafe { std::alloc::dealloc(ptr, layout) }
 }
 
 /// Runs JIT-compiled `loom_main` at `code` and returns its exit status.
 ///
-/// The JIT is the only caller: `code` must be the address of a function generated with
-/// the signature `extern "C" fn() -> i32` whose module is still alive. The function is
-/// safe to call so that no other crate needs `unsafe` (ADR 0021 §4).
+/// This is the one trust boundary between the JIT and the runtime (ADR 0021 §4): the code
+/// generator may not contain `unsafe` code, so the call through the generated function
+/// pointer happens here. The JIT is the only caller, and `code` must be the address of a
+/// function generated with the signature `extern "C" fn() -> i32` whose module is still
+/// alive.
+///
+/// # Panics
+///
+/// If `code` is null.
 #[must_use]
+#[allow(
+    clippy::not_unsafe_ptr_arg_deref,
+    reason = "the JIT trust boundary documented above; callers may not use unsafe code"
+)]
 pub fn run_jit_entry(code: *const u8) -> i32 {
     assert!(!code.is_null(), "no entry point");
     // SAFETY: the JIT passes the address of `loom_main`, generated as

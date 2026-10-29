@@ -81,6 +81,7 @@ pub extern "C" fn loom_map_new(
     key_info: *const TypeInfo,
     value_info: *const TypeInfo,
 ) -> *mut LoomMap {
+    crate::track(1);
     Box::into_raw(Box::new(LoomMap {
         keys: loom_array_new(key_info),
         values: loom_array_new(value_info),
@@ -285,6 +286,7 @@ pub unsafe extern "C" fn loom_map_update(
 pub unsafe extern "C" fn loom_map_clone(m: *mut LoomMap) -> *mut LoomMap {
     // SAFETY: `m` is live.
     let map = unsafe { get(m) };
+    crate::track(1);
     Box::into_raw(Box::new(LoomMap {
         // SAFETY: the arrays are live.
         keys: unsafe { crate::array::loom_array_clone(map.keys) },
@@ -305,6 +307,7 @@ pub unsafe extern "C" fn loom_map_drop(m: *mut LoomMap) {
     if m.is_null() {
         return;
     }
+    crate::track(-1);
     // SAFETY: the caller transfers ownership.
     let map = unsafe { Box::from_raw(m) };
     // SAFETY: the arrays are owned by the map.

@@ -54,9 +54,25 @@ where the hash covers the substitution.
 | `dyn Trait` | `{data pointer (heap), vtable pointer}` |
 
 Every MIR local lives in a stack slot of its layout; aggregates are copied with
-`memcpy`. Arguments of aggregate type are passed as a pointer to a caller-owned copy,
-and aggregate results through a hidden return pointer. This is simple rather than fast;
-Phase 7 (LLVM) and MIR optimizations improve it.
+`memcpy`. This is simple rather than fast; Phase 7 (LLVM) and MIR optimizations improve
+it. The calling convention, as implemented:
+
+- **Functions:** a result pointer first (every result, scalar or not, is written through
+  it into a fresh slot of the caller), then each argument: a scalar by value, an
+  aggregate as a pointer to a caller-owned copy that the callee owns, nothing for a
+  zero-size value. Borrowed parameters are `ref` locals in MIR and so are pointers.
+- **Closures:** `(result, environment, arguments…)`, where every argument is borrowed
+  (a pointer), as MIR passes arguments to callable values. Runtime callbacks
+  (`sort_by`, `update`) use the same convention. The environment is heap-allocated:
+  two words of header (its drop and clone functions), then the captures in C layout.
+- **Functions and constructors used as values** get a shim with the closure convention
+  and a null environment. A shim deep-copies arguments that the target takes `own`.
+- **`dyn` vtables:** drop glue, size, alignment, clone glue, then the trait's methods
+  that take a receiver, ordered by name. A `dyn` method call passes the data pointer as
+  the receiver.
+- **Value semantics of copies:** a MIR `Copy` of a place whose type owns resources
+  (possible where the interpreter's copy-on-write values made it free) is a deep copy
+  through clone glue, so a value is never owned twice.
 
 ### 4. Runtime (`runtime/`, crate `loom_runtime`)
 
@@ -82,10 +98,14 @@ them on panic too so that the two agree.
 
 ### 6. Drops
 
-The backend implements MIR `Drop` with **drop flags**: every local that may be moved
-gets a flag, set when it is initialized and cleared when it is moved, and every field
-path that is moved separately (a partial move) gets its own flag, so a partially moved
-value drops exactly its remaining fields. `Drop` of a value whose type implements
+The backend implements MIR `Drop` with **drop flags**: every local whose type owns
+resources gets a flag, set when it is initialized and cleared when it is moved;
+`StorageLive`/`StorageDead` clear it. Assigning to an initialized place drops the old
+value first. Every field path that is moved separately (a partial move) is to get its own
+flag, so a partially moved value drops exactly its remaining fields; until then a
+partial move clears the whole local's flag, which can leak the remaining fields but
+never drops anything twice. The MIR builder schedules drops for statement temporaries,
+including on early exits (`return`, `?`, `break`, `next`) and in expression bodies. `Drop` of a value whose type implements
 `Drop` calls `drop`, then drops its fields; runtime objects free their memory and drop
 their elements through the type descriptor.
 
@@ -94,9 +114,19 @@ their elements through the type descriptor.
 `cargo xtask differential` runs every example and every accept case of the conformance
 suite with the interpreter and with the native backend and requires identical standard
 output and exit status. It is part of `cargo xtask ci` from the moment the backend
-compiles the examples.
+compiles the examples. The runtime counts its live objects; with `LOOM_LEAK_CHECK=1` a
+program that ends with live objects reports them, and the differential test fails on
+such a report. `--aot` also builds and runs each program with `loom build`, and
+`--valgrind` runs those executables under Valgrind (Linux CI).
 
-### 8. Dependencies
+### 8. The JIT trust boundary
+
+The code generator crate may not contain `unsafe` code (only `runtime/` may, CLAUDE.md).
+Calling the JIT-compiled entry point needs one cast from an address to a function
+pointer; it lives in the runtime as `run_jit_entry`, a documented trust boundary whose
+only caller is the JIT.
+
+### 9. Dependencies
 
 `cranelift-codegen`, `cranelift-frontend`, `cranelift-module`, `cranelift-jit`,
 `cranelift-object` and `target-lexicon`, version-pinned together, used only by

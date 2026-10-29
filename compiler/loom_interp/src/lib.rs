@@ -12,7 +12,7 @@ mod value;
 pub use value::{Place, Value};
 
 use loom_check::{Checked, Env, Items, Solver, TypedBody};
-use loom_hir::{BodyId, DefId, Hir, Name};
+use loom_hir::{BodyId, DefId, ExprId, Hir, Name};
 use loom_span::{SourceMap, Span};
 use loom_types::{InferTable, Interner, Subst, Ty};
 use std::cell::{Cell, RefCell};
@@ -70,6 +70,8 @@ pub struct Interp<'a> {
     out: RefCell<Box<dyn Write + 'a>>,
     depth: Cell<usize>,
     consts: RefCell<HashMap<DefId, Value>>,
+    /// Closure expressions in owning positions, which capture by copy (spec §8.4).
+    escaping: std::collections::HashSet<(BodyId, ExprId)>,
 }
 
 impl<'a> Interp<'a> {
@@ -87,7 +89,24 @@ impl<'a> Interp<'a> {
             out: RefCell::new(out),
             depth: Cell::new(0),
             consts: RefCell::new(HashMap::new()),
+            escaping: std::collections::HashSet::new(),
         }
+    }
+
+    /// Takes the escaping closures from the program's MIR: they capture by copy, and
+    /// assignments to their captures change only the closure's copy (spec §8.4 rule 1).
+    #[must_use]
+    pub fn with_mir(mut self, mir: &loom_mir::Mir) -> Self {
+        self.escaping = mir
+            .bodies
+            .iter()
+            .filter(|b| b.escaping)
+            .filter_map(|b| match b.source {
+                loom_mir::MirSource::Closure(body, expr) => Some((body, expr)),
+                _ => None,
+            })
+            .collect();
+        self
     }
 
     fn interner(&self) -> &'a Interner {

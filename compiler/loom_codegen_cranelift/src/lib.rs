@@ -349,7 +349,7 @@ pub(crate) struct Gen<'a, 'm> {
     pub counter: u32,
 }
 
-impl<'a> Gen<'a, '_> {
+impl Gen<'_, '_> {
     /// The function for `instance`, declared (and queued) on first use.
     pub fn func(&mut self, instance: Instance) -> Result<FuncId> {
         if let Some(&id) = self.funcs.get(&instance) {

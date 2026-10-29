@@ -331,14 +331,14 @@ impl<'a> Fx<'_, 'a, '_, '_> {
     /// An integer constant of type `t` (including 128-bit values).
     pub fn int_const(&mut self, t: Type, value: i128) -> Value {
         if t == types::I128 {
-            let lo = self
-                .b
-                .ins()
-                .iconst(types::I64, (value as u128 & u128::from(u64::MAX)) as i64);
-            let hi = self
-                .b
-                .ins()
-                .iconst(types::I64, ((value as u128) >> 64) as i64);
+            let bits = value.cast_unsigned();
+            let half = |v: u128| {
+                u64::try_from(v & u128::from(u64::MAX))
+                    .unwrap_or(0)
+                    .cast_signed()
+            };
+            let lo = self.b.ins().iconst(types::I64, half(bits));
+            let hi = self.b.ins().iconst(types::I64, half(bits >> 64));
             self.b.ins().iconcat(lo, hi)
         } else {
             #[allow(clippy::cast_possible_truncation, reason = "the value fits the type")]
@@ -404,6 +404,8 @@ pub(crate) struct BodyTx<'x, 'g, 'a, 'm, 'f> {
     blocks: Vec<Block>,
     env_local: Option<Local>,
     captures: Vec<(u32, Ty)>,
+    /// Constants materialized to be read in place, dropped after the statement.
+    const_temps: Vec<(Value, Ty)>,
     pub span: Span,
 }
 
@@ -485,15 +487,17 @@ impl<'x, 'g, 'a, 'm, 'f> BodyTx<'x, 'g, 'a, 'm, 'f> {
             blocks,
             env_local: None,
             captures,
+            const_temps: Vec::new(),
             span: body.span,
         };
-        tx.allocate_locals(params)?;
+        tx.allocate_locals(params);
         tx.fx.b.ins().jump(tx.blocks[0], &[]);
         for (i, block) in body.blocks.iter().enumerate() {
             tx.fx.b.switch_to_block(tx.blocks[i]);
             for statement in &block.statements {
                 tx.span = statement.span;
                 tx.statement(&statement.kind)?;
+                tx.drop_const_temps()?;
             }
             match &block.terminator {
                 Some(t) => {
@@ -516,7 +520,7 @@ impl<'x, 'g, 'a, 'm, 'f> BodyTx<'x, 'g, 'a, 'm, 'f> {
         self.fx.g.cx.concrete(ty, &self.subst)
     }
 
-    fn allocate_locals(&mut self, params: &[Value]) -> Result<()> {
+    fn allocate_locals(&mut self, params: &[Value]) {
         let mut next_param = 1;
         let ptr = self.fx.ptr();
         for (i, decl) in self.body.locals.iter().enumerate() {
@@ -566,7 +570,6 @@ impl<'x, 'g, 'a, 'm, 'f> BodyTx<'x, 'g, 'a, 'm, 'f> {
             };
             self.locals.push(LocalInfo { ty, addr, flag });
         }
-        Ok(())
     }
 
     fn set_flag(&mut self, local: Local, value: bool) {
@@ -612,7 +615,10 @@ impl<'x, 'g, 'a, 'm, 'f> BodyTx<'x, 'g, 'a, 'm, 'f> {
                     ty = match fields.get(*f as usize) {
                         Some(&(_, t)) => t,
                         None => {
-                            return unsupported(format!("field {f} of `{}`", self.cx().ty_name(ty)));
+                            return unsupported(format!(
+                                "field {f} of `{}`",
+                                self.cx().ty_name(ty)
+                            ));
                         }
                     };
                 }
@@ -760,9 +766,20 @@ impl<'x, 'g, 'a, 'm, 'f> BodyTx<'x, 'g, 'a, 'm, 'f> {
                 let ty = self.concrete(*ty);
                 let slot = self.fx.slot_for(ty);
                 self.const_into(c, ty, slot)?;
+                if self.fx.needs_drop(ty) {
+                    self.const_temps.push((slot, ty));
+                }
                 Ok((slot, ty))
             }
         }
+    }
+
+    /// Drops the constants materialized for reads by the current statement.
+    fn drop_const_temps(&mut self) -> Result<()> {
+        for (slot, ty) in std::mem::take(&mut self.const_temps) {
+            self.fx.drop_at(slot, ty)?;
+        }
+        Ok(())
     }
 
     /// A pointer to the value an argument designates: the pointer itself for a reference,
@@ -1031,6 +1048,7 @@ impl<'x, 'g, 'a, 'm, 'f> BodyTx<'x, 'g, 'a, 'm, 'f> {
 
     // ----- operators ---------------------------------------------------------------------
 
+    #[allow(clippy::many_single_char_names, reason = "operands and their values")]
     fn binary(&mut self, op: BinaryOp, a: &Operand, b: &Operand) -> Result<Value> {
         let ty = self.operand_ty(a)?;
         let interner = self.cx().interner();
@@ -1098,6 +1116,7 @@ impl<'x, 'g, 'a, 'm, 'f> BodyTx<'x, 'g, 'a, 'm, 'f> {
         }
     }
 
+    #[allow(clippy::too_many_lines, reason = "one case per operator")]
     pub(crate) fn int_binary(
         &mut self,
         op: BinaryOp,
@@ -1311,6 +1330,7 @@ impl<'x, 'g, 'a, 'm, 'f> BodyTx<'x, 'g, 'a, 'm, 'f> {
                 target,
             } => {
                 self.call(callee, args, dest)?;
+                self.drop_const_temps()?;
                 match target {
                     Some(t) => {
                         self.fx.b.ins().jump(self.blocks[t.index()], &[]);

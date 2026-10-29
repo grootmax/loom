@@ -19,6 +19,7 @@ impl LoomString {
     /// A new string object on the heap.
     #[must_use]
     pub fn boxed(text: String) -> *mut Self {
+        crate::track(1);
         Box::into_raw(Box::new(Self {
             bytes: text.into_bytes(),
         }))
@@ -65,6 +66,7 @@ pub extern "C" fn loom_string_new() -> *mut LoomString {
 /// `s` must be a live string.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn loom_string_clone(s: *const LoomString) -> *mut LoomString {
+    crate::track(1);
     // SAFETY: the caller passes a live string.
     Box::into_raw(Box::new(unsafe { get(s) }.clone()))
 }
@@ -77,6 +79,7 @@ pub unsafe extern "C" fn loom_string_clone(s: *const LoomString) -> *mut LoomStr
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn loom_string_drop(s: *mut LoomString) {
     if !s.is_null() {
+        crate::track(-1);
         // SAFETY: the caller transfers ownership of a handle from `Box::into_raw`.
         drop(unsafe { Box::from_raw(s) });
     }

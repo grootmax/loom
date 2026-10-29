@@ -125,6 +125,7 @@ fn code_type(code: char, ptr: Type) -> AbiParam {
 }
 
 /// The signature of runtime function `name`.
+#[must_use]
 pub fn signature(name: &str, ptr: Type, call_conv: CallConv) -> Signature {
     let code = sig_of(name).unwrap_or(">");
     let (params, ret) = code.split_once('>').unwrap_or((code, ""));
