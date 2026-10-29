@@ -1,0 +1,6 @@
+# spec: §12.4
+def main
+  assert(1 + 1 == 2)
+  assert_eq(2 + 2, 4)
+  print("ok\n")
+end

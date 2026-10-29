@@ -1,0 +1,19 @@
+# spec: §3.3 rule 4
+enum Shape
+  Circle(radius: Float)
+  Square(side: Float)
+
+  def area -> Float
+    case self
+    in Circle(radius: r) then 3.14159 * r * r
+    in Square(side: s) then s * s
+    end
+  end
+end
+
+def main
+  c = Shape.Circle(radius: 2.0)
+  s = Shape.Square(side: 3.0)
+  puts c.area()
+  puts s.area()
+end

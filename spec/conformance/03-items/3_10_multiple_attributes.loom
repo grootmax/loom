@@ -1,0 +1,8 @@
+# spec: §3.10
+@[inline]
+@[deprecated("use new_calc")]
+def old_calc(x: Int) -> Int = x * 2
+
+def main
+  puts old_calc(5)
+end

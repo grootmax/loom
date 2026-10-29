@@ -1,0 +1,5 @@
+# spec: §14.1
+def main -> Result[Unit, String]
+  puts "running main with result"
+  Ok(())
+end

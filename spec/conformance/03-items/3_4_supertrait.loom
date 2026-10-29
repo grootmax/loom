@@ -1,0 +1,26 @@
+# spec: §3.4 rule 3
+trait Base
+  def base_val -> Int
+end
+
+trait Extended: Base
+  def ext_val -> Int
+end
+
+struct Num
+  n: Int
+end
+
+impl Base for Num
+  def base_val -> Int = @n
+end
+
+impl Extended for Num
+  def ext_val -> Int = @n * 2
+end
+
+def main
+  x = Num(n: 5)
+  puts x.base_val()
+  puts x.ext_val()
+end

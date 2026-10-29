@@ -1,0 +1,9 @@
+# spec: §4.1 rule 1
+def main
+  var counter = 0
+  puts counter
+  counter = 10
+  puts counter
+  counter = 20
+  puts counter
+end

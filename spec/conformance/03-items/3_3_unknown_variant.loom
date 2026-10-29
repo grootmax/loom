@@ -1,0 +1,9 @@
+# spec: §3.3 rule 2
+enum Status
+  Active
+  Inactive
+end
+
+def main
+  s: Status = Pending
+end

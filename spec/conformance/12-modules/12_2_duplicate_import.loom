@@ -1,0 +1,14 @@
+# spec: §3.7 rule 3
+module m1
+  pub def val -> Int = 1
+end
+
+module m2
+  pub def val -> Int = 2
+end
+
+use m1.val
+use m2.val
+
+def main
+end

@@ -1,0 +1,19 @@
+# spec: §3.6
+module m1
+  pub module m2
+    pub struct Item
+      pub val: Int
+    end
+
+    pub def make(v: Int) -> Item
+      Item(val: v)
+    end
+  end
+end
+
+use m1.m2.{Item, make}
+
+def main
+  it = make(99)
+  puts it.val
+end

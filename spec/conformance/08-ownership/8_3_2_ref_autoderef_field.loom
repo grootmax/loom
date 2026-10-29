@@ -1,0 +1,18 @@
+# spec: §8.3 rule 2
+struct Inner
+  val: Int
+end
+
+struct Outer
+  inner: Inner
+
+  def inner_ref -> ref Inner
+    self.inner
+  end
+end
+
+def main
+  o = Outer(inner: Inner(val: 99))
+  r = o.inner_ref
+  puts r.val
+end

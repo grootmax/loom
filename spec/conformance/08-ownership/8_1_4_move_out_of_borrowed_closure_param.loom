@@ -1,0 +1,4 @@
+# spec: §8.1 rule 4
+def main
+  closure = { |s: String| s2 = s }
+end

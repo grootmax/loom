@@ -1,0 +1,9 @@
+# spec: §8.2 rule 3
+def modify_both(mut a: Array[String], b: Array[String])
+  a.push(b.length.to_string)
+end
+
+def main
+  var list = ["a"]
+  modify_both(list, list)
+end

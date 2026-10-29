@@ -1,0 +1,17 @@
+# spec: §3.3 rule 3
+enum Direction
+  North
+  South
+  East
+  West
+end
+
+def main
+  d = Direction.East
+  case d
+  in Direction.North then puts "N"
+  in Direction.South then puts "S"
+  in Direction.East then puts "E"
+  in Direction.West then puts "W"
+  end
+end

@@ -1,0 +1,14 @@
+# spec: §8.3 rule 3
+struct Item
+  label: String
+
+  def get_label -> ref String
+    self.label
+  end
+end
+
+def main
+  item = Item(label: "active")
+  r = item.get_label
+  puts r
+end

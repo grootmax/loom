@@ -1,0 +1,14 @@
+# spec: §4.2 rule 1
+struct Box
+  value: Int
+end
+
+def update_box(mut b: Box, new_val: Int)
+  b.value = new_val
+  puts b.value
+end
+
+def main
+  var b = Box(value: 1)
+  update_box(b, 100)
+end

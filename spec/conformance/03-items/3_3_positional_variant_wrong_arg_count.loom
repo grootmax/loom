@@ -1,0 +1,8 @@
+# spec: §3.3 rule 3
+enum Number
+  Pair(Int, Int)
+end
+
+def main
+  n = Number.Pair(1, 2, 3)
+end

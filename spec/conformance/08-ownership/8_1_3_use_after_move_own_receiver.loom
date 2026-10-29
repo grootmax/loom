@@ -1,0 +1,13 @@
+# spec: §8.1 rule 3
+struct Consumer
+  data: String
+
+  def own finish
+  end
+end
+
+def main
+  c = Consumer(data: "hello")
+  c.finish
+  puts c.data
+end

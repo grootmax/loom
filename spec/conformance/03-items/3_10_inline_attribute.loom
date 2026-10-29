@@ -1,0 +1,9 @@
+# spec: §3.10
+@[inline]
+def fast_add(a: Int, b: Int) -> Int
+  a + b
+end
+
+def main
+  puts fast_add(3, 4)
+end
