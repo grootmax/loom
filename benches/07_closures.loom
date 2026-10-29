@@ -1,0 +1,29 @@
+# Closures with map and filter benchmark.
+
+def process_data(iterations: Int) -> Int
+  var checksum = 0
+  var rep = 0
+  while rep < iterations
+    var numbers = Array[Int].new
+    var i = 1
+    while i <= 2000
+      numbers.push(i)
+      i += 1
+    end
+
+    filtered = numbers.filter { |n| n % 2 == 0 or n % 3 == 0 }
+    mapped = filtered.map { |n| n * 3 + 1 }
+    evens = mapped.filter { |n| n % 5 != 0 }
+
+    for v in evens
+      checksum += v
+    end
+    rep += 1
+  end
+  checksum
+end
+
+def main
+  checksum = process_data(600)
+  puts "checksum: #{checksum}"
+end

@@ -1,0 +1,32 @@
+# Sorting 100,000 integers with sort_by.
+
+def sort_pass -> Int
+  var numbers = Array[Int].new
+  var seed = 123456789
+  var i = 0
+  while i < 100000
+    seed = (seed * 1103515245 + 12345) % 2147483647
+    numbers.push(seed)
+    i += 1
+  end
+
+  numbers.sort_by { |n| n }
+
+  var checksum = 0
+  var idx = 0
+  while idx < numbers.length
+    checksum += numbers[idx] % (idx + 1)
+    idx += 100
+  end
+  checksum
+end
+
+def main
+  var total = 0
+  var rep = 0
+  while rep < 4
+    total += sort_pass()
+    rep += 1
+  end
+  puts "checksum: #{total}"
+end
