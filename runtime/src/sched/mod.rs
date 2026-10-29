@@ -702,6 +702,18 @@ pub fn spawn(work: Work) -> Arc<Task> {
     spawn_task(&sched, scope, work, size)
 }
 
+/// Starts a child of `scope` running `work`.
+///
+/// # Panics
+///
+/// Outside a task.
+#[allow(clippy::must_use_candidate, reason = "the handle is optional")]
+pub fn spawn_in(scope: &Arc<Scope>, work: Work) -> Arc<Task> {
+    let sched = sched().expect("spawn outside a task");
+    let size = sched.stack_size;
+    spawn_task(&sched, Some(Arc::clone(scope)), work, size)
+}
+
 /// Starts a task that belongs to no scope.
 ///
 /// # Panics

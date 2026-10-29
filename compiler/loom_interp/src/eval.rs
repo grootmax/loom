@@ -100,6 +100,7 @@ impl Interp<'_> {
             Value::Array(_) => self.lang_ty("Array", vec![interner.error()]),
             Value::Map(_) => self.lang_ty("Map", vec![interner.error(), interner.error()]),
             Value::Closure(_) | Value::Function { .. } => interner.error(),
+            Value::Handle(h) => self.lang_ty(h.lang(), Vec::new()),
         }
     }
 
