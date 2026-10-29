@@ -1,0 +1,32 @@
+# Map[String, Int] word counting benchmark.
+
+def word_counts(text: String, iterations: Int) -> Int
+  var total_checksum = 0
+  var rep = 0
+  while rep < iterations
+    var counts = Map[String, Int].new
+    for word in text.split_whitespace
+      key = word.trim_matches { |c| not c.is_alphanumeric }.to_lowercase
+      if key.is_empty
+        next
+      end
+      counts.update(key, default: 0) { |mut count| count += 1 }
+    end
+    for (w, c) in counts
+      total_checksum += c * w.length
+    end
+    rep += 1
+  end
+  total_checksum
+end
+
+def main
+  text = """
+    The loom weaves threads. The threads hold; the loom moves on.
+    Fast execution, structured code, types, functions, modules, maps, sets, arrays.
+    Performance benchmark for word counting with maps and strings.
+    Repeat the sentence to increase workload for frequency counting.
+    """
+  checksum = word_counts(text, 2000)
+  puts "checksum: #{checksum}"
+end

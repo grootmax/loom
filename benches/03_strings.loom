@@ -1,0 +1,35 @@
+# String building and splitting benchmark.
+
+def build_and_split(iterations: Int) -> Int
+  var checksum = 0
+  var outer = 0
+  while outer < iterations
+    var buf = ""
+    var i = 0
+    while i < 100
+      buf.push_str("word_")
+      buf.push_str(i.to_string)
+      if i < 99
+        buf.push_str(",")
+      end
+      i += 1
+    end
+
+    parts = buf.split(",")
+    var total_len = 0
+    for part in parts
+      total_len += part.length
+      if part.starts_with("word_5")
+        checksum += part.length
+      end
+    end
+    checksum += total_len
+    outer += 1
+  end
+  checksum
+end
+
+def main
+  res = build_and_split(3000)
+  puts "checksum: #{res}"
+end
