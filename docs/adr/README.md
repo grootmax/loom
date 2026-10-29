@@ -33,3 +33,4 @@ met us learns *why* Loom is the way it is ([ADR 0001](0001-record-decisions-as-a
 | [0018](0018-front-end-design.md) | Front-end design (Phase 1) | Accepted (provisional) |
 | [0019](0019-semantic-analysis-and-interpreter.md) | Semantic analysis and the reference interpreter (Phase 2) | Accepted (provisional) |
 | [0020](0020-mir-and-ownership-checking.md) | MIR and ownership checking (Phase 3) | Accepted (provisional) |
+| [0021](0021-native-backend-and-runtime.md) | Native backend (Cranelift) and runtime (Phase 3) | Accepted (provisional) |

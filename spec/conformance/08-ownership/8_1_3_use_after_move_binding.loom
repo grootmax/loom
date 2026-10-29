@@ -1,0 +1,6 @@
+# spec: §8.1 rule 3
+def main
+  s1 = "hello"
+  s2 = s1
+  puts s1
+end

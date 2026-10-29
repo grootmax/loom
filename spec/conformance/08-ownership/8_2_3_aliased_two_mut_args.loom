@@ -1,0 +1,8 @@
+# spec: §8.2 rule 3
+def swap_lists(mut a: Array[String], mut b: Array[String])
+end
+
+def main
+  var list = ["a"]
+  swap_lists(list, list)
+end

@@ -1,0 +1,13 @@
+# spec: §8.1 rule 1
+@[derive(Copy, Clone)]
+struct Point
+  x: Int
+  y: Int
+end
+
+def main
+  p1 = Point(x: 10, y: 20)
+  p2 = p1
+  puts p1.x
+  puts p2.x
+end

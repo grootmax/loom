@@ -1,0 +1,8 @@
+# spec: §8.3 rule 4
+def main
+  var list = [10, 20]
+  list.push(list.length)
+  for x in list
+    puts x
+  end
+end

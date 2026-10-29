@@ -1,0 +1,9 @@
+# spec: §8.1 rule 3
+def main
+  s = "hello"
+  s2 = s
+  case s
+  in "hello" then puts "matched"
+  else puts "other"
+  end
+end

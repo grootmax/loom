@@ -1,0 +1,10 @@
+# spec: §8.2 rule 1
+def inspect_str(s: String)
+  puts s
+end
+
+def main
+  msg = "hello"
+  inspect_str(msg)
+  puts msg
+end

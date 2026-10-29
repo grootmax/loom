@@ -1,0 +1,25 @@
+# spec: §8.6 rule 1
+struct Account
+  owner: String
+  tags: Array[String]
+end
+
+def rename(mut account: Account, name: String)
+  account.owner = name.clone
+  account.tags.push("renamed")
+end
+
+def main
+  var account = Account(owner: "ada", tags: ["new"])
+  account.owner = "grace"
+  rename(account, "linus")
+  account.tags = ["reset", "again"]
+  puts "#{account.owner} #{account.tags.length}"
+  var names: Array[String] = []
+  for i in 0..3
+    var label = "item"
+    label = "#{label}-#{i}"
+    names.push(label)
+  end
+  puts names.join(", ")
+end

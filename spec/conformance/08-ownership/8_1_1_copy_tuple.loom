@@ -1,0 +1,9 @@
+# spec: §8.1 rule 1
+def main
+  t1 = (1, 2)
+  t2 = t1
+  puts t1.0
+  puts t1.1
+  puts t2.0
+  puts t2.1
+end

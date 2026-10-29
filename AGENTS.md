@@ -70,3 +70,8 @@ Rules added after reviewing agent work. Each one cites the task where the proble
    Use only syntax from `spec/grammar.ebnf` and `examples/`. Don't invent features (such as
    `var` on struct fields). *(Tasks 0006 and 0008: invented syntax, a raw string that
    ended early, and a column counted in bytes instead of characters.)*
+5. **Never silence lints to get green.** Don't add blanket allows such as
+   `#![allow(clippy::pedantic)]`, and don't edit files outside your task's allowed paths
+   to make CI pass. Fix the code you own, or report the problem in the PR description
+   (with a failing test marked `#[ignore = "…"]` if it is a bug elsewhere). *(Task 0022
+   added a crate-wide allow to a forbidden file; its ignored test found a real bug.)*

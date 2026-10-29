@@ -1,0 +1,4 @@
+# spec: §8.3 rule 3
+def get_num_ref(x: Int) -> ref Int
+  x
+end

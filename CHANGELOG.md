@@ -10,13 +10,18 @@ All notable changes to the Loom toolchain are recorded here. The format follows
 ### Added
 - Phase 3 part 1: `ref T` types, MIR (`loom check --dump=mir`) and the ownership and
   borrow checker (E0500–E0504), ADR 0020 and normative spec §8.
-- Phase reports for Phases 1 and 2 (`docs/reports/`).
+- Phase reports for Phases 1, 2 and 3 (`docs/reports/`).
 
 ### Changed
 - Programs that return a field of a borrowed value now need `.clone` (spec §8); `Option`,
   `Result` and `Range` are `Copy` when their contents are.
 
 ### Fixed
+- The interpreter now copies the captures of escaping closures (spec §8.4 rule 1); an
+  assignment inside such a closure no longer changes the outer binding.
+- MIR: a borrow returned by a call and passed on in a borrow position is reborrowed, not
+  copied into a temporary; temporaries of expression bodies and of statements left early
+  (`return`, `?`, `break`, `next`) and default argument values are dropped.
 - `loom fmt`: a line break inside brackets after which a `.` is followed by a space no
   longer changes indentation on the second run (found by fuzzing).
 

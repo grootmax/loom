@@ -912,13 +912,25 @@ impl Interp<'_> {
                 }
                 Ok(Value::Map(Rc::new(map)))
             }
-            Expr::Closure { .. } => Ok(Value::Closure(Rc::new(Closure {
-                body: frame.body_id,
-                expr: id,
-                slots: frame.slots.clone(),
-                self_place: frame.self_place.clone(),
-                subst: Rc::clone(&frame.subst),
-            }))),
+            Expr::Closure { .. } => {
+                let (slots, self_place) = if self.escaping.contains(&(frame.body_id, id)) {
+                    // Captures by copy (spec §8.4 rule 1).
+                    let copy = |p: &Place| Place::new(p.read());
+                    (
+                        frame.slots.iter().map(|s| s.as_ref().map(copy)).collect(),
+                        frame.self_place.as_ref().map(copy),
+                    )
+                } else {
+                    (frame.slots.clone(), frame.self_place.clone())
+                };
+                Ok(Value::Closure(Rc::new(Closure {
+                    body: frame.body_id,
+                    expr: id,
+                    slots,
+                    self_place,
+                    subst: Rc::clone(&frame.subst),
+                })))
+            }
             Expr::Block { stmts } => {
                 let mut last = Value::Unit;
                 let count = stmts.len();

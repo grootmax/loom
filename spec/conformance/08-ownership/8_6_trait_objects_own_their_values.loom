@@ -1,0 +1,37 @@
+# spec: §8.6 rule 2
+trait Named
+  def name -> String
+end
+
+struct Person
+  first: String
+  last: String
+end
+
+struct Robot
+  serial: Int
+end
+
+impl Named for Person
+  def name -> String = "#{@first} #{@last}"
+end
+
+impl Named for Robot
+  def name -> String = "robot #{@serial}"
+end
+
+def main
+  var all: Array[dyn Named] = [Person(first: "Ada", last: "Lovelace"), Robot(serial: 7)]
+  all.push(Person(first: "Alan", last: "Turing"))
+  for entry in all
+    puts entry.name
+  end
+  var counts: Map[String, Int] = {}
+  for word in ["a", "b", "a", "c", "a"]
+    counts.update(word.clone, 0) { |mut n| n += 1 }
+  end
+  puts "a=#{counts["a"]} b=#{counts["b"]}"
+  var words = ["pear", "fig", "banana"]
+  words.sort_by { |w| w.length }
+  puts words.join(" ")
+end

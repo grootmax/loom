@@ -1,0 +1,29 @@
+# spec: §8.6 rule 1
+struct Pair
+  first: String
+  second: String
+end
+
+enum Message
+  Text(body: String, sender: String)
+  Ping
+end
+
+def describe(message: Message) -> String
+  case message
+  in Text(body:, ..) then "text #{body}"
+  in Ping then "ping"
+  end
+end
+
+def main
+  var pair = Pair(first: "a", second: "b")
+  taken = pair.first
+  pair.first = "c"
+  puts "#{taken} #{pair.first} #{pair.second}"
+  owned = Pair(first: "x", second: "y")
+  only = owned.second
+  puts only
+  puts describe(Message.Text(body: "hi", sender: "me"))
+  puts describe(Message.Ping)
+end

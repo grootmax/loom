@@ -1,0 +1,9 @@
+# spec: §8.6 rule 1
+def echo_two(first: String, second: String)
+  puts first
+  puts second
+end
+
+def main
+  echo_two("1", "2")
+end

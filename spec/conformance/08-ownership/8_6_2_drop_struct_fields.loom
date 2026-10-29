@@ -1,0 +1,11 @@
+# spec: §8.6 rule 2
+struct Pair
+  x: String
+  y: String
+end
+
+def main
+  p = Pair(x: "a", y: "b")
+  puts p.x
+  puts p.y
+end

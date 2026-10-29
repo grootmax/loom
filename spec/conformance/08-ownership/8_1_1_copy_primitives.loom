@@ -1,0 +1,7 @@
+# spec: §8.1 rule 1
+def main
+  x = 42
+  y = x
+  puts x
+  puts y
+end

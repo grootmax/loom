@@ -1,9 +1,9 @@
 # Status
 
-**Current phase: 3 — Native code** (started 2026-10-29 on the owner's go-ahead). Phases 1
-and 2 are complete and tagged `v0.1.0-phase1` and `v0.2.0-phase2`; their reports are in
-[`docs/reports/`](reports/). This file is the honest answer to "what works?" and must be
-updated whenever that changes.
+**Current phase: 4 — Concurrency** (started 2026-10-29 on the owner's go-ahead to proceed
+through the pending phases). Phases 1–3 are complete and tagged (`v0.1.0-phase1`,
+`v0.2.0-phase2`, `v0.3.0-phase3`); their reports are in [`docs/reports/`](reports/). This
+file is the honest answer to "what works?" and must be updated whenever that changes.
 
 _Last updated: 2026-10-29_
 
@@ -38,12 +38,9 @@ _Last updated: 2026-10-29_
 
 ## In progress
 
-- Phase 3 part 2: the Cranelift backend and the C-ABI runtime (ADR 0021). The runtime
-  library exists on the `phase3/native` branch; the code generator, `loom build`, drops and the
-  differential test are being written.
-- Conformance for §8 ownership, error explanations for E02xx–E05xx, and rich CLI
-  diagnostics (Jules PRs #25–#27); runtime tests under Miri (task 0022); nightly fuzzing
-  (task 0023); items and statements conformance (task 0014).
+- Phase 4 (ADR 0022): the task scheduler (stackful tasks, deterministic and parallel
+  modes), channels, `select`, scopes with cancellation, `std.time`, `std.sync`, `Shared`,
+  `Send`/`Sync`, the I/O reactor and TCP for the echo benchmark.
 
 ## Known limitations
 

@@ -85,6 +85,8 @@ struct LoopScope {
     continue_block: BlockId,
     result: Option<Place>,
     scope_depth: usize,
+    /// The number of statement-temporary levels outside the loop.
+    temps_depth: usize,
 }
 
 struct Builder<'a> {
@@ -525,7 +527,16 @@ impl<'a> Builder<'a> {
 
     /// Emits the drops of the scopes above `depth` without popping them (for `break`,
     /// `next` and `return`).
-    fn exit_scopes_to(&mut self, depth: usize, span: Span) {
+    fn exit_scopes_to(&mut self, depth: usize, temps_depth: usize, span: Span) {
+        // The temporaries of the statements being left end first (spec §8.6 rule 1).
+        let temps: Vec<Local> = self.stmt_temps[temps_depth.min(self.stmt_temps.len())..]
+            .iter()
+            .rev()
+            .flat_map(|level| level.iter().rev().copied())
+            .collect();
+        for local in temps {
+            self.drop_place(Place::local(local), span);
+        }
         let mut drops = Vec::new();
         for scope in self.scopes[depth..].iter().rev() {
             drops.extend(scope.drops.iter().rev().copied());
@@ -537,6 +548,12 @@ impl<'a> Builder<'a> {
 
     fn exit_all_scopes(&mut self) {
         let span = self.mir.span;
+        // Temporaries of an expression body (`def f = …`) end with it (spec §8.6 rule 1).
+        while let Some(temps) = self.stmt_temps.pop() {
+            for local in temps.into_iter().rev() {
+                self.drop_place(Place::local(local), span);
+            }
+        }
         while self.scopes.len() > 1 {
             self.pop_scope(span);
         }
@@ -851,8 +868,17 @@ impl<'a> Builder<'a> {
                 _ => place,
             };
         }
-        let ty = self.coerced_ty(expr);
         let span = self.span(expr);
+        if let Some(Coercion::Deref) = self.typed.coercions.get(&expr) {
+            // A borrow produced by a call (`array_get(…)`): the place is behind it, not a
+            // copy of its target.
+            let ty = self.ty(expr);
+            let tmp = self.temp(ty, span);
+            let place = Place::local(tmp);
+            self.expr_value_into(&place, expr);
+            return self.deref_all(place, ty);
+        }
+        let ty = self.coerced_ty(expr);
         let tmp = self.temp(ty, span);
         let place = Place::local(tmp);
         self.expr_into_owning(&place, expr);
@@ -1283,6 +1309,7 @@ impl<'a> Builder<'a> {
                     continue_block: head,
                     result: Some(dest.clone()),
                     scope_depth: self.scopes.len(),
+                    temps_depth: self.stmt_temps.len(),
                 });
                 let tmp = self.unit_temp(span);
                 self.expr_value_into(&tmp, loop_body);
@@ -1307,6 +1334,7 @@ impl<'a> Builder<'a> {
                     continue_block: head,
                     result: None,
                     scope_depth: self.scopes.len() - 1,
+                    temps_depth: self.stmt_temps.len(),
                 });
                 let tmp = self.unit_temp(span);
                 self.expr_value_into(&tmp, loop_body);
@@ -1330,32 +1358,37 @@ impl<'a> Builder<'a> {
                     let unit = self.unit_operand();
                     self.assign(&ret, Rvalue::Use(unit), span);
                 }
-                self.exit_scopes_to(0, span);
+                self.exit_scopes_to(0, 0, span);
                 self.terminate(TerminatorKind::Return, span);
                 self.current = self.new_block();
             }
             &Expr::Break(value) => {
-                let Some(target) = self
-                    .loops
-                    .last()
-                    .map(|l| (l.break_block, l.result.clone(), l.scope_depth))
-                else {
+                let Some(target) = self.loops.last().map(|l| {
+                    (
+                        l.break_block,
+                        l.result.clone(),
+                        l.scope_depth,
+                        l.temps_depth,
+                    )
+                }) else {
                     return;
                 };
                 if let (Some(v), Some(result)) = (value, &target.1) {
                     self.expr_into_owning(result, v);
                 }
-                self.exit_scopes_to(target.2, span);
+                self.exit_scopes_to(target.2, target.3, span);
                 self.goto(target.0, span);
                 self.current = self.new_block();
             }
             Expr::Next => {
-                let Some((block, depth)) =
-                    self.loops.last().map(|l| (l.continue_block, l.scope_depth))
+                let Some((block, depth, temps_depth)) = self
+                    .loops
+                    .last()
+                    .map(|l| (l.continue_block, l.scope_depth, l.temps_depth))
                 else {
                     return;
                 };
-                self.exit_scopes_to(depth, span);
+                self.exit_scopes_to(depth, temps_depth, span);
                 self.goto(block, span);
                 self.current = self.new_block();
             }
@@ -1948,7 +1981,8 @@ impl<'a> Builder<'a> {
                         .fns
                         .get(&fn_def)
                         .map_or_else(|| self.interner().error(), |s| s.params[p].2);
-                    let tmp = self.new_local(ty, LocalKind::Temp, true, span);
+                    // A temporary of the call's statement: dropped after it (spec §8.6).
+                    let tmp = self.temp(ty, span);
                     let next = self.new_block();
                     self.terminate(
                         TerminatorKind::Call {
@@ -2160,7 +2194,7 @@ impl<'a> Builder<'a> {
                 );
             }
         }
-        self.exit_scopes_to(0, span);
+        self.exit_scopes_to(0, 0, span);
         self.terminate(TerminatorKind::Return, span);
         self.current = good_block;
         let value = Place::local(tmp)
@@ -2307,6 +2341,7 @@ impl<'a> Builder<'a> {
             continue_block: head,
             result: None,
             scope_depth: self.scopes.len() - 1,
+            temps_depth: self.stmt_temps.len(),
         });
         let tmp = self.unit_temp(span);
         self.expr_value_into(&tmp, loop_body);

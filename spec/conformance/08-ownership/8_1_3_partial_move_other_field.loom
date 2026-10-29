@@ -1,0 +1,11 @@
+# spec: §8.1 rule 3
+struct Container
+  a: String
+  b: String
+end
+
+def main
+  c = Container(a: "alpha", b: "beta")
+  first = c.a
+  puts c.b
+end

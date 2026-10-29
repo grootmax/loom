@@ -1,0 +1,17 @@
+# spec: §8.4 rule 1
+def make_greeter(greeting: String) -> Fn(String) -> String
+  prefix = greeting.clone
+  { |name| "#{prefix}, #{name}!" }
+end
+
+def main
+  hello = make_greeter("Hello")
+  puts hello("Ada")
+  puts hello("Grace")
+  var greeters: Array[Fn(String) -> String] = []
+  greeters.push(make_greeter("Hi"))
+  greeters.push(make_greeter("Hey"))
+  for greet in greeters
+    puts greet("Linus")
+  end
+end

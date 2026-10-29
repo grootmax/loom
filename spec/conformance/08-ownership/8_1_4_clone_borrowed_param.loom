@@ -1,0 +1,9 @@
+# spec: §8.1 rule 4
+def duplicate(s: String) -> String = s.clone
+
+def main
+  s = "original"
+  copy = duplicate(s)
+  puts s
+  puts copy
+end

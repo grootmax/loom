@@ -1,0 +1,8 @@
+# spec: §8.3 rule 3
+def borrow_mut_param(mut s: String) -> ref String = s
+
+def main
+  var msg = "mut_param"
+  r = borrow_mut_param(msg)
+  puts r
+end
