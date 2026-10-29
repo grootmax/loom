@@ -1,0 +1,10 @@
+# spec: §3.9
+type IntPair = (Int, Int)
+
+def sum_pair(p: IntPair) -> Int
+  p.0 + p.1
+end
+
+def main
+  puts sum_pair((15, 25))
+end

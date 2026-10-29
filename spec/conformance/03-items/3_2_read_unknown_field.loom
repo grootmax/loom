@@ -1,0 +1,9 @@
+# spec: §3.2 rule 3
+struct Person
+  name: String
+end
+
+def main
+  p = Person(name: "Alice")
+  puts p.age
+end

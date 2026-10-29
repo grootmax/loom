@@ -1,0 +1,15 @@
+# spec: §3.7 rule 1
+module geo
+  pub struct Point
+    pub x: Int
+    pub y: Int
+  end
+end
+
+use geo.Point as Pt
+
+def main
+  p = Pt(x: 3, y: 4)
+  puts p.x
+  puts p.y
+end

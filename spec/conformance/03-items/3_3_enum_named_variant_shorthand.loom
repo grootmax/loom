@@ -1,0 +1,13 @@
+# spec: §3.3 rule 3
+enum Event
+  Move(x: Int, y: Int)
+end
+
+def main
+  x = 15
+  y = 25
+  e = Event.Move(x:, y:)
+  case e
+  in Event.Move(x: a, y: b) then puts a + b
+  end
+end

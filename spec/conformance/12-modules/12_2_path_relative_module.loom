@@ -1,0 +1,10 @@
+# spec: §12.2 rule 2
+module helper
+  pub def value -> String = "helper value"
+end
+
+use self.helper.value
+
+def main
+  puts value()
+end

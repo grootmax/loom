@@ -1,0 +1,9 @@
+# spec: §3.1 rule 1
+def do_nothing
+  var x = 1
+end
+
+def main
+  do_nothing()
+  puts "done"
+end

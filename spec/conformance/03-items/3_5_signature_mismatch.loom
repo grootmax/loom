@@ -1,0 +1,14 @@
+# spec: §3.5 rule 1
+trait Simple
+  def process(x: Int) -> Int
+end
+
+struct Target
+end
+
+impl Simple for Target
+  def process(x: String) -> Int = 1
+end
+
+def main
+end

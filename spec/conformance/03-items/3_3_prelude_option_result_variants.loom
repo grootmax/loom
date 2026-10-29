@@ -1,0 +1,21 @@
+# spec: §3.3 rule 5
+def check_value(x: Int) -> Result[Int, String]
+  if x > 0
+    Ok(x * 2)
+  else
+    Err("negative")
+  end
+end
+
+def main
+  case check_value(5)
+  in Ok(v) then puts v
+  in Err(e) then puts e
+  end
+
+  var opt: Option[Int] = Some(10)
+  case opt
+  in Some(n) then puts n
+  in None then puts 0
+  end
+end

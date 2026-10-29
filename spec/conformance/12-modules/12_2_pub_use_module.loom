@@ -1,0 +1,16 @@
+# spec: §3.7 rule 4
+module core_mod
+  pub module utils
+    pub def helper -> Int = 123
+  end
+end
+
+module facade
+  pub use super.core_mod.utils
+end
+
+use facade.utils.helper
+
+def main
+  puts helper()
+end
