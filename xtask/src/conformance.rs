@@ -19,7 +19,7 @@ use std::process::Command;
 use crate::workspace_root;
 
 /// The highest error code the current phase implements.
-const IMPLEMENTED_UP_TO: u32 = 499;
+const IMPLEMENTED_UP_TO: u32 = 599;
 
 /// The current roadmap phase.
 pub const CURRENT_PHASE: u32 = 3;
