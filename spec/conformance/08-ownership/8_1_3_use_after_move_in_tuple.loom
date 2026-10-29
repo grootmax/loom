@@ -1,0 +1,6 @@
+# spec: §8.1 rule 3
+def main
+  s = "hello"
+  s2 = s
+  t = (s, "world")
+end

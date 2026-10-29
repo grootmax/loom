@@ -1,0 +1,9 @@
+# spec: §8.4 rule 2
+def run_closure(f: Fn())
+  f()
+end
+
+def main
+  msg = "ref_captured"
+  run_closure({ || puts msg })
+end

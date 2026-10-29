@@ -1,0 +1,19 @@
+# spec: §8.3 rule 4
+struct Holder
+  name: String
+
+  def get_ref -> ref String
+    self.name
+  end
+
+  def mut append_name(text: String)
+    @name.append(text)
+  end
+end
+
+def main
+  var h = Holder(name: "a")
+  r = h.get_ref
+  h.append_name("b")
+  puts r
+end

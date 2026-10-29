@@ -1,0 +1,6 @@
+# spec: §8.4 rule 1
+def main
+  s = "captured"
+  c = { || puts s }
+  c()
+end

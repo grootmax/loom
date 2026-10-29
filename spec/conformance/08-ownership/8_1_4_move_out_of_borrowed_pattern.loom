@@ -1,0 +1,8 @@
+# spec: §8.1 rule 4
+def inspect_opt(opt: Option[String])
+  case opt
+  in Some(s)
+    s2 = s
+  in None
+  end
+end

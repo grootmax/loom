@@ -1,0 +1,9 @@
+# spec: §8.1 rule 3
+def main
+  s = "hello"
+  cond = true
+  if cond
+    s2 = s
+  end
+  puts s
+end

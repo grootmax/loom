@@ -1,0 +1,8 @@
+# spec: §8.4 rule 2
+def main
+  var count = 0
+  increment = { || count += 1 }
+  increment()
+  increment()
+  puts count
+end

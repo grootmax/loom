@@ -1,0 +1,8 @@
+# spec: §8.1 rule 4
+struct Holder
+  name: String
+
+  def get_name
+    n = self.name
+  end
+end
