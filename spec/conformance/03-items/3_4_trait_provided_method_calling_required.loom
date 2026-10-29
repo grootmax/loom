@@ -1,0 +1,23 @@
+# spec: §3.4 rule 1
+trait Doubleable
+  def val -> Int
+
+  default def doubled -> Int
+    self.val() * 2
+  end
+end
+
+struct Num
+  n: Int
+end
+
+impl Doubleable for Num
+  def val -> Int
+    @n
+  end
+end
+
+def main
+  num = Num(n: 21)
+  puts num.doubled()
+end

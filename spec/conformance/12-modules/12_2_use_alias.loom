@@ -1,0 +1,10 @@
+# spec: §3.7 rule 1
+module calc
+  pub def compute(x: Int) -> Int = x * 10
+end
+
+use calc.compute as scale
+
+def main
+  puts scale(5)
+end

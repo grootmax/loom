@@ -1,0 +1,14 @@
+# spec: §3.7 rule 4
+module inner
+  pub def secret_value -> Int = 777
+end
+
+module outer
+  pub use super.inner.secret_value
+end
+
+use outer.secret_value
+
+def main
+  puts secret_value()
+end

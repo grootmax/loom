@@ -1,0 +1,6 @@
+# spec: §4.2 rule 3
+def main
+  var arr = [10, 20, 30]
+  arr[1] = 99
+  puts arr[1]
+end

@@ -1,0 +1,4 @@
+# spec: §12.2 rule 2
+def main
+  x = unknown_var + 1
+end

@@ -1,0 +1,12 @@
+# spec: §3.5 rule 1
+struct NotATrait
+end
+
+struct Target
+end
+
+impl NotATrait for Target
+end
+
+def main
+end

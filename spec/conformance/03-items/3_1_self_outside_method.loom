@@ -1,0 +1,8 @@
+# spec: §3.1 rule 5
+def free_fn -> Int
+  self.value
+end
+
+def main
+  puts free_fn()
+end

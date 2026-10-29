@@ -1,0 +1,13 @@
+# spec: §12.1 rule 1
+module outer
+  module inner
+    pub def val -> Int = 99
+  end
+  pub use inner.val
+end
+
+use outer.val
+
+def main
+  puts val()
+end

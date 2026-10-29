@@ -1,0 +1,9 @@
+# spec: §3.2 rule 2
+struct Point
+  x: Int
+  y: Int
+end
+
+def main
+  p = Point(x: 1, y: 2, x: 3)
+end

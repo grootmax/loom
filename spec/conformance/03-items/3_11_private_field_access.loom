@@ -1,0 +1,18 @@
+# spec: §3.11
+module data
+  pub struct User
+    pub id: Int
+    name: String
+  end
+
+  pub def make_user(id: Int, own name: String) -> User
+    User(id:, name:)
+  end
+end
+
+use data.{User, make_user}
+
+def main
+  u = make_user(1, "Bob")
+  puts u.name
+end

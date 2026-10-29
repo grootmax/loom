@@ -1,0 +1,9 @@
+# spec: §3.1 rule 1
+def greet(name: String) -> Unit
+  puts name
+  var temp = 0
+end
+
+def main
+  greet("world")
+end

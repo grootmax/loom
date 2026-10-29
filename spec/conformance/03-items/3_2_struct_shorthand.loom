@@ -1,0 +1,13 @@
+# spec: §3.2 rule 2
+struct Point
+  x: Int
+  y: Int
+end
+
+def main
+  x = 10
+  y = 20
+  p = Point(x:, y:)
+  puts p.x
+  puts p.y
+end

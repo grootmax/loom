@@ -1,0 +1,18 @@
+# spec: §12.2 rule 2
+module parent
+  pub def parent_val -> Int = 100
+
+  pub module child
+    use super.parent_val
+
+    pub def child_val -> Int
+      parent_val() + 1
+    end
+  end
+end
+
+use parent.child.child_val
+
+def main
+  puts child_val()
+end

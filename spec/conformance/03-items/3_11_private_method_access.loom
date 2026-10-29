@@ -1,0 +1,15 @@
+# spec: §3.11
+module secret
+  pub struct Vault
+    def secret_method -> Int
+      42
+    end
+  end
+end
+
+use secret.Vault
+
+def main
+  v = Vault()
+  puts v.secret_method()
+end
