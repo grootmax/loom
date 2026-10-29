@@ -1,0 +1,13 @@
+# spec: §4.2 rule 2
+struct Point
+  x: Int
+  y: Int
+end
+
+def main
+  var p = Point(x: 10, y: 20)
+  p.x += 5
+  p.y *= 2
+  puts p.x
+  puts p.y
+end

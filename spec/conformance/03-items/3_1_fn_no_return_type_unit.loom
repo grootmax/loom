@@ -1,0 +1,9 @@
+# spec: §3.1 rule 1
+def do_work
+  puts "working"
+end
+
+def main
+  res = do_work()
+  puts "done"
+end

@@ -1,0 +1,17 @@
+# spec: §3.5 rule 1
+trait Convert[T]
+  def convert -> T
+end
+
+struct Wrapper
+  val: Int
+end
+
+impl Convert[String] for Wrapper
+  def convert -> String = "val:#{@val}"
+end
+
+def main
+  w = Wrapper(val: 42)
+  puts w.convert()
+end

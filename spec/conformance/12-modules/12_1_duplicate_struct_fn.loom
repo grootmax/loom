@@ -1,0 +1,8 @@
+# spec: §12.1 rule 2
+struct Foo
+end
+
+def Foo -> Int = 1
+
+def main
+end

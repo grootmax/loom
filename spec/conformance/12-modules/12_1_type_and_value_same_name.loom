@@ -1,0 +1,11 @@
+# spec: §12.1 rule 2
+type Score = Int
+
+def Score(x: Int) -> Int
+  x * 10
+end
+
+def main
+  s: Score = Score(5)
+  puts s
+end

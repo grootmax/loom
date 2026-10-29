@@ -1,0 +1,13 @@
+# spec: §3.1 rule 5
+struct User
+  name: String
+
+  def get_name -> String
+    @name.clone()
+  end
+end
+
+def main
+  u = User(name: "Alice")
+  puts u.get_name()
+end

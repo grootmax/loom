@@ -1,0 +1,8 @@
+# spec: §4.1
+def main
+  var count = 0
+  while count < 3
+    count += 1
+    puts count
+  end
+end

@@ -1,0 +1,6 @@
+# spec: §12.1 rule 2
+def foo -> Int = 1
+def foo -> Int = 2
+
+def main
+end

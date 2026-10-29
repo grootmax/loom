@@ -1,0 +1,19 @@
+# spec: §3.4 rule 1
+trait Calculator
+  def add(a: Int, b: Int) -> Int
+  def mul(a: Int, b: Int) -> Int
+end
+
+struct SimpleCalc
+end
+
+impl Calculator for SimpleCalc
+  def add(a: Int, b: Int) -> Int = a + b
+  def mul(a: Int, b: Int) -> Int = a * b
+end
+
+def main
+  c = SimpleCalc()
+  puts c.add(3, 4)
+  puts c.mul(3, 4)
+end

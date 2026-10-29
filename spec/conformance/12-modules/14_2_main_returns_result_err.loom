@@ -1,0 +1,4 @@
+# spec: §14.2
+def main -> Result[Unit, String]
+  Err("something went wrong")
+end

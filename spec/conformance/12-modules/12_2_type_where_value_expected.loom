@@ -1,0 +1,8 @@
+# spec: §12.2 rule 3
+struct Point
+  x: Int
+end
+
+def main
+  x = Point + 1
+end
