@@ -84,8 +84,9 @@ fn check(binary: &Path, root: &Path, example: &Path, mode: &str) -> Result<(), S
     }
     let expected_path = root.join(example).with_extension("stdout");
     let expected = std::fs::read_to_string(&expected_path)
-        .map_err(|error| format!("could not read `{}`: {error}", expected_path.display()))?;
-    let stdout = String::from_utf8_lossy(&output.stdout);
+        .map_err(|error| format!("could not read `{}`: {error}", expected_path.display()))?
+        .replace("\r\n", "\n");
+    let stdout = String::from_utf8_lossy(&output.stdout).replace("\r\n", "\n");
     if stdout == expected {
         Ok(())
     } else {

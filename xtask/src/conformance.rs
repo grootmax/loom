@@ -205,7 +205,8 @@ impl Runner<'_> {
                 return Ok(Outcome::Failed(format!("accept case reported {got:?}")));
             }
             let expected = std::fs::read_to_string(&stdout_file)
-                .map_err(|error| format!("could not read `{}`: {error}", stdout_file.display()))?;
+                .map_err(|error| format!("could not read `{}`: {error}", stdout_file.display()))?
+                .replace("\r\n", "\n");
             let expected_exit: i32 = std::fs::read_to_string(case.with_extension("exit"))
                 .ok()
                 .and_then(|t| t.trim().parse().ok())
@@ -216,7 +217,7 @@ impl Runner<'_> {
                 .current_dir(self.root)
                 .output()
                 .map_err(|error| format!("could not run `{}`: {error}", self.binary.display()))?;
-            let stdout = String::from_utf8_lossy(&output.stdout);
+            let stdout = String::from_utf8_lossy(&output.stdout).replace("\r\n", "\n");
             let exit = output.status.code().unwrap_or(-1);
             return Ok(if stdout != expected {
                 Outcome::Failed(format!("expected output {expected:?}, got {stdout:?}"))
