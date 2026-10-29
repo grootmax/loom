@@ -483,14 +483,20 @@ mod tests {
     use std::rc::Rc;
 
     fn in_scope(seed: u64, body: impl FnOnce() + 'static) {
-        run(Mode::Deterministic { seed }, 64 * 1024, move || {
-            let (scope, previous) = enter_scope(None);
-            body();
-            exit_scope(&scope, previous);
-        });
+        run(
+            Mode::Deterministic { seed },
+            64 * 1024,
+            64 * 1024,
+            move || {
+                let (scope, previous) = enter_scope(None);
+                body();
+                exit_scope(&scope, previous);
+            },
+        );
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "switches stacks with inline assembly")]
     fn rendezvous_channel_passes_values_in_order() {
         for seed in 0..20 {
             let got = Rc::new(RefCell::new(Vec::new()));
@@ -513,6 +519,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "switches stacks with inline assembly")]
     fn workers_share_a_buffered_channel() {
         for seed in 0..20 {
             let total = Rc::new(RefCell::new(0));
@@ -544,6 +551,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "switches stacks with inline assembly")]
     fn select_with_timeout() {
         let log = Rc::new(RefCell::new(Vec::new()));
         let l = Rc::clone(&log);
@@ -574,18 +582,24 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "switches stacks with inline assembly")]
     fn cancelled_receiver_gets_none() {
         let got = Rc::new(RefCell::new(None));
         let g = Rc::clone(&got);
-        run(Mode::Deterministic { seed: 2 }, 64 * 1024, move || {
-            let ch: Rc<Chan<i32>> = Rc::new(Chan::new(0));
-            let (scope, previous) = enter_scope(Some(5_000_000));
-            let rx = Rc::clone(&ch);
-            spawn(Box::new(move || {
-                *g.borrow_mut() = Some(rx.recv());
-            }));
-            exit_scope(&scope, previous);
-        });
+        run(
+            Mode::Deterministic { seed: 2 },
+            64 * 1024,
+            64 * 1024,
+            move || {
+                let ch: Rc<Chan<i32>> = Rc::new(Chan::new(0));
+                let (scope, previous) = enter_scope(Some(5_000_000));
+                let rx = Rc::clone(&ch);
+                spawn(Box::new(move || {
+                    *g.borrow_mut() = Some(rx.recv());
+                }));
+                exit_scope(&scope, previous);
+            },
+        );
         assert_eq!(*got.borrow(), Some(None));
     }
 }

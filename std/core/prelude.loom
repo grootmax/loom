@@ -10,5 +10,7 @@ pub use core.option.{Option, Result}
 pub use core.option.Option.{Some, None}
 pub use core.option.Result.{Ok, Err}
 pub use core.iter.{Iterator, Iterable, Range}
-pub use core.traits.{Eq, Ord, Ordering, Clone, Copy, Hash, Default, From, Display, Error, Sum}
+pub use core.traits.{Eq, Ord, Ordering, Clone, Copy, Hash, Default, From, Display, Error, Sum, Deref}
 pub use core.io.{puts, print, panic, todo, assert, assert_eq}
+pub use core.task.{scope, Scope, Task, Chan, yield_now}
+pub use core.sync.Shared

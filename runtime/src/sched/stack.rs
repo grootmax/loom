@@ -8,6 +8,10 @@ pub const GUARD: usize = 64 * 1024;
 /// Granularity of stack sizes.
 const GRANULE: usize = 64 * 1024;
 
+/// How much of a stack is committed up front on Windows.
+#[cfg(windows)]
+const WINDOWS_COMMIT: usize = 64 * 1024;
+
 /// A task stack.
 #[derive(Debug)]
 pub struct Stack {
@@ -59,10 +63,10 @@ mod sys {
 mod sys {
     use std::ffi::c_void;
 
+    pub const PAGE_GUARD: u32 = 0x100;
     pub const MEM_COMMIT: u32 = 0x1000;
     pub const MEM_RESERVE: u32 = 0x2000;
     pub const MEM_RELEASE: u32 = 0x8000;
-    pub const PAGE_NOACCESS: u32 = 0x01;
     pub const PAGE_READWRITE: u32 = 0x04;
 
     #[link(name = "kernel32")]
@@ -70,7 +74,6 @@ mod sys {
         pub fn VirtualAlloc(addr: *mut c_void, size: usize, kind: u32, protect: u32)
         -> *mut c_void;
         pub fn VirtualFree(addr: *mut c_void, size: usize, kind: u32) -> i32;
-        pub fn VirtualProtect(addr: *mut c_void, size: usize, protect: u32, old: *mut u32) -> i32;
     }
 }
 
@@ -117,25 +120,43 @@ impl Stack {
         p.cast()
     }
 
+    /// On Windows, the stack is reserved and only its top committed; a guard page below
+    /// the committed part lets the system grow it, as it grows thread stacks, using the
+    /// stack bounds the context switch keeps in the thread information block.
     #[cfg(windows)]
     fn reserve(size: usize) -> *mut u8 {
-        use sys::{MEM_COMMIT, MEM_RESERVE, PAGE_NOACCESS, PAGE_READWRITE};
-        // SAFETY: a fresh allocation at an address of the system's choice.
-        let p = unsafe {
-            sys::VirtualAlloc(
-                std::ptr::null_mut(),
-                size,
-                MEM_RESERVE | MEM_COMMIT,
-                PAGE_READWRITE,
-            )
-        };
+        use sys::{MEM_COMMIT, MEM_RESERVE, PAGE_GUARD, PAGE_READWRITE};
+        // SAFETY: a fresh reservation at an address of the system's choice.
+        let p =
+            unsafe { sys::VirtualAlloc(std::ptr::null_mut(), size, MEM_RESERVE, PAGE_READWRITE) };
         if p.is_null() {
             return std::ptr::null_mut();
         }
-        let mut old = 0u32;
-        // SAFETY: the guard region is the first `GUARD` bytes of the allocation just made.
-        unsafe { sys::VirtualProtect(p, super::stack::GUARD, PAGE_NOACCESS, &raw mut old) };
-        p.cast()
+        let base = p.cast::<u8>();
+        // SAFETY: both ranges lie inside the reservation just made.
+        unsafe {
+            let committed = base.add(size - WINDOWS_COMMIT);
+            sys::VirtualAlloc(committed.cast(), WINDOWS_COMMIT, MEM_COMMIT, PAGE_READWRITE);
+            sys::VirtualAlloc(
+                committed.sub(4096).cast(),
+                4096,
+                MEM_COMMIT,
+                PAGE_READWRITE | PAGE_GUARD,
+            );
+        }
+        base
+    }
+
+    /// The usable size of a stack made by `Stack::new(usable)`.
+    #[must_use]
+    pub fn usable_for(usable: usize) -> usize {
+        usable.next_multiple_of(GRANULE)
+    }
+
+    /// The usable size of this stack.
+    #[must_use]
+    pub fn usable(&self) -> usize {
+        self.size - GUARD
     }
 
     /// The highest address of the stack (16-byte aligned); stacks grow down from it.
@@ -150,6 +171,19 @@ impl Stack {
     pub fn limit(&self) -> *mut u8 {
         // SAFETY: inside the reservation.
         unsafe { self.base.add(GUARD) }
+    }
+
+    /// The lowest address the context may use at first: the committed bottom on Windows
+    /// (the system moves it down as the stack grows), the limit elsewhere.
+    #[must_use]
+    pub fn initial_limit(&self) -> *mut u8 {
+        #[cfg(windows)]
+        // SAFETY: inside the reservation.
+        unsafe {
+            self.top().sub(WINDOWS_COMMIT)
+        }
+        #[cfg(not(windows))]
+        self.limit()
     }
 
     /// The start of the reservation.

@@ -440,6 +440,9 @@ impl Sched {
     }
 
     fn recycle_stack(&self, stack: Stack) {
+        if stack.usable() != Stack::usable_for(self.stack_size) {
+            return;
+        }
         let mut stacks = lock(&self.stacks);
         if stacks.len() < 1024 {
             stacks.push(stack);
@@ -485,7 +488,12 @@ fn switch_to_worker(after: After) {
 }
 
 /// Creates a task running `work` in `scope`, and makes it ready.
-fn spawn_task(sched: &Arc<Sched>, scope: Option<Arc<Scope>>, work: Work) -> Arc<Task> {
+fn spawn_task(
+    sched: &Arc<Sched>,
+    scope: Option<Arc<Scope>>,
+    work: Work,
+    stack_size: usize,
+) -> Arc<Task> {
     let task = Arc::new(Task {
         id: sched.next_id.fetch_add(1, Ordering::Relaxed),
         state: Mutex::new(State::Ready),
@@ -500,12 +508,22 @@ fn spawn_task(sched: &Arc<Sched>, scope: Option<Arc<Scope>>, work: Work) -> Arc<
         scope.running.fetch_add(1, Ordering::AcqRel);
     }
     *lock(&task.scope) = scope;
-    let stack = sched.take_stack();
+    let stack = if stack_size == sched.stack_size {
+        sched.take_stack()
+    } else {
+        Stack::new(stack_size)
+    };
     let arg = Arc::into_raw(Arc::clone(&task)).cast_mut().cast::<u8>();
     // SAFETY: the stack is fresh or recycled (no context uses it), and `task_entry` takes
     // ownership of `arg`.
     unsafe {
-        let sp = context::prepare(stack.top(), stack.limit(), stack.base(), task_entry, arg);
+        let sp = context::prepare(
+            stack.top(),
+            stack.initial_limit(),
+            stack.base(),
+            task_entry,
+            arg,
+        );
         *task.sp.get() = sp;
         *task.stack.get() = Some(stack);
     }
@@ -621,9 +639,11 @@ fn finish(sched: &Arc<Sched>, task: &Arc<Task>) {
     }
 }
 
-/// Runs `main` as the first task of a new scheduler in `mode` and returns when it
-/// finishes. Detached tasks still running are abandoned.
-pub fn run(mode: Mode, stack_size: usize, main: impl FnOnce() + 'static) {
+/// Runs `main` as the first task of a new scheduler in `mode`, on a stack of
+/// `main_stack` bytes (other tasks get `stack_size`), and returns when it finishes or a
+/// task calls [`abort`]. Tasks still running are abandoned; work that never started is
+/// dropped before `run` returns.
+pub fn run(mode: Mode, stack_size: usize, main_stack: usize, main: impl FnOnce() + 'static) {
     let sched = Sched::new(mode, stack_size);
     let done = Arc::new(AtomicBool::new(false));
     let flag = Arc::clone(&done);
@@ -633,7 +653,7 @@ pub fn run(mode: Mode, stack_size: usize, main: impl FnOnce() + 'static) {
         flag.store(true, Ordering::Release);
         stopper.stop();
     });
-    spawn_task(&sched, None, work);
+    spawn_task(&sched, None, work, main_stack);
     let extra = match mode {
         Mode::Deterministic { .. } => 0,
         Mode::Parallel { workers } => workers.saturating_sub(1),
@@ -651,6 +671,22 @@ pub fn run(mode: Mode, stack_size: usize, main: impl FnOnce() + 'static) {
     for t in threads.into_iter().flatten() {
         let _ = t.join();
     }
+    // Drop queued work that never started (it may own resources).
+    let queued: Vec<Arc<Task>> = lock(&sched.ready).drain(..).collect();
+    for task in queued {
+        // SAFETY: the scheduler has stopped; no worker touches the task any more.
+        drop(unsafe { (*task.work.get()).take() });
+    }
+}
+
+/// Ends the program from inside a task (a panic, ADR 0022 §3): stops the scheduler, so
+/// that [`run`] returns, and never resumes the calling task.
+pub fn abort() -> ! {
+    if let Some(sched) = sched() {
+        sched.stop();
+    }
+    switch_to_worker(After::Exit);
+    unreachable!("an aborted task was resumed");
 }
 
 /// Starts a child of the current task's scope running `work`.
@@ -662,7 +698,8 @@ pub fn run(mode: Mode, stack_size: usize, main: impl FnOnce() + 'static) {
 pub fn spawn(work: Work) -> Arc<Task> {
     let sched = sched().expect("spawn outside a task");
     let scope = current().and_then(|t| lock(&t.scope).clone());
-    spawn_task(&sched, scope, work)
+    let size = sched.stack_size;
+    spawn_task(&sched, scope, work, size)
 }
 
 /// Starts a task that belongs to no scope.
@@ -673,7 +710,52 @@ pub fn spawn(work: Work) -> Arc<Task> {
 #[allow(clippy::must_use_candidate, reason = "the handle is optional")]
 pub fn spawn_detached(work: Work) -> Arc<Task> {
     let sched = sched().expect("spawn outside a task");
-    spawn_task(&sched, None, work)
+    let size = sched.stack_size;
+    spawn_task(&sched, None, work, size)
+}
+
+/// A lock that parks waiting tasks instead of blocking their worker (`Mutex`, spec
+/// §11.7).
+#[derive(Debug, Default)]
+pub struct Lock {
+    state: Mutex<(bool, VecDeque<Arc<Task>>)>,
+}
+
+impl Lock {
+    /// A new, unlocked lock.
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Waits until the lock is free and takes it.
+    ///
+    /// # Panics
+    ///
+    /// Outside a task, when it would have to wait.
+    pub fn acquire(&self) {
+        loop {
+            let mut state = lock(&self.state);
+            if !state.0 {
+                state.0 = true;
+                return;
+            }
+            let me = current().expect("a lock taken outside a task");
+            state.1.push_back(me);
+            drop(state);
+            park();
+        }
+    }
+
+    /// Releases the lock and wakes one waiting task.
+    pub fn release(&self) {
+        let mut state = lock(&self.state);
+        state.0 = false;
+        if let Some(next) = state.1.pop_front() {
+            drop(state);
+            wake(&next);
+        }
+    }
 }
 
 /// Waits until `task` finishes.
@@ -816,83 +898,107 @@ mod tests {
     use std::rc::Rc;
 
     #[test]
+    #[cfg_attr(miri, ignore = "switches stacks with inline assembly")]
     fn tasks_interleave_deterministically() {
         let log = Rc::new(RefCell::new(Vec::new()));
         let l = Rc::clone(&log);
-        run(Mode::Deterministic { seed: 7 }, 64 * 1024, move || {
-            let (scope, previous) = super::enter_scope(None);
-            for i in 0..3 {
-                let l = Rc::clone(&l);
-                spawn(Box::new(move || {
-                    for step in 0..3 {
-                        l.borrow_mut().push((i, step));
-                        yield_now();
-                    }
-                }));
-            }
-            super::exit_scope(&scope, previous);
-            l.borrow_mut().push((99, 0));
-        });
+        run(
+            Mode::Deterministic { seed: 7 },
+            64 * 1024,
+            64 * 1024,
+            move || {
+                let (scope, previous) = super::enter_scope(None);
+                for i in 0..3 {
+                    let l = Rc::clone(&l);
+                    spawn(Box::new(move || {
+                        for step in 0..3 {
+                            l.borrow_mut().push((i, step));
+                            yield_now();
+                        }
+                    }));
+                }
+                super::exit_scope(&scope, previous);
+                l.borrow_mut().push((99, 0));
+            },
+        );
         let log = log.borrow();
         assert_eq!(log.len(), 10);
         assert_eq!(log.last(), Some(&(99, 0)));
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "switches stacks with inline assembly")]
     fn virtual_sleep_orders_wakeups() {
         let log = Rc::new(RefCell::new(Vec::new()));
         let l = Rc::clone(&log);
-        run(Mode::Deterministic { seed: 1 }, 64 * 1024, move || {
-            let (scope, previous) = super::enter_scope(None);
-            for (i, ms) in [(1, 30u64), (2, 10), (3, 20)] {
-                let l = Rc::clone(&l);
-                spawn(Box::new(move || {
-                    sleep(ms * 1_000_000);
-                    l.borrow_mut().push(i);
-                }));
-            }
-            super::exit_scope(&scope, previous);
-        });
+        run(
+            Mode::Deterministic { seed: 1 },
+            64 * 1024,
+            64 * 1024,
+            move || {
+                let (scope, previous) = super::enter_scope(None);
+                for (i, ms) in [(1, 30u64), (2, 10), (3, 20)] {
+                    let l = Rc::clone(&l);
+                    spawn(Box::new(move || {
+                        sleep(ms * 1_000_000);
+                        l.borrow_mut().push(i);
+                    }));
+                }
+                super::exit_scope(&scope, previous);
+            },
+        );
         assert_eq!(*log.borrow(), vec![2, 3, 1]);
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "switches stacks with inline assembly")]
     fn deadline_cancels_sleepers() {
         let log = Rc::new(RefCell::new(Vec::new()));
         let l = Rc::clone(&log);
-        run(Mode::Deterministic { seed: 3 }, 64 * 1024, move || {
-            let (scope, previous) = super::enter_scope(Some(25_000_000));
-            for ms in [10u64, 50] {
-                let l = Rc::clone(&l);
-                spawn(Box::new(move || {
-                    let finished = sleep(ms * 1_000_000);
-                    l.borrow_mut().push((ms, finished));
-                }));
-            }
-            super::exit_scope(&scope, previous);
-        });
+        run(
+            Mode::Deterministic { seed: 3 },
+            64 * 1024,
+            64 * 1024,
+            move || {
+                let (scope, previous) = super::enter_scope(Some(25_000_000));
+                for ms in [10u64, 50] {
+                    let l = Rc::clone(&l);
+                    spawn(Box::new(move || {
+                        let finished = sleep(ms * 1_000_000);
+                        l.borrow_mut().push((ms, finished));
+                    }));
+                }
+                super::exit_scope(&scope, previous);
+            },
+        );
         let mut log = log.borrow().clone();
         log.sort_unstable();
         assert_eq!(log, vec![(10, true), (50, false)]);
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "switches stacks with inline assembly")]
     fn parallel_mode_runs_many_tasks() {
         use std::sync::Arc;
         use std::sync::atomic::{AtomicUsize, Ordering};
         let count = Arc::new(AtomicUsize::new(0));
         let c = Arc::clone(&count);
-        run(Mode::Parallel { workers: 4 }, 64 * 1024, move || {
-            let (scope, previous) = super::enter_scope(None);
-            for _ in 0..1000 {
-                let c = Arc::clone(&c);
-                spawn(Box::new(move || {
-                    yield_now();
-                    c.fetch_add(1, Ordering::Relaxed);
-                }));
-            }
-            super::exit_scope(&scope, previous);
-        });
+        run(
+            Mode::Parallel { workers: 4 },
+            64 * 1024,
+            64 * 1024,
+            move || {
+                let (scope, previous) = super::enter_scope(None);
+                for _ in 0..1000 {
+                    let c = Arc::clone(&c);
+                    spawn(Box::new(move || {
+                        yield_now();
+                        c.fetch_add(1, Ordering::Relaxed);
+                    }));
+                }
+                super::exit_scope(&scope, previous);
+            },
+        );
         assert_eq!(count.load(Ordering::Relaxed), 1000);
     }
 }
