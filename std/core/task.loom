@@ -65,10 +65,12 @@ pub struct Chan[T]
 
   ## Adds `value`, waiting while the channel is full. Returns `false` if the task's scope
   ## is cancelled first.
+  @[lang("chan_send")]
   pub def send(own value: T) -> Bool = chan_send(self, value)
 
   ## Takes the oldest value, waiting while the channel is empty and open; `None` once the
   ## channel is closed and empty, or when the task's scope is cancelled.
+  @[lang("chan_recv")]
   pub def recv -> Option[T] = chan_recv(self)
 
   ## Takes a value if one is available now.

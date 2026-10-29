@@ -1064,7 +1064,8 @@ function may block; blocking suspends only the calling task. There is no `async`
 5. In a cancelled scope, a `select` without an `else` arm that would wait instead chooses
    a `recv` arm with the result `None`; if it has no `recv` arm, it ends without running
    any arm.
-6. An arm `when P = e` receives into the pattern `P`, and an arm `when e` waits on `e`. The
+6. A `select` expression has type `()`; the values of its arms are discarded.
+7. An arm `when P = e` receives into the pattern `P`, and an arm `when e` waits on `e`. The
    parser tells them apart by looking for a `=` at bracket depth 0 before `then` or the end
    of the line.
 
@@ -1087,15 +1088,16 @@ function may block; blocking suspends only the calling task. There is no `async`
    `String`, `Bytes`, `Duration`, `Chan[T]` (for `Send` `T`), `Mutex[T]` and `Shared[T]`
    (for `Send` `T`) are `Send` and `Sync`. `ref T` is `Send` when `T` is `Sync`. A
    closure is `Send` when its captures are.
-2. It is an error (E0600) to send a value whose type is not `Send` on a channel, to
-   capture a non-`Send` value by move in a spawned or detached closure, and (E0601) to
-   capture a binding whose type is not `Sync` by reference in a spawned closure. The
-   message names the field whose type breaks the bound.
+2. A value sent on a channel or moved into a spawned or detached closure must be `Send`,
+   and a binding a spawned closure borrows must be `Sync`; the error names the field whose
+   type breaks the bound. Every type of this edition is `Send` and `Sync`, so these checks
+   take effect with the first types that are not (foreign handles); the codes E0600 and
+   E0601 are reserved for them.
 
 ### 11.6 Detached tasks
 
 1. `Task.detach { … }` starts a task that belongs to no scope. Its closure is escaping
-   (§8.4 rule 1), must not borrow (E0602), and must be `Send`.
+   (§8.4 rule 1), so it cannot borrow (E0503), and it must be `Send`.
 2. A detached task is abandoned when `main` finishes (§11.1 rule 5).
 
 ### 11.7 Time and synchronization
@@ -1355,6 +1357,4 @@ implement yet (`select`, `unsafe`, `extern "C"`); it disappears as the phases la
 
 | Code | Error | At | Rule |
 |---|---|---|---|
-| E0600 | A value that must be `Send` is not (sent on a channel, moved into a task) | the value or capture | §11.5 |
-| E0601 | A binding borrowed by a spawned closure is not `Sync` | the capture | §11.5 |
-| E0602 | A detached task's closure borrows | the capture | §11.6 |
+| E0603 | A `select` arm is not a channel operation or timer, or a non-`recv` arm has a pattern | the operation or pattern | §11.3 |

@@ -68,6 +68,7 @@ pub struct Time
   end
 
   ## A `select` arm that becomes ready once `duration` has passed.
+  @[lang("time_after")]
   pub def self.after(duration: Duration) -> Timeout = Timeout(nanos: duration.nanos)
 
   ## The current instant of the monotonic clock.

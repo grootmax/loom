@@ -1,10 +1,10 @@
 //! The concurrency intrinsics (spec §11, ADR 0022 §9): tasks run on the runtime's
 //! deterministic scheduler, in this thread.
 
-use crate::eval::ArgVal;
+use crate::eval::{ArgVal, Frame};
 use crate::value::Handle;
 use crate::{Eval, Flow, Interp, Place, Value};
-use loom_hir::DefId;
+use loom_hir::{DefId, ExprId, SelectArm};
 use loom_resolve::TyParamId;
 use loom_runtime::sched::{self, Lock, chan::Chan, chan::SendError};
 use loom_span::Span;
@@ -169,7 +169,11 @@ impl Interp<'_> {
             },
             "chan_recv" | "chan_try_recv" => match get(0).as_deref() {
                 Some(Handle::Chan(ch)) => {
-                    let value = if name == "chan_recv" { ch.recv() } else { ch.try_recv() };
+                    let value = if name == "chan_recv" {
+                        ch.recv()
+                    } else {
+                        ch.try_recv()
+                    };
                     Ok(self.option(self.type_param(def, subst, 0), value))
                 }
                 _ => panic("internal error: not a channel"),
@@ -253,5 +257,123 @@ impl Interp<'_> {
             },
             other => panic(&format!("internal error: unknown intrinsic `{other}`")),
         }
+    }
+}
+
+impl Interp<'_> {
+    /// Evaluates `select` (spec §11.3).
+    pub(crate) fn eval_select(
+        &self,
+        frame: &mut Frame<'_>,
+        id: ExprId,
+        arms: &[SelectArm],
+        else_branch: Option<ExprId>,
+    ) -> Eval<Value> {
+        use loom_check::SelectOp;
+        use sched::chan::{Arm, Selected, select};
+        let span = self.span(frame, id);
+        if sched::current().is_none() {
+            return Err(Flow::Panic(
+                "internal error: tasks need the scheduled interpreter".to_owned(),
+                span,
+            ));
+        }
+        let ops = frame.typed.selects.get(&id).cloned().unwrap_or_default();
+        // Evaluate every operand first, in order (rule 2).
+        enum Operand {
+            Recv(Rc<Handle>, Ty),
+            Send(Rc<Handle>, Value),
+            Timer(u64),
+        }
+        let mut operands = Vec::new();
+        for (arm, op) in arms.iter().zip(&ops) {
+            operands.push(match *op {
+                SelectOp::Recv { channel } => match self.eval(frame, channel)? {
+                    Value::Handle(h) => {
+                        let option_ty = frame.typed.expr_ty(arm.operation);
+                        Operand::Recv(h, option_ty)
+                    }
+                    _ => {
+                        return Err(Flow::Panic(
+                            "internal error: not a channel".to_owned(),
+                            span,
+                        ));
+                    }
+                },
+                SelectOp::Send { channel, value } => {
+                    let ch = self.eval(frame, channel)?;
+                    let v = self.eval(frame, value)?;
+                    match ch {
+                        Value::Handle(h) => Operand::Send(h, v),
+                        _ => {
+                            return Err(Flow::Panic(
+                                "internal error: not a channel".to_owned(),
+                                span,
+                            ));
+                        }
+                    }
+                }
+                SelectOp::Timer => {
+                    let nanos = match self.eval(frame, arm.operation)? {
+                        Value::Struct(s) => s.fields.first().map_or(0, Value::as_int),
+                        _ => 0,
+                    };
+                    Operand::Timer(u64::try_from(nanos).unwrap_or(0))
+                }
+            });
+        }
+        let mut runtime_arms = Vec::new();
+        for operand in &operands {
+            runtime_arms.push(match operand {
+                Operand::Recv(h, _) | Operand::Send(h, _) => {
+                    let Handle::Chan(ch) = &**h else {
+                        return Err(Flow::Panic(
+                            "internal error: not a channel".to_owned(),
+                            span,
+                        ));
+                    };
+                    match operand {
+                        Operand::Send(_, v) => Arm::Send(ch, v.clone()),
+                        _ => Arm::Recv(ch),
+                    }
+                }
+                Operand::Timer(ns) => Arm::Timer(*ns),
+            });
+        }
+        let chosen = select(runtime_arms, else_branch.is_some());
+        let (arm, received) = match chosen {
+            Selected::Recv(i, value) => (i, Some(value)),
+            Selected::Sent(i) | Selected::Timer(i) => (i, None),
+            Selected::Else => {
+                if let Some(e) = else_branch {
+                    self.eval(frame, e)?;
+                }
+                return Ok(Value::Unit);
+            }
+            Selected::Cancelled => return Ok(Value::Unit),
+            Selected::SendClosed(_) => {
+                return Err(Flow::Panic("send on a closed channel".to_owned(), span));
+            }
+        };
+        let Some(select_arm) = arms.get(arm) else {
+            return Ok(Value::Unit);
+        };
+        if let (Some(value), Operand::Recv(_, option_ty)) = (received, &operands[arm]) {
+            let elem = match self.interner().kind(*option_ty) {
+                loom_types::TyKind::Adt(_, args) => args
+                    .first()
+                    .copied()
+                    .unwrap_or_else(|| self.interner().error()),
+                _ => self.interner().error(),
+            };
+            let option = self.option(elem, value);
+            if let Some(pat) = select_arm.pat
+                && !self.match_pat(frame, pat, &option)?
+            {
+                return Ok(Value::Unit);
+            }
+        }
+        self.eval(frame, select_arm.body)?;
+        Ok(Value::Unit)
     }
 }

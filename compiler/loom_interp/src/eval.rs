@@ -43,8 +43,8 @@ impl ArgVal {
 /// A call frame.
 pub(crate) struct Frame<'b> {
     body_id: BodyId,
-    body: &'b Body,
-    typed: &'b TypedBody,
+    pub(crate) body: &'b Body,
+    pub(crate) typed: &'b TypedBody,
     slots: Vec<Option<Place>>,
     self_place: Option<Place>,
     subst: Rc<Subst>,
@@ -66,7 +66,7 @@ impl Interp<'_> {
         clippy::unnecessary_wraps,
         reason = "mirrors the fallible signatures around it"
     )]
-    fn span(&self, frame: &Frame<'_>, expr: ExprId) -> Option<Span> {
+    pub(crate) fn span(&self, frame: &Frame<'_>, expr: ExprId) -> Option<Span> {
         Some(frame.body.expr_span(expr))
     }
 
@@ -426,7 +426,25 @@ impl Interp<'_> {
             Some(r) if receiver_mode == Some(Mode::Mut) => {
                 Some(ArgVal::Place(self.eval_place(frame, r)?))
             }
-            Some(r) => Some(ArgVal::Value(self.eval(frame, r)?)),
+            Some(r) => {
+                let value = self.eval(frame, r)?;
+                // A receiver reached through `Deref` (spec §7.4 rule 6).
+                if let Some(&loom_check::Coercion::Overloaded { from, .. }) =
+                    frame.typed.coercions.get(&r)
+                {
+                    let from = self.concrete(from, &frame.subst);
+                    Some(ArgVal::Value(self.call_trait_method(
+                        "Deref",
+                        "deref",
+                        from,
+                        ArgVal::Value(value),
+                        Vec::new(),
+                        span,
+                    )?))
+                } else {
+                    Some(ArgVal::Value(value))
+                }
+            }
             None => None,
         };
         // Arguments are evaluated in the order written (spec §7).
@@ -961,6 +979,7 @@ impl Interp<'_> {
                     Ok(Value::Unit)
                 }
             }
+            Expr::Select { arms, else_branch } => self.eval_select(frame, id, arms, *else_branch),
             Expr::Case {
                 scrutinee,
                 arms,

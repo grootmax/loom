@@ -58,7 +58,10 @@ pub enum Handle {
     /// The scope handle passed to the block of `scope`.
     Scope(std::sync::Arc<loom_runtime::sched::Scope>),
     /// `Task[T]`: the task and the cell its result is written to.
-    Task(std::sync::Arc<loom_runtime::sched::Task>, Rc<RefCell<Option<Value>>>),
+    Task(
+        std::sync::Arc<loom_runtime::sched::Task>,
+        Rc<RefCell<Option<Value>>>,
+    ),
     /// `Mutex[T]`.
     Mutex(Place, loom_runtime::sched::Lock),
     /// `Shared[T]`: the value and the number of owners.

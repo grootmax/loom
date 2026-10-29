@@ -129,10 +129,10 @@ Core lang traits `Send` and `Sync`, implemented automatically and structurally: 
 `Mutex` and closures whose captures are `Send` are `Send`; borrowed types `ref T` are
 `Send` when `T` is `Sync`. The checker requires `Send` for values sent on channels, for
 the captures of `Task.detach` closures, and for the captures of spawned closures that
-move into the child, and `Sync` for bindings a spawned closure borrows. Errors name the
-field that breaks the bound (E0600–E0602). Phase 4 has no non-`Send` types except
-user-visible handles that the runtime marks (none yet), so the checks mostly guard the
-future (`Shared`, FFI handles).
+move into the child, and `Sync` for bindings a spawned closure borrows. Every type of this
+edition is `Send` and `Sync`, so the checks take effect with the first types that are not
+(foreign handles, Phase 5); spec Appendix C reserves E0600 and E0601 for them. A detached
+closure cannot borrow because it is escaping (E0503).
 
 ### 8. Synchronization and shared ownership
 

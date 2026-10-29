@@ -227,7 +227,10 @@ impl<'a> Interp<'a> {
         self.run_scheduled(move |me| me.run_tests(root))
     }
 
-    fn run_scheduled<T: 'static>(&'static self, work: impl FnOnce(&'static Self) -> T + 'static) -> T
+    fn run_scheduled<T: 'static>(
+        &'static self,
+        work: impl FnOnce(&'static Self) -> T + 'static,
+    ) -> T
     where
         T: Default,
     {
