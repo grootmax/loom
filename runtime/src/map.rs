@@ -188,19 +188,12 @@ pub unsafe extern "C" fn loom_map_remove(m: *mut LoomMap, key: *const u8, out: *
     let map = unsafe { get(m) };
     let Some(i) = map.find(key) else { return 0 };
     let (here, nowhere) = (b"<map>".as_ptr(), 5);
+    let index = i64::try_from(i).unwrap_or(i64::MAX);
     let mut scratch = vec![0u8; map.key_info().size.max(1)];
     // SAFETY: entry `i` exists; the key is removed and dropped, the value moved to `out`.
     unsafe {
-        crate::array::loom_array_remove(
-            map.keys,
-            i as i64,
-            scratch.as_mut_ptr(),
-            here,
-            nowhere,
-            0,
-            0,
-        );
-        crate::array::loom_array_remove(map.values, i as i64, out, here, nowhere, 0, 0);
+        crate::array::loom_array_remove(map.keys, index, scratch.as_mut_ptr(), here, nowhere, 0, 0);
+        crate::array::loom_array_remove(map.values, index, out, here, nowhere, 0, 0);
         if let Some(drop_key) = map.key_info().drop {
             drop_key(scratch.as_mut_ptr());
         }
@@ -234,8 +227,9 @@ pub unsafe extern "C" fn loom_map_entry(
     }
 }
 
-/// The calling convention of an update closure: (environment, value).
-pub type UpdateFn = unsafe extern "C" fn(*mut u8, *mut u8);
+/// The calling convention of an update closure (ADR 0021 §3): (result, environment,
+/// value); the result is `Unit`, so nothing is written to it.
+pub type UpdateFn = unsafe extern "C" fn(*mut u8, *mut u8, *mut u8);
 
 /// Calls the closure with the value for `key`, inserting `default` first if absent. The
 /// key and default are moved in (and dropped if not stored).
@@ -254,34 +248,32 @@ pub unsafe extern "C" fn loom_map_update(
 ) {
     // SAFETY: `m` is live.
     let map = unsafe { get(m) };
-    let i = match map.find(key) {
-        Some(i) => {
-            // SAFETY: the incoming key and default are not stored, so they are dropped.
-            unsafe {
-                if let Some(drop_key) = map.key_info().drop {
-                    drop_key(key);
-                }
-                if let Some(drop_value) = (*(*map.values).info).drop {
-                    drop_value(default);
-                }
+    let i = if let Some(i) = map.find(key) {
+        // SAFETY: the incoming key and default are not stored, so they are dropped.
+        unsafe {
+            if let Some(drop_key) = map.key_info().drop {
+                drop_key(key);
             }
-            i
-        }
-        None => {
-            let h = map.hash(key);
-            let position = map.len();
-            // SAFETY: both arrays are live and the pointers hold elements.
-            unsafe {
-                loom_array_push(map.keys, key);
-                loom_array_push(map.values, default);
+            if let Some(drop_value) = (*(*map.values).info).drop {
+                drop_value(default);
             }
-            map.index.entry(h).or_default().push(position);
-            position
         }
+        i
+    } else {
+        let h = map.hash(key);
+        let position = map.len();
+        // SAFETY: both arrays are live and the pointers hold elements.
+        unsafe {
+            loom_array_push(map.keys, key);
+            loom_array_push(map.values, default);
+        }
+        map.index.entry(h).or_default().push(position);
+        position
     };
     let value = map.value_ptr(i);
+    let mut unit = 0u8;
     // SAFETY: the closure receives a pointer to a live value it may mutate.
-    unsafe { code(env, value) };
+    unsafe { code(&raw mut unit, env, value) };
 }
 
 /// A clone of the map.
@@ -329,19 +321,19 @@ pub unsafe extern "C" fn loom_map_drop(m: *mut LoomMap) {
 /// Both must be live maps of the same types with eq glue.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn loom_map_eq(a: *mut LoomMap, b: *mut LoomMap) -> u8 {
-    // SAFETY: both are live.
-    let (x, y) = (unsafe { get(a) }, unsafe { &*b });
-    if x.len() != y.len() {
+    // SAFETY: both are live; they are only read, so they may be the same map.
+    let (left, right) = (unsafe { &*a }, unsafe { &*b });
+    if left.len() != right.len() {
         return 0;
     }
     // SAFETY: the value array is live.
-    let Some(eq) = (unsafe { &*(*x.values).info }).eq else {
+    let Some(eq) = (unsafe { &*(*left.values).info }).eq else {
         return 0;
     };
-    for i in 0..x.len() {
-        match y.find(x.key_ptr(i)) {
+    for index in 0..left.len() {
+        match right.find(left.key_ptr(index)) {
             // SAFETY: both point to values.
-            Some(j) if unsafe { eq(x.value_ptr(i), y.value_ptr(j)) } != 0 => {}
+            Some(other) if unsafe { eq(left.value_ptr(index), right.value_ptr(other)) } != 0 => {}
             _ => return 0,
         }
     }

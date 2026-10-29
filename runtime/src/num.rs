@@ -75,12 +75,13 @@ pub unsafe extern "C" fn loom_int_parse(
         text.parse::<i128>()
             .ok()
             .filter(|&v| bits >= 128 || (v >= -(1i128 << (bits - 1)) && v < (1i128 << (bits - 1))))
-            .map(|v| v as i64)
+            .and_then(|v| i64::try_from(v).ok())
     } else {
         text.parse::<u128>()
             .ok()
             .filter(|&v| bits >= 128 || v < (1u128 << bits))
-            .map(|v| v as u64 as i64)
+            .and_then(|v| u64::try_from(v).ok())
+            .map(u64::cast_signed)
     };
     match fits {
         Some(v) => {
