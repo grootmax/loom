@@ -1,0 +1,8 @@
+# spec: §3.3 rule 3
+enum Event
+  Clicked(x: Int, y: Int)
+end
+
+def main
+  e = Event.Clicked(x: 10)
+end

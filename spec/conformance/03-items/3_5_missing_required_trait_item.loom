@@ -1,0 +1,13 @@
+# spec: §3.5 rule 1
+trait Required
+  def required_method -> Int
+end
+
+struct Target
+end
+
+impl Required for Target
+end
+
+def main
+end

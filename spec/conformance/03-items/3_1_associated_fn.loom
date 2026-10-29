@@ -1,0 +1,15 @@
+# spec: §3.1 rule 5
+struct Point
+  x: Int
+  y: Int
+
+  def self.new(x: Int, y: Int) -> Point
+    Point(x:, y:)
+  end
+end
+
+def main
+  p = Point.new(3, 4)
+  puts p.x
+  puts p.y
+end

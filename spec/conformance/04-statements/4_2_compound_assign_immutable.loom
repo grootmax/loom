@@ -1,0 +1,5 @@
+# spec: §4.2 rule 1
+def main
+  x = 10
+  x += 5
+end

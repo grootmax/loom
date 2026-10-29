@@ -1,0 +1,8 @@
+# spec: §3.7 rule 3
+module helper
+end
+
+use helper.nonexistent
+
+def main
+end

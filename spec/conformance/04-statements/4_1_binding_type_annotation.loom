@@ -1,0 +1,7 @@
+# spec: §4.1 rule 3
+def main
+  x: Int = 100
+  var y: String = "hello"
+  puts x
+  puts y
+end

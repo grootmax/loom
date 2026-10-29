@@ -1,0 +1,13 @@
+# spec: §3.1 rule 5
+struct Consumer
+  data: Int
+
+  def own consume() -> Int
+    @data
+  end
+end
+
+def main
+  c = Consumer(data: 100)
+  puts c.consume()
+end

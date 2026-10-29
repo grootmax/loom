@@ -1,0 +1,6 @@
+# spec: §3.1 rule 1
+def square(x: Int) -> Int = x * x
+
+def main
+  puts square(6)
+end

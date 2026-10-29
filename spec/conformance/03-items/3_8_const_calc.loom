@@ -1,0 +1,8 @@
+# spec: §3.8
+const BASE: Int = 10
+const MULT: Int = 5
+const TOTAL: Int = BASE * MULT
+
+def main
+  puts TOTAL
+end

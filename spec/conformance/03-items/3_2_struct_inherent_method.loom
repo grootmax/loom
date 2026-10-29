@@ -1,0 +1,12 @@
+# spec: §3.2 rule 1
+struct Rectangle
+  width: Int
+  height: Int
+
+  def area -> Int = @width * @height
+end
+
+def main
+  r = Rectangle(width: 5, height: 8)
+  puts r.area()
+end

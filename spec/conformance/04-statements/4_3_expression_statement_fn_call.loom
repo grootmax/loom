@@ -1,0 +1,10 @@
+# spec: §4.3
+def side_effect(msg: String) -> Int
+  puts msg
+  42
+end
+
+def main
+  side_effect("evaluating")
+  puts "after side effect"
+end

@@ -1,0 +1,10 @@
+# spec: §3.1 rule 3
+def format_point(x: Int, y: Int = 0, z: Int = 0) -> String
+  "(#{x}, #{y}, #{z})"
+end
+
+def main
+  puts format_point(10)
+  puts format_point(10, 20)
+  puts format_point(10, 20, 30)
+end
