@@ -851,8 +851,17 @@ impl<'a> Builder<'a> {
                 _ => place,
             };
         }
-        let ty = self.coerced_ty(expr);
         let span = self.span(expr);
+        if let Some(Coercion::Deref) = self.typed.coercions.get(&expr) {
+            // A borrow produced by a call (`array_get(…)`): the place is behind it, not a
+            // copy of its target.
+            let ty = self.ty(expr);
+            let tmp = self.temp(ty, span);
+            let place = Place::local(tmp);
+            self.expr_value_into(&place, expr);
+            return self.deref_all(place, ty);
+        }
+        let ty = self.coerced_ty(expr);
         let tmp = self.temp(ty, span);
         let place = Place::local(tmp);
         self.expr_into_owning(&place, expr);

@@ -408,3 +408,15 @@ pub unsafe extern "C" fn loom_string_debug(s: *const LoomString, out: *mut LoomS
     // SAFETY: `out` is live.
     unsafe { &mut *out }.push_str(&text);
 }
+
+/// Appends a debug rendering of a character (quoted, escaped).
+///
+/// # Safety
+///
+/// `out` must be a live string.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn loom_char_debug(c: u32, out: *mut LoomString) {
+    let text = format!("{:?}", char::from_u32(c).unwrap_or('\u{FFFD}'));
+    // SAFETY: `out` is live.
+    unsafe { &mut *out }.push_str(&text);
+}

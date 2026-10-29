@@ -16,10 +16,19 @@
 pub mod array;
 pub mod map;
 pub mod num;
+pub mod ops;
 pub mod string;
 
 use std::io::Write;
 use std::sync::Mutex;
+
+/// The functions defined at the crate root, for the code generator's symbol table.
+pub mod root {
+    pub use super::ops::{loom_int_arith, loom_int_pow, loom_name_code};
+    pub use super::{
+        loom_alloc, loom_exit_error, loom_flush, loom_free, loom_panic, loom_panic_string,
+    };
+}
 
 /// The name of this crate, used by the driver for diagnostics about the pipeline.
 pub const CRATE_NAME: &str = "loom_runtime";
@@ -175,6 +184,22 @@ pub unsafe extern "C" fn loom_free(ptr: *mut u8, size: usize, align: usize) {
         .unwrap_or(std::alloc::Layout::new::<u8>());
     // SAFETY: the caller guarantees `ptr` was allocated with this layout.
     unsafe { std::alloc::dealloc(ptr, layout) }
+}
+
+/// Runs JIT-compiled `loom_main` at `code` and returns its exit status.
+///
+/// The JIT is the only caller: `code` must be the address of a function generated with
+/// the signature `extern "C" fn() -> i32` whose module is still alive. The function is
+/// safe to call so that no other crate needs `unsafe` (ADR 0021 §4).
+#[must_use]
+pub fn run_jit_entry(code: *const u8) -> i32 {
+    assert!(!code.is_null(), "no entry point");
+    // SAFETY: the JIT passes the address of `loom_main`, generated as
+    // `extern "C" fn() -> i32` and kept alive by its module for the duration of the call.
+    let entry: extern "C" fn() -> i32 = unsafe { std::mem::transmute(code) };
+    let status = entry();
+    flush_stdout();
+    status
 }
 
 #[cfg(test)]

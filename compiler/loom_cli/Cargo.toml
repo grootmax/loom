@@ -19,6 +19,7 @@ loom_driver = { path = "../loom_driver" }
 loom_hir = { path = "../loom_hir" }
 loom_interp = { path = "../loom_interp" }
 loom_mir = { path = "../loom_mir" }
+loom_codegen_cranelift = { path = "../loom_codegen_cranelift" }
 loom_fmt = { path = "../../tools/loom_fmt" }
 
 [dev-dependencies]

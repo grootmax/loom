@@ -150,3 +150,20 @@ pub unsafe extern "C" fn loom_debug_text(ptr: *const u8, len: usize, out: *mut L
     // SAFETY: forwarded.
     unsafe { &mut *out }.push_str(unsafe { crate::str_from(ptr, len) });
 }
+
+/// The remainder of a float division (`%`, truncated like Rust's).
+#[unsafe(no_mangle)]
+pub extern "C" fn loom_float_rem(left: f64, right: f64) -> f64 {
+    left % right
+}
+
+/// A float function by [`crate::ops::name_code`]: 0 `sqrt`, 1 `abs`, 2 `floor`, 3 `ceil`.
+#[unsafe(no_mangle)]
+pub extern "C" fn loom_float_math(value: f64, operation: u32) -> f64 {
+    match operation {
+        1 => value.abs(),
+        2 => value.floor(),
+        3 => value.ceil(),
+        _ => value.sqrt(),
+    }
+}
