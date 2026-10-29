@@ -1,0 +1,6 @@
+# spec: §7.5 rule 1
+def main
+  x: U8 = U8.max_value
+  puts "before"
+  puts x * 2
+end
