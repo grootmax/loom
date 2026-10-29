@@ -1,11 +1,11 @@
 # Status
 
-**Current phase: 2 — Semantics** (started 2026-10-28 on the owner's go-ahead). Phase 1's
-exit criteria are met locally except for the 24 CPU-hour fuzz run (in progress) and the
-merge and tag, which wait on push access. This file is the honest answer to "what
-works?" and must be updated whenever that changes.
+**Current phase: 3 — Native code** (started 2026-10-29 on the owner's go-ahead). Phases 1
+and 2 are complete and tagged `v0.1.0-phase1` and `v0.2.0-phase2`; their reports are in
+[`docs/reports/`](reports/). This file is the honest answer to "what works?" and must be
+updated whenever that changes.
 
-_Last updated: 2026-10-28_
+_Last updated: 2026-10-29_
 
 ## Works
 
@@ -25,8 +25,13 @@ _Last updated: 2026-10-28_
     `Option`, `Result`, `Range`, iterators, the core traits, and `puts`/`assert`.
   - The reference interpreter: `loom run <file>` and `loom test <file>`. All 19 examples
     marked `# phase: 2` produce their expected output byte for byte.
-- `loom check [--dump=cst|--dump=hir] <paths>` reports lexical, syntax, name and type
-  errors.
+- **Ownership (Phase 3, part 1):** `ref T` is a real type with auto-deref and autoref;
+  MIR is built for every function and closure (`loom check --dump=mir`); the borrow
+  checker reports use after move (E0500/E0501), conflicting borrows (E0502), escaping
+  borrows (E0503) and returned borrows whose source is ambiguous (E0504), with
+  non-lexical lifetimes and two-phase borrows (ADR 0020, spec §8).
+- `loom check [--dump=cst|hir|mir] <paths>` reports lexical, syntax, name, type and
+  ownership errors.
 - `cargo xtask conformance` runs `spec/conformance/` (accept cases through `loom run`);
   `cargo xtask examples` runs every example whose phase has been reached.
 - VS Code syntax highlighting for `.loom` files (`tools/editors/vscode`).
@@ -35,13 +40,15 @@ _Last updated: 2026-10-28_
 
 - Phase 3 exit: native executables checked on every Tier 1 host in CI (Windows links with
   MSVC's `link.exe`), Valgrind over native executables, the Phase 3 report.
-- Conformance for §8 ownership and rich CLI diagnostics (Jules PRs #25, #27); nightly
-  fuzzing (#29).
+- Conformance for §8 ownership and rich CLI diagnostics (Jules PRs #25, #27); the nightly
+  fuzz workflow is fixed in #34.
 
 ## Known limitations
 
-- Ownership is not checked yet (Phase 3): programs that move a value twice or keep a
-  borrow too long are accepted and run. `ref T` is checked as `T`. `Drop` does not run.
+- Programs run only in the interpreter; native code arrives in Phase 3 part 2. `Drop`
+  does not run yet.
+- Explicit lifetimes are not part of the language (owner decision, 2026-10-29): a
+  function may return a borrow only when its source is unambiguous (spec §8.5).
 - `select`, `unsafe` and `extern "C"` report E0398 (not implemented in this phase).
 - Programs are single files with inline modules; packages arrive in Phase 5.
 - Map and set keys use structural hashing; a user `Eq` on a key type is honored for
@@ -50,10 +57,11 @@ _Last updated: 2026-10-28_
 
 ## Written down (design, not implementation)
 
-- ADRs 0001–0019 (`docs/adr/`), including the ownership model (0005), concurrency (0006),
-  the front-end design (0018) and semantic analysis (0019).
-- Spec: §2–§7, §9, §10, §12.1–§12.2, §12.4 and §14 are normative; §8, §11, §12.3 and §13
-  are outlines.
+- ADRs 0001–0020 (`docs/adr/`), including the ownership model (0005), concurrency (0006),
+  the front-end design (0018), semantic analysis (0019), and MIR and ownership checking
+  (0020).
+- Spec: §2–§10, §12.1–§12.2, §12.4 and §14 are normative; §11, §12.3 and §13 are
+  outlines.
 
 ## Open owner decisions
 

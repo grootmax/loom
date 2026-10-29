@@ -1,0 +1,51 @@
+name: Fuzz
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      seconds:
+        description: 'Fuzzing duration in seconds'
+        required: false
+        default: '21000'
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  fuzz:
+    name: fuzz (${{ matrix.index }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        index: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v7
+      # rustup reads rust-toolchain.toml and installs the pinned toolchain.
+      - name: Install pinned toolchain
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: Print seed to step summary
+        run: echo "Seed: ${{ github.run_id }}${{ matrix.index }}" >> "$GITHUB_STEP_SUMMARY"
+      - name: Run fuzzer
+        # The dispatch input reaches the shell only as a validated number.
+        env:
+          SECONDS_INPUT: ${{ inputs.seconds || '21000' }}
+          SEED: ${{ github.run_id }}${{ matrix.index }}
+        run: |
+          case "$SECONDS_INPUT" in ''|*[!0-9]*) echo "seconds must be a number" >&2; exit 2;; esac
+          cargo run --release -p loom_fuzz -- --target all --seconds "$SECONDS_INPUT" --seed "$SEED" --out target/fuzz
+      - name: Upload crashers artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-crashers-${{ matrix.index }}
+          path: target/fuzz/
