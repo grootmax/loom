@@ -29,3 +29,5 @@ Status values: `dispatched`, `in review`, `merged`, `rejected`, `superseded`.
 | [0014](0014-conformance-items-statements.md) | Jules | 2b77f098-c8ad-4155-917c-be6be6d48bcf | `spec/conformance/{03,04,12}-*/` | 2026-10-29 | dispatched | — | Phase 3 wave 2 |
 | [0022](0022-runtime-tests-miri.md) | Jules | 6bf274fb-1775-446e-9f17-c1d3117d543e | `runtime/tests/`, `ci.yml` (miri job) | 2026-10-29 | dispatched | — | Phase 3 wave 2 |
 | [0023](0023-nightly-fuzz.md) | Jules | 8c7b4a33-f4d6-442b-97ef-3e792e5a3bef | `.github/workflows/fuzz.yml` | 2026-10-29 | dispatched | — | Phase 3 wave 2 |
+| [0024](0024-conformance-integer-arithmetic.md) | Jules | cc6842be-4e98-49ee-9318-90d40483c1a8 | `spec/conformance/07-expressions/7_5_int_*`, `7_12_number_text_*` | 2026-10-29 | dispatched | — | Phase 4 wave 1 (native/interpreter parity) |
+| [0025](0025-benchmark-harness.md) | Jules | 1788e3bd-edfc-4269-bf1f-f59c23e4472b | `benches/`, `xtask/src/bench.rs` | 2026-10-29 | dispatched | — | Phase 4 wave 1 |
