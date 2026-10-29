@@ -100,14 +100,15 @@ them on panic too so that the two agree.
 
 The backend implements MIR `Drop` with **drop flags**: every local whose type owns
 resources gets a flag, set when it is initialized and cleared when it is moved;
-`StorageLive`/`StorageDead` clear it. Assigning to an initialized place drops the old
-value first. Every field path that is moved separately (a partial move) is to get its own
-flag, so a partially moved value drops exactly its remaining fields; until then a
-partial move clears the whole local's flag, which can leak the remaining fields but
-never drops anything twice. The MIR builder schedules drops for statement temporaries,
-including on early exits (`return`, `?`, `break`, `next`) and in expression bodies. `Drop` of a value whose type implements
-`Drop` calls `drop`, then drops its fields; runtime objects free their memory and drop
-their elements through the type descriptor.
+`StorageLive`/`StorageDead` clear it. Every field path that MIR moves, drops or assigns
+separately (`move p.first`, `drop(p.first)`, `p.first = …`) gets its own flag, so a
+partially moved value drops exactly its remaining fields: a drop of a local walks its
+type and skips the paths whose flags are clear. As in Rust's MIR, an assignment never
+drops the old value; MIR emits an explicit `Drop` before assigning to an initialized
+place. The MIR builder schedules drops for statement temporaries, including on early
+exits (`return`, `?`, `break`, `next`) and in expression bodies. `Drop` of a value whose
+type implements `Drop` (once the core trait exists) calls `drop`, then drops its fields;
+runtime objects free their memory and drop their elements through the type descriptor.
 
 ### 7. Differential testing
 

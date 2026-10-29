@@ -406,6 +406,9 @@ pub(crate) struct BodyTx<'x, 'g, 'a, 'm, 'f> {
     captures: Vec<(u32, Ty)>,
     /// Constants materialized to be read in place, dropped after the statement.
     const_temps: Vec<(Value, Ty)>,
+    /// Field paths of locals that are moved, dropped or assigned separately, each with a
+    /// drop flag: whether the path holds a value, given that its local does (ADR 0021 §6).
+    paths: Vec<(Local, Vec<Proj>, Value)>,
     pub span: Span,
 }
 
@@ -488,9 +491,11 @@ impl<'x, 'g, 'a, 'm, 'f> BodyTx<'x, 'g, 'a, 'm, 'f> {
             env_local: None,
             captures,
             const_temps: Vec::new(),
+            paths: Vec::new(),
             span: body.span,
         };
         tx.allocate_locals(params);
+        tx.allocate_paths()?;
         tx.fx.b.ins().jump(tx.blocks[0], &[]);
         for (i, block) in body.blocks.iter().enumerate() {
             tx.fx.b.switch_to_block(tx.blocks[i]);
@@ -569,6 +574,176 @@ impl<'x, 'g, 'a, 'm, 'f> BodyTx<'x, 'g, 'a, 'm, 'f> {
                 None
             };
             self.locals.push(LocalInfo { ty, addr, flag });
+        }
+    }
+
+    /// Finds the field paths that need their own drop flags: every place below a local
+    /// (not behind a reference) whose type owns resources and that MIR moves, drops or
+    /// assigns.
+    fn allocate_paths(&mut self) -> Result<()> {
+        fn visit_operand(op: &Operand, out: &mut Vec<Place>) {
+            if let Operand::Move(p) = op {
+                out.push(p.clone());
+            }
+        }
+        let mut places: Vec<Place> = Vec::new();
+        for block in &self.body.blocks {
+            for statement in &block.statements {
+                if let StatementKind::Assign(place, rvalue) = &statement.kind {
+                    places.push(place.clone());
+                    match rvalue {
+                        Rvalue::Use(op) | Rvalue::Unary(_, op) | Rvalue::Unsize(op, _) => {
+                            visit_operand(op, &mut places);
+                        }
+                        Rvalue::Binary(_, a, b) => {
+                            visit_operand(a, &mut places);
+                            visit_operand(b, &mut places);
+                        }
+                        Rvalue::Aggregate(_, ops) => {
+                            for op in ops {
+                                visit_operand(op, &mut places);
+                            }
+                        }
+                        Rvalue::Ref { .. } | Rvalue::Discriminant(_) => {}
+                    }
+                }
+            }
+            match block.terminator.as_ref().map(|t| &t.kind) {
+                Some(TerminatorKind::Call { callee, args, .. }) => {
+                    if let Callee::Value(op) = callee {
+                        visit_operand(op, &mut places);
+                    }
+                    for op in args {
+                        visit_operand(op, &mut places);
+                    }
+                }
+                Some(TerminatorKind::Drop { place, .. }) => places.push(place.clone()),
+                _ => {}
+            }
+        }
+        for place in places {
+            if place.proj.is_empty()
+                || place.is_behind_ref()
+                || place.proj.iter().any(|p| matches!(p, Proj::Index(_)))
+                || self.locals[place.local.index()].flag.is_none()
+                || self
+                    .paths
+                    .iter()
+                    .any(|(l, p, _)| *l == place.local && *p == place.proj)
+            {
+                continue;
+            }
+            if !self.fx.needs_drop(self.place_type(&place)?) {
+                continue;
+            }
+            let flag = self.fx.slot(1, 1);
+            let is_arg = place.local.index() >= 1 && place.local.index() <= self.body.arg_count;
+            let init = self.fx.b.ins().iconst(types::I8, i64::from(is_arg));
+            self.fx.store(init, flag, 0);
+            self.paths.push((place.local, place.proj.clone(), flag));
+        }
+        Ok(())
+    }
+
+    /// The drop flag of the field path `proj` of `local`, if it has one.
+    fn path_flag(&self, local: Local, proj: &[Proj]) -> Option<Value> {
+        self.paths
+            .iter()
+            .find(|(l, p, _)| *l == local && p.as_slice() == proj)
+            .map(|&(_, _, f)| f)
+    }
+
+    /// Sets the flags of `proj` and of every tracked path below it.
+    fn set_path_flags(&mut self, local: Local, proj: &[Proj], value: bool) {
+        let flags: Vec<Value> = self
+            .paths
+            .iter()
+            .filter(|(l, p, _)| *l == local && p.starts_with(proj))
+            .map(|&(_, _, f)| f)
+            .collect();
+        for flag in flags {
+            let v = self.fx.b.ins().iconst(types::I8, i64::from(value));
+            self.fx.store(v, flag, 0);
+        }
+    }
+
+    /// Drops the value of type `ty` at `addr`, the path `prefix` of `local`, except for the
+    /// tracked paths below it that no longer hold a value.
+    fn drop_elaborated(
+        &mut self,
+        local: Local,
+        prefix: &[Proj],
+        ty: Ty,
+        addr: Value,
+    ) -> Result<()> {
+        if !self.fx.needs_drop(ty) {
+            return Ok(());
+        }
+        let cont = self.fx.b.create_block();
+        if let Some(flag) = self.path_flag(local, prefix) {
+            let set = self.fx.load(types::I8, flag, 0);
+            let present = self.fx.b.create_block();
+            self.fx.b.ins().brif(set, present, &[], cont, &[]);
+            self.fx.b.switch_to_block(present);
+        }
+        let below = self
+            .paths
+            .iter()
+            .any(|(l, p, _)| *l == local && p.len() > prefix.len() && p.starts_with(prefix));
+        if below {
+            let layout = self.cx().layout(ty);
+            if layout.variants.is_empty() {
+                for (i, &(offset, field_ty)) in layout.fields.iter().enumerate() {
+                    let mut path = prefix.to_vec();
+                    path.push(Proj::Field(u32::try_from(i).unwrap_or(0)));
+                    let at = self.fx.offset(addr, offset);
+                    self.drop_elaborated(local, &path, field_ty, at)?;
+                }
+            } else {
+                let variants = self.variant_defs(ty);
+                let tag = self.fx.load(types::I32, addr, 0);
+                let done = self.fx.b.create_block();
+                let mut switch = Switch::new();
+                let blocks: Vec<Block> = layout
+                    .variants
+                    .iter()
+                    .map(|_| self.fx.b.create_block())
+                    .collect();
+                for (i, &block) in blocks.iter().enumerate() {
+                    switch.set_entry(i as u128, block);
+                }
+                switch.emit(&mut self.fx.b, tag, done);
+                for (i, &block) in blocks.iter().enumerate() {
+                    self.fx.b.switch_to_block(block);
+                    for (k, &(offset, field_ty)) in layout.variants[i].iter().enumerate() {
+                        let mut path = prefix.to_vec();
+                        if let Some(&v) = variants.get(i) {
+                            path.push(Proj::Downcast(v));
+                        }
+                        path.push(Proj::Field(u32::try_from(k).unwrap_or(0)));
+                        let at = self.fx.offset(addr, offset);
+                        self.drop_elaborated(local, &path, field_ty, at)?;
+                    }
+                    self.fx.b.ins().jump(done, &[]);
+                }
+                self.fx.b.switch_to_block(done);
+            }
+        } else {
+            self.fx.drop_at(addr, ty)?;
+        }
+        self.fx.b.ins().jump(cont, &[]);
+        self.fx.b.switch_to_block(cont);
+        Ok(())
+    }
+
+    /// The variants of enum type `ty`, in declaration order.
+    fn variant_defs(&self, ty: Ty) -> Vec<loom_hir::DefId> {
+        match self.cx().interner().kind(ty) {
+            TyKind::Adt(def, _) => match &self.cx().hir.def(def).kind {
+                DefKind::Enum(data) => data.variants.clone(),
+                _ => Vec::new(),
+            },
+            _ => Vec::new(),
         }
     }
 
@@ -715,7 +890,14 @@ impl<'x, 'g, 'a, 'm, 'f> BodyTx<'x, 'g, 'a, 'm, 'f> {
         if place.is_behind_ref() {
             return;
         }
-        self.set_flag(place.local, false);
+        if place.proj.is_empty() {
+            self.set_flag(place.local, false);
+        } else if let Some(flag) = self.path_flag(place.local, &place.proj) {
+            let zero = self.fx.b.ins().iconst(types::I8, 0);
+            self.fx.store(zero, flag, 0);
+        } else {
+            self.set_flag(place.local, false);
+        }
     }
 
     /// Writes an owned copy of the operand's value to `dst`: a move, a deep copy of a
@@ -875,34 +1057,17 @@ impl<'x, 'g, 'a, 'm, 'f> BodyTx<'x, 'g, 'a, 'm, 'f> {
         }
     }
 
-    /// Moves the value at `src` into `place`, dropping the place's previous value.
+    /// Moves the value at `src` into `place`. The old value is not dropped here: MIR drops
+    /// it explicitly before an assignment to an initialized place, as Rust's MIR does.
     pub fn assign_from(&mut self, place: &Place, src: Value) -> Result<()> {
         let (dst, ty) = self.place_addr(place)?;
-        if self.fx.needs_drop(ty) {
-            self.drop_old(place, dst, ty)?;
-        }
         self.fx.copy_ty(dst, src, ty);
-        if place.proj.is_empty() {
-            self.set_flag(place.local, true);
+        if !place.is_behind_ref() {
+            if place.proj.is_empty() {
+                self.set_flag(place.local, true);
+            }
+            self.set_path_flags(place.local, &place.proj, true);
         }
-        Ok(())
-    }
-
-    fn drop_old(&mut self, place: &Place, addr: Value, ty: Ty) -> Result<()> {
-        if place.is_behind_ref() {
-            return self.fx.drop_at(addr, ty);
-        }
-        let Some(flag) = self.locals[place.local.index()].flag else {
-            return Ok(());
-        };
-        let set = self.fx.load(types::I8, flag, 0);
-        let drop_block = self.fx.b.create_block();
-        let cont = self.fx.b.create_block();
-        self.fx.b.ins().brif(set, drop_block, &[], cont, &[]);
-        self.fx.b.switch_to_block(drop_block);
-        self.fx.drop_at(addr, ty)?;
-        self.fx.b.ins().jump(cont, &[]);
-        self.fx.b.switch_to_block(cont);
         Ok(())
     }
 
@@ -1364,7 +1529,7 @@ impl<'x, 'g, 'a, 'm, 'f> BodyTx<'x, 'g, 'a, 'm, 'f> {
         if !self.fx.needs_drop(ty) {
             return Ok(());
         }
-        if !place.proj.is_empty() {
+        if place.is_behind_ref() || place.proj.iter().any(|p| matches!(p, Proj::Index(_))) {
             let (addr, ty) = self.place_addr(place)?;
             return self.fx.drop_at(addr, ty);
         }
@@ -1377,9 +1542,12 @@ impl<'x, 'g, 'a, 'm, 'f> BodyTx<'x, 'g, 'a, 'm, 'f> {
         self.fx.b.ins().brif(set, drop_block, &[], cont, &[]);
         self.fx.b.switch_to_block(drop_block);
         let (addr, ty) = self.place_addr(place)?;
-        self.fx.drop_at(addr, ty)?;
-        let zero = self.fx.b.ins().iconst(types::I8, 0);
-        self.fx.store(zero, flag, 0);
+        self.drop_elaborated(place.local, &place.proj, ty, addr)?;
+        if place.proj.is_empty() {
+            let zero = self.fx.b.ins().iconst(types::I8, 0);
+            self.fx.store(zero, flag, 0);
+        }
+        self.set_path_flags(place.local, &place.proj, false);
         self.fx.b.ins().jump(cont, &[]);
         self.fx.b.switch_to_block(cont);
         Ok(())

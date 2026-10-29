@@ -1,0 +1,31 @@
+# spec: §8.6 rule 1
+def first_long(words: Array[String]) -> Option[String]
+  for word in words
+    label = "word: #{word}"
+    if word.length > 3
+      return Some(label)
+    end
+  end
+  None
+end
+
+def count_until_stop(words: Array[String]) -> Int
+  var count = 0
+  for word in words
+    copy = word.clone
+    if copy == "stop"
+      break
+    end
+    if copy == "skip"
+      next
+    end
+    count += 1
+  end
+  count
+end
+
+def main
+  puts first_long(["a", "bb", "cccc", "dd"]).unwrap_or("none")
+  puts first_long(["a"]).unwrap_or("none")
+  puts count_until_stop(["a", "skip", "b", "stop", "c"])
+end

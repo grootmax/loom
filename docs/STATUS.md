@@ -34,8 +34,7 @@ _Last updated: 2026-10-28_
 ## In progress
 
 - Phase 3 exit: native executables checked on every Tier 1 host in CI (Windows links with
-  MSVC's `link.exe`), Valgrind over native executables, per-field drop flags, the Phase 3
-  report.
+  MSVC's `link.exe`), Valgrind over native executables, the Phase 3 report.
 - Conformance for §8 ownership and rich CLI diagnostics (Jules PRs #25, #27); nightly
   fuzzing (#29).
 
