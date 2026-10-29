@@ -9,6 +9,7 @@ repository.workspace = true
 publish = false
 
 [dependencies]
+loom_mir = { path = "../loom_mir" }
 loom_check = { path = "../loom_check" }
 loom_hir = { path = "../loom_hir" }
 loom_resolve = { path = "../loom_resolve" }

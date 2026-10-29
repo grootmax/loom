@@ -3,6 +3,8 @@
 //! Status: Phase 1. `check` (syntax only), `fmt` and `explain` work; every other command
 //! reports which roadmap phase will implement it and exits with status 2.
 
+mod link;
+
 use std::io::Write as _;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -133,6 +135,7 @@ fn main() -> ExitCode {
         "check" => check(rest),
         "run" => run(rest, false),
         "test" => run(rest, true),
+        "build" => build(rest),
         "fmt" => fmt(rest),
         "explain" => explain(rest),
         name => {
@@ -287,6 +290,7 @@ fn check(args: &[String]) -> ExitCode {
     let mut dump_cst = false;
     let mut dump_hir = false;
     let mut dump_mir = false;
+    let mut dump_core = false;
     let mut format = MessageFormat::Rendered;
     let mut color = ColorChoice::Auto;
     for option in options {
@@ -294,6 +298,10 @@ fn check(args: &[String]) -> ExitCode {
             "--dump=cst" => dump_cst = true,
             "--dump=hir" => dump_hir = true,
             "--dump=mir" => dump_mir = true,
+            "--dump=mir-all" => {
+                dump_mir = true;
+                dump_core = true;
+            }
             "--message-format=short" => format = MessageFormat::Short,
             "--message-format=rendered" | "--message-format=human" => {
                 format = MessageFormat::Rendered;
@@ -332,7 +340,7 @@ fn check(args: &[String]) -> ExitCode {
         }
         if dump_mir && let Some(mir) = &analysis.mir {
             for body in &mir.bodies {
-                if analysis.hir.package_of(body.owner) == loom_hir::Package::Main {
+                if dump_core || analysis.hir.package_of(body.owner) == loom_hir::Package::Main {
                     print!(
                         "{}",
                         loom_mir::dump_body(
@@ -361,15 +369,42 @@ fn check(args: &[String]) -> ExitCode {
     }
 }
 
-/// `loom run <file> [-- args]` and `loom test <file>`: checks the program, then
-/// interprets `main` or the `@[test]` functions (ADR 0019 §8–§9).
+/// Options of `loom run` and `loom test`.
+#[derive(Clone, Copy)]
+struct RunOptions {
+    tests: bool,
+    engine: Engine,
+    verbose: bool,
+    format: MessageFormat,
+    color: ColorChoice,
+}
+
+/// How `loom run` executes a program.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Engine {
+    /// Native code if the backend supports the program, otherwise the interpreter.
+    Auto,
+    /// The reference interpreter (`--interp`).
+    Interp,
+    /// Native code only (`--native`); unsupported programs are an error.
+    Native,
+}
+
+/// `loom run [--interp|--native] [--verbose] <file> [-- args]` and `loom test <file>`:
+/// checks the program, then runs `main` natively with the JIT (ADR 0021 §1) or in the
+/// interpreter, or runs the `@[test]` functions (ADR 0019 §8–§9).
 fn run(args: &[String], tests: bool) -> ExitCode {
     let split = args.iter().position(|a| a == "--").unwrap_or(args.len());
     let (options, paths) = split_options(&args[..split]);
+    let mut engine = if tests { Engine::Interp } else { Engine::Auto };
+    let mut verbose = false;
     let mut format = MessageFormat::Rendered;
     let mut color = ColorChoice::Auto;
     for option in options {
         match option {
+            "--interp" => engine = Engine::Interp,
+            "--native" if !tests => engine = Engine::Native,
+            "--verbose" => verbose = true,
             "--message-format=short" => format = MessageFormat::Short,
             "--message-format=rendered" | "--message-format=human" => {
                 format = MessageFormat::Rendered;
@@ -388,10 +423,19 @@ fn run(args: &[String], tests: bool) -> ExitCode {
         });
     };
     let path = path.clone();
-    // Deep recursion in the interpreted program needs a large native stack.
+    // Deep recursion in the program needs a large native stack.
     let worker = std::thread::Builder::new()
         .stack_size(1 << 30)
-        .spawn(move || run_on_this_thread(&path, tests, format, color));
+        .spawn(move || {
+            let engine = RunOptions {
+                tests,
+                engine,
+                verbose,
+                format,
+                color,
+            };
+            run_on_this_thread(&path, engine)
+        });
     if let Ok(Ok(code)) = worker.map(std::thread::JoinHandle::join) {
         ExitCode::from(code)
     } else {
@@ -400,18 +444,18 @@ fn run(args: &[String], tests: bool) -> ExitCode {
     }
 }
 
-fn run_on_this_thread(
+/// Loads and checks one file, printing diagnostics; `None` if it has errors.
+fn analyze_file(
     path: &std::path::Path,
-    tests: bool,
     format: MessageFormat,
     color: ColorChoice,
-) -> u8 {
+) -> Option<(Session, loom_driver::Analysis)> {
     let mut session = Session::new();
     let file = match session.load(path) {
         Ok(file) => file,
         Err(error) => {
             eprintln!("loom: {error}");
-            return 1;
+            return None;
         }
     };
     let analysis = session.analyze(file);
@@ -423,11 +467,127 @@ fn run_on_this_thread(
         color,
     );
     if analysis.has_errors() {
+        return None;
+    }
+    Some((session, analysis))
+}
+
+/// `loom build [-o <output>] <file>`: compiles a program to a native executable with the
+/// Cranelift backend and the system linker (ADR 0021 §1).
+fn build(args: &[String]) -> ExitCode {
+    let mut output: Option<PathBuf> = None;
+    let mut inputs = Vec::new();
+    let mut iter = args.iter();
+    while let Some(arg) = iter.next() {
+        match arg.as_str() {
+            "-o" => match iter.next() {
+                Some(o) => output = Some(PathBuf::from(o)),
+                None => return usage_error("build: `-o` needs a file name"),
+            },
+            other if other.starts_with('-') => {
+                return usage_error(&format!("build: unknown option `{other}`"));
+            }
+            other => inputs.push(PathBuf::from(other)),
+        }
+    }
+    let [path] = inputs.as_slice() else {
+        return usage_error("build: expected one file");
+    };
+    let Some((session, analysis)) = analyze_file(path, MessageFormat::Rendered, ColorChoice::Auto)
+    else {
+        return ExitCode::from(1);
+    };
+    let Some(main) = analysis.main() else {
+        eprintln!(
+            "{}: error[E0211]: a program needs a `main` function",
+            path.display()
+        );
+        return ExitCode::from(1);
+    };
+    let Some(mir) = analysis.mir.as_ref() else {
+        return ExitCode::from(1);
+    };
+    let program = loom_codegen_cranelift::Program {
+        hir: &analysis.hir,
+        checked: &analysis.checked,
+        mir,
+        sources: session.sources(),
+    };
+    let stem = path
+        .file_stem()
+        .map_or_else(|| "main".to_owned(), |s| s.to_string_lossy().into_owned());
+    let output = output.unwrap_or_else(|| {
+        PathBuf::from(if cfg!(windows) {
+            format!("{stem}.exe")
+        } else {
+            stem.clone()
+        })
+    });
+    let object = match loom_codegen_cranelift::build_object(program, main, &stem) {
+        Ok(bytes) => bytes,
+        Err(error) => {
+            eprintln!("loom: {error}");
+            return ExitCode::from(1);
+        }
+    };
+    match link::link(&object, &output) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(error) => {
+            eprintln!("loom: {error}");
+            ExitCode::from(1)
+        }
+    }
+}
+
+fn run_on_this_thread(path: &std::path::Path, options: RunOptions) -> u8 {
+    let RunOptions {
+        tests,
+        engine,
+        verbose,
+        format,
+        color,
+    } = options;
+    let Some((session, analysis)) = analyze_file(path, format, color) else {
         return 1;
+    };
+    if !tests {
+        let Some(main) = analysis.main() else {
+            eprintln!(
+                "{}: error[E0211]: a program needs a `main` function",
+                path.display()
+            );
+            return 1;
+        };
+        if engine != Engine::Interp
+            && let Some(mir) = analysis.mir.as_ref()
+        {
+            let program = loom_codegen_cranelift::Program {
+                hir: &analysis.hir,
+                checked: &analysis.checked,
+                mir,
+                sources: session.sources(),
+            };
+            match loom_codegen_cranelift::run_jit(program, main) {
+                Ok(status) => return u8::try_from(status).unwrap_or(1),
+                Err(error) if engine == Engine::Native => {
+                    eprintln!("loom: {error}");
+                    return 1;
+                }
+                Err(error) => {
+                    if verbose {
+                        eprintln!("loom: running in the interpreter: {error}");
+                    }
+                }
+            }
+        }
     }
     let stdout = std::io::stdout();
     let out = Box::new(std::io::BufWriter::new(stdout.lock()));
-    let interp = loom_interp::Interp::new(&analysis.hir, &analysis.checked, session.sources(), out);
+    let mut interp =
+        loom_interp::Interp::new(&analysis.hir, &analysis.checked, session.sources(), out);
+    if let Some(mir) = analysis.mir.as_ref() {
+        interp = interp.with_mir(mir);
+    }
     if tests {
         return if interp.run_tests(analysis.root) {
             0
@@ -436,10 +596,6 @@ fn run_on_this_thread(
         };
     }
     let Some(main) = analysis.main() else {
-        eprintln!(
-            "{}: error[E0211]: a program needs a `main` function",
-            path.display()
-        );
         return 1;
     };
     let outcome = interp.run_main(main);

@@ -17,6 +17,11 @@ All notable changes to the Loom toolchain are recorded here. The format follows
   `Result` and `Range` are `Copy` when their contents are.
 
 ### Fixed
+- The interpreter now copies the captures of escaping closures (spec §8.4 rule 1); an
+  assignment inside such a closure no longer changes the outer binding.
+- MIR: a borrow returned by a call and passed on in a borrow position is reborrowed, not
+  copied into a temporary; temporaries of expression bodies and of statements left early
+  (`return`, `?`, `break`, `next`) and default argument values are dropped.
 - `loom fmt`: a line break inside brackets after which a `.` is followed by a space no
   longer changes indentation on the second run (found by fuzzing).
 

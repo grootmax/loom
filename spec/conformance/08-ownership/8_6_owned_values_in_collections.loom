@@ -1,0 +1,23 @@
+# spec: §8.6 rule 2
+@[derive(Clone)]
+struct Item
+  name: String
+  scores: Array[Int]
+end
+
+def main
+  var items: Array[Item] = []
+  for name in ["alpha", "beta", "gamma"]
+    items.push(Item(name: name.clone, scores: [name.length, 1]))
+  end
+  removed = items.remove(1)
+  puts "#{removed.name} #{removed.scores.length}"
+  var index: Map[String, Array[String]] = {}
+  for item in items
+    index[item.name.clone] = [item.name.to_uppercase]
+  end
+  index["alpha"] = ["replaced"]
+  puts index.length
+  copy = items.clone
+  puts "#{copy.length} #{items.length}"
+end

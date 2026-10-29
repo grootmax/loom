@@ -8,5 +8,20 @@ license.workspace = true
 repository.workspace = true
 publish = false
 
+[dependencies]
+loom_check = { path = "../loom_check" }
+loom_hir = { path = "../loom_hir" }
+loom_mir = { path = "../loom_mir" }
+loom_resolve = { path = "../loom_resolve" }
+loom_span = { path = "../loom_span" }
+loom_types = { path = "../loom_types" }
+loom_runtime = { path = "../../runtime" }
+cranelift-codegen = "=0.137.0"
+cranelift-frontend = "=0.137.0"
+cranelift-module = "=0.137.0"
+cranelift-jit = "=0.137.0"
+cranelift-object = "=0.137.0"
+target-lexicon = "0.13"
+
 [lints]
 workspace = true
