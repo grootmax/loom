@@ -1,0 +1,14 @@
+# spec: §3.1 rule 5
+struct Counter
+  value: Int
+
+  def mut increment
+    @value = @value + 1
+  end
+end
+
+def main
+  var c = Counter(value: 0)
+  c.increment()
+  puts c.value
+end

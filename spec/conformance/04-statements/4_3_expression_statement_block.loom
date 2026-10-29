@@ -1,0 +1,9 @@
+# spec: §4.3
+def compute(x: Int) -> Int
+  x * 2
+  x + 10
+end
+
+def main
+  puts compute(5)
+end

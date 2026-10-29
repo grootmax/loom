@@ -1,0 +1,9 @@
+# spec: §3.1 rule 3
+def make_pair(a: Int, b: Int = a + 1) -> Int
+  a + b
+end
+
+def main
+  puts make_pair(5)
+  puts make_pair(5, 10)
+end

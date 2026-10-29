@@ -1,0 +1,15 @@
+# spec: §3.3 rule 3
+enum Event
+  Click(x: Int, y: Int)
+  KeyPress(code: Int)
+end
+
+def main
+  e = Event.Click(x: 100, y: 200)
+  case e
+  in Event.Click(x:, y:) then
+    puts x
+    puts y
+  else ()
+  end
+end

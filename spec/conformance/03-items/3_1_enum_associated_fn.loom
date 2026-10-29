@@ -1,0 +1,16 @@
+# spec: §3.1 rule 5
+enum Status
+  Active
+  Inactive
+
+  def self.default_status -> Status
+    Status.Active
+  end
+end
+
+def main
+  case Status.default_status()
+  in Status.Active then puts "active"
+  in Status.Inactive then puts "inactive"
+  end
+end

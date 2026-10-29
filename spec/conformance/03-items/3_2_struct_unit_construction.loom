@@ -1,0 +1,8 @@
+# spec: §3.2 rule 2
+struct Empty
+end
+
+def main
+  e = Empty()
+  puts "ok"
+end

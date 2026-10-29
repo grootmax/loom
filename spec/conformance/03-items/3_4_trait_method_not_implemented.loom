@@ -1,0 +1,12 @@
+# spec: §3.4 rule 4
+trait Speakable
+  def speak -> String
+end
+
+struct Cat
+end
+
+def main
+  c = Cat()
+  puts c.speak()
+end

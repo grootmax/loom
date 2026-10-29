@@ -1,0 +1,13 @@
+# spec: §3.3 rule 3
+enum Number
+  Single(Int)
+  Pair(Int, Int)
+end
+
+def main
+  n = Number.Pair(10, 20)
+  case n
+  in Number.Single(x) then puts x
+  in Number.Pair(a, b) then puts a + b
+  end
+end

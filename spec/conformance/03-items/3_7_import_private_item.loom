@@ -1,0 +1,9 @@
+# spec: §3.7 rule 3
+module internal
+  def secret_fn -> Int = 42
+end
+
+use internal.secret_fn
+
+def main
+end

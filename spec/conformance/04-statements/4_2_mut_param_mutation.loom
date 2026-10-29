@@ -1,0 +1,9 @@
+# spec: §4.2 rule 1
+def increment(mut x: Int) -> Int
+  x += 10
+  x
+end
+
+def main
+  puts increment(5)
+end

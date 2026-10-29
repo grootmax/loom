@@ -1,0 +1,15 @@
+# spec: §3.3 rule 3
+enum Shape
+  Circle(Int)
+  Rectangle(Int, Int)
+end
+
+def main
+  s = Shape.Rectangle(10, 20)
+  case s
+  in Shape.Rectangle(w, h) then
+    puts w
+    puts h
+  else ()
+  end
+end

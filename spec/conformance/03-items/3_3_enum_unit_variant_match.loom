@@ -1,0 +1,15 @@
+# spec: §3.3 rule 1
+enum Color
+  Red
+  Green
+  Blue
+end
+
+def main
+  c = Color.Green
+  case c
+  in Color.Red then puts "red"
+  in Color.Green then puts "green"
+  in Color.Blue then puts "blue"
+  end
+end

@@ -1,0 +1,8 @@
+# spec: §3.8
+const SECONDS_PER_MINUTE: Int = 60
+const MINUTES_PER_HOUR: Int = 60
+const SECONDS_PER_HOUR: Int = SECONDS_PER_MINUTE * MINUTES_PER_HOUR
+
+def main
+  puts SECONDS_PER_HOUR
+end

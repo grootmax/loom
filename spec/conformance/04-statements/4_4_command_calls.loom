@@ -1,0 +1,8 @@
+# spec: §4.4
+def greet(name: String, count: Int)
+  puts "#{name}: #{count}"
+end
+
+def main
+  greet "hello", 3
+end

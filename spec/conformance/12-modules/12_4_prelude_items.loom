@@ -1,0 +1,15 @@
+# spec: §12.4
+def main
+  opt: Option[Int] = Some(42)
+  res: Result[Int, String] = Ok(100)
+
+  case opt
+  in Some(v) then puts v
+  in None then ()
+  end
+
+  case res
+  in Ok(v) then puts v
+  in Err(_) then ()
+  end
+end
