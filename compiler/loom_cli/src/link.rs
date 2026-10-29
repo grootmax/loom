@@ -55,8 +55,9 @@ fn system_libs() -> &'static [&'static str] {
             "userenv.lib",
             "ws2_32.lib",
             "bcrypt.lib",
+            "dbghelp.lib",
+            "synchronization.lib",
             "msvcrt.lib",
-            "legacy_stdio_definitions.lib",
         ]
     } else {
         &["-lpthread", "-lm", "-lc"]

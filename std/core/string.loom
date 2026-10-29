@@ -117,3 +117,9 @@ end
 impl Display for String
   def to_string -> String = value_clone(self)
 end
+
+## A string is an error whose message is the string, so `main` can return
+## `Result[Unit, String]` (spec §14.2).
+impl Error for String
+  def message -> String = value_clone(self)
+end

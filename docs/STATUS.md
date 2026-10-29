@@ -33,10 +33,11 @@ _Last updated: 2026-10-28_
 
 ## In progress
 
-- Phase 1 closure: a 24 CPU-hour run of a mutation fuzzer over lexer, parser and
-  formatter (2 formatter bugs found and fixed so far); merging Jules's Phase 1 PRs.
-- Phase 2: conformance coverage of every Phase 2 spec section (cases for §3–§10 exist;
-  more are being written), diagnostic snapshot tests, the diagnostic renderer.
+- Phase 3 exit: native executables checked on every Tier 1 host in CI (Windows links with
+  MSVC's `link.exe`), Valgrind over native executables, per-field drop flags, the Phase 3
+  report.
+- Conformance for §8 ownership and rich CLI diagnostics (Jules PRs #25, #27); nightly
+  fuzzing (#29).
 
 ## Known limitations
 
