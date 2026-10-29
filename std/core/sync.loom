@@ -3,7 +3,7 @@
 
 extern "intrinsic"
   def mutex_new[T](own value: T) -> Mutex[T]
-  def mutex_lock[T, R](mutex: Mutex[T], f: FnMut(T) -> R) -> R
+  def mutex_lock[T, R](mutex: Mutex[T], f: FnOnce(T) -> R) -> R
   def atomic_new(value: Int) -> AtomicInt
   def atomic_op(atomic: AtomicInt, operation: Int, a: Int, b: Int) -> Int
   def shared_new[T](own value: T) -> Shared[T]
@@ -20,7 +20,7 @@ pub struct Mutex[T]
 
   ## Waits until no other task holds the lock, then calls `f` with exclusive access to
   ## the value and returns its result.
-  pub def lock[R](f: FnMut(T) -> R) -> R = mutex_lock(self, f)
+  pub def lock[R](f: FnOnce(T) -> R) -> R = mutex_lock(self, f)
 end
 
 ## An integer that tasks update atomically.

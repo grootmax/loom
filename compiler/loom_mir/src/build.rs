@@ -107,6 +107,9 @@ struct Builder<'a> {
     owning_uses: HashSet<BindingId>,
     /// Closure expressions in owning positions (escaping, spec §8.4).
     escaping_closures: HashSet<ExprId>,
+    /// Closures passed to `spawn` on the parameter of a `scope` block (spec §11.1 rule 3):
+    /// they capture bindings from outside the block by reference, the others by move.
+    scoped_spawns: HashSet<ExprId>,
     /// Closures found while building, to build next.
     closures: Vec<Job>,
     env: Env,
@@ -174,6 +177,7 @@ impl<'a> Builder<'a> {
             loops: Vec::new(),
             owning_uses: HashSet::new(),
             escaping_closures: HashSet::new(),
+            scoped_spawns: HashSet::new(),
             closures: Vec::new(),
             env,
             stmt_temps: vec![Vec::new()],
@@ -610,6 +614,7 @@ impl<'a> Builder<'a> {
     /// Records which bindings are used in owning positions and which closures escape
     /// (spec §8.1 rule 2, §8.4 rule 1).
     fn analyze_owning(&mut self) {
+        self.find_scoped_spawns();
         let roots: Vec<ExprId> = self
             .body
             .root
@@ -618,6 +623,63 @@ impl<'a> Builder<'a> {
             .collect();
         for root in roots {
             self.walk_owning(root, true);
+        }
+    }
+
+    /// The lang name of the function a call expression calls, if any.
+    fn call_lang(&self, expr: ExprId) -> Option<&'a str> {
+        match self.typed.exprs.get(&expr) {
+            Some(ExprInfo::Call {
+                target: CallTarget::Fn { def, .. } | CallTarget::Trait { method: def, .. },
+                ..
+            }) => self.cx.hir.def(*def).lang(),
+            _ => None,
+        }
+    }
+
+    /// Finds the closures passed to `s.spawn` where `s` is the parameter of a closure
+    /// passed to `scope` (spec §11.1 rule 3).
+    fn find_scoped_spawns(&mut self) {
+        let body = self.body;
+        let mut scope_params: HashSet<BindingId> = HashSet::new();
+        for (index, expr) in body.exprs.iter().enumerate() {
+            let id = ExprId(u32::try_from(index).unwrap_or(0));
+            let (Expr::Call { args, .. } | Expr::MethodCall { args, .. }) = expr else {
+                continue;
+            };
+            if self.call_lang(id) != Some("scope") {
+                continue;
+            }
+            for arg in args {
+                if let Expr::Closure { params, .. } = body.expr(arg.value) {
+                    for param in params.iter().flatten() {
+                        let mut bound = HashSet::new();
+                        collect_pattern_bindings(body, param.pat, &mut bound);
+                        scope_params.extend(bound.into_iter().map(|b| self.typed.canonical(b)));
+                    }
+                }
+            }
+        }
+        for (index, expr) in body.exprs.iter().enumerate() {
+            let id = ExprId(u32::try_from(index).unwrap_or(0));
+            let Expr::MethodCall { receiver, args, .. } = expr else {
+                continue;
+            };
+            if self.call_lang(id) != Some("scope_spawn") {
+                continue;
+            }
+            let on_scope_param = matches!(
+                self.typed.exprs.get(receiver),
+                Some(ExprInfo::Local(b)) if scope_params.contains(&self.typed.canonical(*b))
+            );
+            if !on_scope_param {
+                continue;
+            }
+            for arg in args {
+                if matches!(body.expr(arg.value), Expr::Closure { .. }) {
+                    self.scoped_spawns.insert(arg.value);
+                }
+            }
         }
     }
 
@@ -649,7 +711,7 @@ impl<'a> Builder<'a> {
             Expr::Closure {
                 body: closure_body, ..
             } => {
-                if owning {
+                if owning && !self.scoped_spawns.contains(&expr) {
                     self.escaping_closures.insert(expr);
                 }
                 self.walk_owning(*closure_body, true);
@@ -2414,7 +2476,15 @@ impl<'a> Builder<'a> {
                 continue;
             }
             let ty = self.typed.binding_tys[b.index()];
-            let by_ref = if escaping {
+            let by_ref = if self.scoped_spawns.contains(&expr) {
+                // Bindings from outside the `scope` block (captures of the block's closure)
+                // by reference; those declared in the block by move (spec §11.1 rule 3).
+                self.mir
+                    .captures
+                    .iter()
+                    .any(|c| c.binding == b)
+                    .then(|| mutated.contains(&b))
+            } else if escaping {
                 None
             } else {
                 Some(mutated.contains(&b))
