@@ -1,0 +1,14 @@
+# spec: §8.3 rule 6
+def extract(own opt: Option[String]) -> String
+  case opt
+  in Some(s)
+    s2 = s
+    s2
+  in None
+    "default"
+  end
+end
+
+def main
+  puts extract(Some("hello"))
+end

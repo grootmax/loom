@@ -1,0 +1,5 @@
+# spec: §8.3 rule 1
+def return_local(dummy: String) -> ref String
+  local = "hello"
+  local
+end

@@ -1,0 +1,7 @@
+# spec: §8.1 rule 3
+def main
+  var s = "first"
+  s2 = s
+  s = "second"
+  puts s
+end

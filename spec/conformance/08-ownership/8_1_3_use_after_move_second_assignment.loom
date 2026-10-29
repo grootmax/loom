@@ -1,0 +1,6 @@
+# spec: §8.1 rule 3
+def main
+  s = "hello"
+  var x = s
+  x = s
+end

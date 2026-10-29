@@ -1,0 +1,12 @@
+# spec: §8.1 rule 4
+struct Holder
+  name: String
+
+  def get_copy -> String = @name.clone
+end
+
+def main
+  h = Holder(name: "holder")
+  puts h.get_copy
+  puts h.name
+end

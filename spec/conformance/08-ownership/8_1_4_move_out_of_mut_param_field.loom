@@ -1,0 +1,8 @@
+# spec: §8.1 rule 4
+struct Holder
+  name: String
+end
+
+def extract(mut h: Holder)
+  n = h.name
+end

@@ -1,0 +1,4 @@
+# spec: §8.3 rule 3
+def pick_ref(a: String, b: String) -> ref String
+  a
+end

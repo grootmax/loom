@@ -1,0 +1,15 @@
+# spec: §8.1 rule 1
+@[derive(Copy, Clone)]
+enum Direction
+  North
+  South
+end
+
+def main
+  d1 = Direction.North
+  d2 = d1
+  case d1
+  in North then puts "north"
+  in South then puts "south"
+  end
+end

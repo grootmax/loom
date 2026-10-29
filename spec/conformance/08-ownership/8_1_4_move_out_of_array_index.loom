@@ -1,0 +1,5 @@
+# spec: §8.1 rule 4
+def main
+  arr = ["hello", "world"]
+  elem = arr[0]
+end

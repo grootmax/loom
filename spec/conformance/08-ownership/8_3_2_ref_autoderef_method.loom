@@ -1,0 +1,14 @@
+# spec: §8.3 rule 2
+struct Holder
+  name: String
+
+  def name_ref -> ref String
+    self.name
+  end
+end
+
+def main
+  h = Holder(name: "testing")
+  r = h.name_ref
+  puts r.length
+end

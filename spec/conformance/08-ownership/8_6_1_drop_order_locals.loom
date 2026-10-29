@@ -1,0 +1,7 @@
+# spec: §8.6 rule 1
+def main
+  a = "first"
+  b = "second"
+  puts a
+  puts b
+end

@@ -1,0 +1,7 @@
+# spec: §8.1 rule 4
+def main
+  arr = ["item0", "item1"]
+  elem = arr[0].clone
+  puts elem
+  puts arr.length
+end
