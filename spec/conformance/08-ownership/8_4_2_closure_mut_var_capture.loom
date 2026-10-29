@@ -1,4 +1,4 @@
-# spec: §8.4 rule 2
+# spec: §8.4 rule 1 (a binding initializer is an owning position, §8.1 rule 2)
 def main
   var count = 0
   increment = { || count += 1 }
