@@ -34,9 +34,15 @@ jobs:
         run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2
       - name: Print seed to step summary
-        run: echo "Seed: ${{ github.run_id }}${{ matrix.index }}" >> $GITHUB_STEP_SUMMARY
+        run: echo "Seed: ${{ github.run_id }}${{ matrix.index }}" >> "$GITHUB_STEP_SUMMARY"
       - name: Run fuzzer
-        run: cargo run --release -p loom_fuzz -- --target all --seconds ${{ inputs.seconds || '21000' }} --seed ${{ github.run_id }}${{ matrix.index }} --out target/fuzz
+        # The dispatch input reaches the shell only as a validated number.
+        env:
+          SECONDS_INPUT: ${{ inputs.seconds || '21000' }}
+          SEED: ${{ github.run_id }}${{ matrix.index }}
+        run: |
+          case "$SECONDS_INPUT" in ''|*[!0-9]*) echo "seconds must be a number" >&2; exit 2;; esac
+          cargo run --release -p loom_fuzz -- --target all --seconds "$SECONDS_INPUT" --seed "$SEED" --out target/fuzz
       - name: Upload crashers artifact
         if: failure()
         uses: actions/upload-artifact@v4
