@@ -10,7 +10,6 @@ All notable changes to the Loom toolchain are recorded here. The format follows
 ### Added
 - Phase 3 part 1: `ref T` types, MIR (`loom check --dump=mir`) and the ownership and
   borrow checker (E0500–E0504), ADR 0020 and normative spec §8.
-- ADR 0021 (native backend and runtime) and the `loom_runtime` C ABI.
 - Phase reports for Phases 1 and 2 (`docs/reports/`).
 
 ### Changed

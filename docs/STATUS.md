@@ -39,7 +39,7 @@ _Last updated: 2026-10-29_
 ## In progress
 
 - Phase 3 part 2: the Cranelift backend and the C-ABI runtime (ADR 0021). The runtime
-  library (`runtime/`) exists; the code generator, `loom build`, drops and the
+  library exists on the `phase3/native` branch; the code generator, `loom build`, drops and the
   differential test are being written.
 - Conformance for §8 ownership, error explanations for E02xx–E05xx, and rich CLI
   diagnostics (Jules PRs #25–#27); runtime tests under Miri (task 0022); nightly fuzzing
@@ -59,9 +59,9 @@ _Last updated: 2026-10-29_
 
 ## Written down (design, not implementation)
 
-- ADRs 0001–0021 (`docs/adr/`), including the ownership model (0005), concurrency (0006),
-  the front-end design (0018), semantic analysis (0019), MIR and ownership checking
-  (0020) and the native backend (0021).
+- ADRs 0001–0020 (`docs/adr/`), including the ownership model (0005), concurrency (0006),
+  the front-end design (0018), semantic analysis (0019), and MIR and ownership checking
+  (0020).
 - Spec: §2–§10, §12.1–§12.2, §12.4 and §14 are normative; §11, §12.3 and §13 are
   outlines.
 
