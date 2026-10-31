@@ -88,9 +88,38 @@ impl Cx<'_> {
             TyKind::String | TyKind::Bytes => true,
             TyKind::Adt(def, _) => {
                 let lang = self.hir.def(def).lang();
-                matches!(lang, Some("Array" | "Map"))
+                matches!(
+                    lang,
+                    Some(
+                        "Array"
+                            | "Map"
+                            | "Chan"
+                            | "Scope"
+                            | "Task"
+                            | "Mutex"
+                            | "Shared"
+                            | "AtomicInt"
+                    )
+                )
             }
             _ => false,
+        }
+    }
+
+    /// The lang name of a concurrency handle type (`Chan`, `Task`, `Mutex`, `Shared`,
+    /// `AtomicInt`, `Scope`), if `ty` is one.
+    pub fn concurrency_handle(&self, ty: Ty) -> Option<&'static str> {
+        match self.interner().kind(ty) {
+            TyKind::Adt(def, _) => match self.hir.def(def).lang()? {
+                "Chan" => Some("chan"),
+                "Scope" => Some("scope"),
+                "Task" => Some("task"),
+                "Mutex" => Some("mutex"),
+                "Shared" => Some("shared"),
+                "AtomicInt" => Some("atomic"),
+                _ => None,
+            },
+            _ => None,
         }
     }
 

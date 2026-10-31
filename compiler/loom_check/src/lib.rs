@@ -133,6 +133,14 @@ pub enum Coercion {
     Autoref,
     /// A value converted to `dyn Trait` (the target type).
     Unsize(Ty),
+    /// A method receiver reached through `Deref`: `deref` is called on the value and the
+    /// method is called on its `Target` (spec §7.4 rule 6).
+    Overloaded {
+        /// The receiver's type.
+        from: Ty,
+        /// `Deref.Target` of that type.
+        target: Ty,
+    },
 }
 
 /// What a path pattern refers to.
@@ -144,6 +152,25 @@ pub enum PatInfo {
     Struct(DefId),
     /// A constant (compared with `==`).
     Const(DefId),
+}
+
+/// The operation of a `select` arm (spec §11.3).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SelectOp {
+    /// `ch.recv`: the channel expression.
+    Recv {
+        /// The channel.
+        channel: ExprId,
+    },
+    /// `ch.send(value)`.
+    Send {
+        /// The channel.
+        channel: ExprId,
+        /// The value sent.
+        value: ExprId,
+    },
+    /// `Time.after(d)`: the operation expression evaluates to a `Timeout`.
+    Timer,
 }
 
 /// The result of checking one body.
@@ -165,6 +192,8 @@ pub struct TypedBody {
     pub assignments: HashMap<BindingId, BindingId>,
     /// Or-pattern binding aliases.
     pub aliases: HashMap<BindingId, BindingId>,
+    /// The operations of the arms of each `select`, in order.
+    pub selects: HashMap<ExprId, Vec<SelectOp>>,
 }
 
 impl TypedBody {

@@ -185,6 +185,8 @@ enum Shape {
     Array,
     Map,
     Ref(Ty),
+    /// A concurrency handle (`chan`, `task`, `mutex`, `shared`, `atomic`, `scope`).
+    Handle(&'static str),
     Record(Vec<(u32, Ty)>, Option<DefId>),
     Enum(DefId, Vec<Vec<(u32, Ty)>>),
     Callable,
@@ -203,6 +205,9 @@ fn shape(cx: &Cx<'_>, ty: Ty) -> Shape {
         TyKind::Tuple(_) => Shape::Record(cx.layout(ty).fields, None),
         TyKind::Callable { .. } => Shape::Callable,
         TyKind::Dyn(..) => Shape::Dyn,
+        TyKind::Adt(_, _) if cx.concurrency_handle(ty).is_some() => {
+            Shape::Handle(cx.concurrency_handle(ty).unwrap_or("scope"))
+        }
         TyKind::Adt(def, _) => match cx.hir.def(def).lang() {
             Some("Array") => Shape::Array,
             Some("Map") => Shape::Map,
@@ -280,7 +285,7 @@ fn drop_glue(fx: &mut Fx<'_, '_, '_, '_>, ty: Ty, p: Value) -> Result<()> {
     let ptr = fx.ptr();
     let word = fx.word();
     match shape(fx.cx(), ty) {
-        Shape::String | Shape::Array | Shape::Map => fx.drop_at(p, ty)?,
+        Shape::String | Shape::Array | Shape::Map | Shape::Handle(_) => fx.drop_at(p, ty)?,
         Shape::Record(fields, _) => {
             for (offset, t) in fields {
                 let at = fx.offset(p, offset);
@@ -338,6 +343,17 @@ fn clone_glue(fx: &mut Fx<'_, '_, '_, '_>, ty: Ty, s: Value, d: Value) -> Result
             };
             let handle = fx.load(ptr, s, 0);
             let copy = fx.rt1(name, &[handle])?;
+            fx.store(copy, d, 0);
+        }
+        Shape::Handle(kind) => {
+            let handle = fx.load(ptr, s, 0);
+            let copy = match kind {
+                "chan" => fx.rt1("loom_chan_clone", &[handle])?,
+                "mutex" => fx.rt1("loom_mutex_clone", &[handle])?,
+                "shared" => fx.rt1("loom_shared_clone", &[handle])?,
+                "atomic" => fx.rt1("loom_atomic_clone", &[handle])?,
+                _ => return unsupported(format!("copying a `{kind}` handle")),
+            };
             fx.store(copy, d, 0);
         }
         Shape::Record(fields, _) => {
@@ -519,6 +535,11 @@ fn eq_glue(fx: &mut Fx<'_, '_, '_, '_>, ty: Ty, a: Value, b: Value) -> Result<Va
             fx.b.switch_to_block(done);
             fx.load(types::I8, result, 0)
         }
+        Shape::Handle(_) => {
+            let x = fx.load(ptr, a, 0);
+            let y = fx.load(ptr, b, 0);
+            fx.b.ins().icmp(IntCC::Equal, x, y)
+        }
         Shape::Callable | Shape::Dyn => fx.b.ins().iconst(types::I8, 0),
     })
 }
@@ -643,7 +664,9 @@ fn cmp_glue(fx: &mut Fx<'_, '_, '_, '_>, ty: Ty, a: Value, b: Value) -> Result<V
             fx.b.switch_to_block(done);
             fx.load(types::I8, result, 0)
         }
-        Shape::Unit | Shape::Map | Shape::Callable | Shape::Dyn => fx.b.ins().iconst(types::I8, 0),
+        Shape::Unit | Shape::Map | Shape::Callable | Shape::Dyn | Shape::Handle(_) => {
+            fx.b.ins().iconst(types::I8, 0)
+        }
     })
 }
 
@@ -727,6 +750,10 @@ fn hash_glue(fx: &mut Fx<'_, '_, '_, '_>, ty: Ty, a: Value) -> Result<Value> {
                 Ok(())
             })?;
             fx.load(types::I64, result, 0)
+        }
+        Shape::Handle(_) => {
+            let h = fx.load(ptr, a, 0);
+            fx.int_convert(h, ptr, types::I64, false)
         }
         Shape::Unit | Shape::Map | Shape::Callable | Shape::Dyn => fx.b.ins().iconst(types::I64, 0),
     })
@@ -886,6 +913,17 @@ fn debug_glue(fx: &mut Fx<'_, '_, '_, '_>, ty: Ty, a: Value, out: Value) -> Resu
             })?;
         }
         Shape::Callable => fx.push_text(out, "<function>")?,
+        Shape::Handle(kind) => {
+            let name = match kind {
+                "chan" => "Chan",
+                "task" => "Task",
+                "mutex" => "Mutex",
+                "shared" => "Shared",
+                "atomic" => "AtomicInt",
+                _ => "Scope",
+            };
+            fx.push_text(out, &format!("<{name}>"))?;
+        }
         Shape::Dyn => fx.push_text(out, "<dyn>")?,
     }
     let _ = panic_trap;

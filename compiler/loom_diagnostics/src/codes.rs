@@ -153,6 +153,9 @@ codes! {
     BORROW_CONFLICT = "E0502", "Conflicting borrow, or use of a borrowed place";
     BORROW_ESCAPES = "E0503", "Borrow escapes: stored, moved to `own`, or captured by an escaping closure";
     REF_RETURN_WITHOUT_SOURCE = "E0504", "`ref` return type without an elided source";
+
+    // Concurrency errors (spec Appendix C.7).
+    SELECT_ARM = "E0603", "A `select` arm is not a channel operation or timer";
 }
 
 /// Outer doc comment not followed by an item, field, variant or method (spec §2.4.2).

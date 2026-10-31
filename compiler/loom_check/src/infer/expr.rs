@@ -207,6 +207,44 @@ impl InferCtxt<'_> {
                     Some(else_branch) => self.branches(&[then_branch, else_branch], expected),
                 }
             }
+            Expr::Select { arms, else_branch } => {
+                let mut ops = Vec::new();
+                for arm in arms {
+                    let op_ty = self.infer(arm.operation);
+                    let op = self.select_op(arm.operation);
+                    match (op, arm.pat) {
+                        (Some(crate::SelectOp::Recv { .. }), Some(p)) => self.check_pat(p, op_ty),
+                        (Some(crate::SelectOp::Send { .. } | crate::SelectOp::Timer), Some(p)) => {
+                            self.error(
+                                Diagnostic::error(
+                                    codes::SELECT_ARM,
+                                    self.body.pat_span(p),
+                                    "only a `recv` arm receives into a pattern".to_owned(),
+                                )
+                                .with_label("remove the pattern and `=`"),
+                            );
+                        }
+                        _ => {}
+                    }
+                    if op.is_none() {
+                        self.error(
+                            Diagnostic::error(
+                                codes::SELECT_ARM,
+                                self.span(arm.operation),
+                                "a `select` arm waits on `ch.recv`, `ch.send(value)` or `Time.after(duration)`".to_owned(),
+                            )
+                            .with_label("not a channel operation or timer"),
+                        );
+                    }
+                    ops.push(op.unwrap_or(crate::SelectOp::Timer));
+                    self.infer(arm.body);
+                }
+                if let Some(e) = else_branch {
+                    self.infer(*e);
+                }
+                self.selects.insert(id, ops);
+                interner.unit()
+            }
             Expr::Case {
                 scrutinee,
                 arms,
@@ -1135,6 +1173,32 @@ impl InferCtxt<'_> {
                 );
                 interner.error()
             }
+        }
+    }
+
+    /// The operation a `select` arm waits on (spec §11.3), from the call its operation
+    /// expression makes.
+    fn select_op(&self, operation: ExprId) -> Option<crate::SelectOp> {
+        let lang = match self.exprs.get(&operation) {
+            Some(ExprInfo::Call {
+                target: CallTarget::Fn { def, .. } | CallTarget::Trait { method: def, .. },
+                ..
+            }) => self.cx.hir.def(*def).lang(),
+            _ => None,
+        }?;
+        match (lang, self.body.expr(operation)) {
+            (
+                "chan_recv",
+                Expr::MethodCall { receiver, .. } | Expr::Field { base: receiver, .. },
+            ) => Some(crate::SelectOp::Recv { channel: *receiver }),
+            ("chan_send", Expr::MethodCall { receiver, args, .. }) => {
+                args.first().map(|a| crate::SelectOp::Send {
+                    channel: *receiver,
+                    value: a.value,
+                })
+            }
+            ("time_after", _) => Some(crate::SelectOp::Timer),
+            _ => None,
         }
     }
 }

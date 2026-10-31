@@ -4,9 +4,9 @@ use crate::{
     Arg, AssocTypeData, Attr, AttrArg, BinaryOp, Binding, BindingId, BindingKind, Body, BodyId,
     CaseArm, ClosureParam, ConstData, DefData, DefId, DefKind, EnumData, Expr, ExprId, FieldData,
     FnData, FnKind, GenericParam, Generics, Hir, ImplData, InterpolationPart, Literal, Mode,
-    ModuleData, Name, Package, ParamData, Pat, PatId, Path, PathSegment, Stmt, StructData,
-    TraitData, TypeAliasData, TypeRef, TypeRefKind, UnaryOp, UseItem, VariantData, VariantFields,
-    Visibility,
+    ModuleData, Name, Package, ParamData, Pat, PatId, Path, PathSegment, SelectArm, Stmt,
+    StructData, TraitData, TypeAliasData, TypeRef, TypeRefKind, UnaryOp, UseItem, VariantData,
+    VariantFields, Visibility,
 };
 use loom_ast::{self as ast, AstNode};
 use loom_span::{FileId, Span, TextRange};
@@ -1091,7 +1091,27 @@ impl BodyLowerer {
                 let body = self.lower_opt_block(f.body(), range);
                 Expr::For { pat, iter, body }
             }
-            ast::Expr::SelectExpr(_) => Expr::Unsupported("`select` (Phase 4)"),
+            ast::Expr::SelectExpr(select) => {
+                let arms = select
+                    .arms()
+                    .map(|arm| {
+                        let r = arm.syntax().text_range();
+                        let pat = arm.pattern().map(|p| self.lower_pat(&p));
+                        let operation = self.lower_opt(arm.operation(), r);
+                        let body = self.lower_opt_block(arm.body(), r);
+                        SelectArm {
+                            pat,
+                            operation,
+                            body,
+                        }
+                    })
+                    .collect();
+                let else_branch = select.else_branch().map(|e| {
+                    let r = e.syntax().text_range();
+                    self.lower_opt_block(e.body(), r)
+                });
+                Expr::Select { arms, else_branch }
+            }
             ast::Expr::UnsafeExpr(_) => Expr::Unsupported("`unsafe` blocks (Phase 3)"),
             ast::Expr::ReturnExpr(r) => Expr::Return(r.value().map(|v| self.lower_expr(&v))),
             ast::Expr::BreakExpr(b) => Expr::Break(b.value().map(|v| self.lower_expr(&v))),
