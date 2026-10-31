@@ -1,0 +1,75 @@
+# Struct-heavy n-body particle update benchmark.
+
+@[derive(Copy, Eq)]
+struct Vector3D
+  x: Int
+  y: Int
+  z: Int
+end
+
+@[derive(Copy, Eq)]
+struct Particle
+  pos: Vector3D
+  vel: Vector3D
+  mass: Int
+end
+
+def update_bodies(mut bodies: Array[Particle], steps: Int) -> Int
+  var step = 0
+  while step < steps
+    var i = 0
+    while i < bodies.length
+      var b1 = bodies[i]
+      var fx = 0
+      var fy = 0
+      var fz = 0
+      var j = 0
+      while j < bodies.length
+        if i != j
+          var b2 = bodies[j]
+          var dx = b2.pos.x - b1.pos.x
+          var dy = b2.pos.y - b1.pos.y
+          var dz = b2.pos.z - b1.pos.z
+          var dist_sq = dx * dx + dy * dy + dz * dz + 1
+          fx += dx * b2.mass / dist_sq
+          fy += dy * b2.mass / dist_sq
+          fz += dz * b2.mass / dist_sq
+        end
+        j += 1
+      end
+      var new_vx = b1.vel.x + fx
+      var new_vy = b1.vel.y + fy
+      var new_vz = b1.vel.z + fz
+      var new_px = b1.pos.x + new_vx
+      var new_py = b1.pos.y + new_vy
+      var new_pz = b1.pos.z + new_vz
+      bodies[i] = Particle(
+        pos: Vector3D(x: new_px, y: new_py, z: new_pz),
+        vel: Vector3D(x: new_vx, y: new_vy, z: new_vz),
+        mass: b1.mass
+      )
+      i += 1
+    end
+    step += 1
+  end
+
+  var checksum = 0
+  for b in bodies
+    checksum += b.pos.x + b.pos.y + b.pos.z + b.vel.x + b.vel.y + b.vel.z
+  end
+  checksum
+end
+
+def main
+  var bodies = Array[Particle].new
+  var i = 0
+  while i < 100
+    p = Vector3D(x: i * 10, y: i * -5, z: i * 2)
+    v = Vector3D(x: 1, y: -1, z: 0)
+    bodies.push(Particle(pos: p, vel: v, mass: 50 + i))
+    i += 1
+  end
+
+  checksum = update_bodies(bodies, 1000)
+  puts "checksum: #{checksum}"
+end
