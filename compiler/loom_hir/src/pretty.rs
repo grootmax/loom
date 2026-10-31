@@ -214,6 +214,27 @@ fn expr(body: &Body, id: ExprId, depth: usize, out: &mut String) {
                 expr(body, *e, depth, out);
             }
         }
+        Expr::Select { arms, else_branch } => {
+            out.push_str("select");
+            for arm in arms {
+                out.push('\n');
+                indent(depth + 1, out);
+                out.push_str("when ");
+                if let Some(p) = arm.pat {
+                    pat(body, p, out);
+                    out.push_str(" = ");
+                }
+                expr(body, arm.operation, depth + 1, out);
+                out.push_str(" => ");
+                expr(body, arm.body, depth + 1, out);
+            }
+            if let Some(e) = else_branch {
+                out.push('\n');
+                indent(depth + 1, out);
+                out.push_str("else ");
+                expr(body, *e, depth + 1, out);
+            }
+        }
         Expr::Case {
             scrutinee,
             arms,

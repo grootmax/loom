@@ -7,6 +7,7 @@
 mod eval;
 mod intrinsics;
 mod ops;
+mod tasks;
 mod value;
 
 pub use value::{Place, Value};
@@ -40,9 +41,10 @@ pub enum Flow {
 pub type Eval<T> = Result<T, Flow>;
 
 /// How a program ended.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub enum Outcome {
     /// `main` returned normally.
+    #[default]
     Finished,
     /// `main` returned `Err`; the message to print.
     Error(String),
@@ -72,6 +74,11 @@ pub struct Interp<'a> {
     consts: RefCell<HashMap<DefId, Value>>,
     /// Closure expressions in owning positions, which capture by copy (spec §8.4).
     escaping: std::collections::HashSet<(BodyId, ExprId)>,
+    /// The interpreter itself with a `'static` lifetime, for the work of spawned tasks
+    /// (set by [`Interp::run_main_scheduled`]).
+    pub(crate) this: std::cell::OnceCell<&'static Interp<'static>>,
+    /// The first panic of a spawned task, which ends the program (ADR 0022 §3).
+    pub(crate) task_panic: RefCell<Option<(String, Option<Span>)>>,
 }
 
 impl<'a> Interp<'a> {
@@ -90,6 +97,8 @@ impl<'a> Interp<'a> {
             depth: Cell::new(0),
             consts: RefCell::new(HashMap::new()),
             escaping: std::collections::HashSet::new(),
+            this: std::cell::OnceCell::new(),
+            task_panic: RefCell::new(None),
         }
     }
 
@@ -165,6 +174,12 @@ impl<'a> Interp<'a> {
         }
     }
 
+    /// Records the first panic of a spawned task and ends the program.
+    pub(crate) fn task_panicked(&self, message: String, span: Option<Span>) -> ! {
+        self.task_panic.borrow_mut().get_or_insert((message, span));
+        loom_runtime::sched::abort()
+    }
+
     /// Runs `main` (spec §14).
     pub fn run_main(&self, main: DefId) -> Outcome {
         let result = self.call_fn(main, &Subst::new(), None, Vec::new(), None);
@@ -198,6 +213,45 @@ impl<'a> Interp<'a> {
             None,
         )?;
         Ok(value.as_str().to_owned())
+    }
+
+    /// Runs `main` as the first task of the deterministic scheduler (ADR 0022 §9), so that
+    /// the program may use tasks, channels and timers. `LOOM_SCHED=deterministic:SEED`
+    /// chooses the seed.
+    pub fn run_main_scheduled(&'static self, main: DefId) -> Outcome {
+        self.run_scheduled(move |me| me.run_main(main))
+    }
+
+    /// Runs the `@[test]` functions under the scheduler (see [`Interp::run_tests`]).
+    pub fn run_tests_scheduled(&'static self, root: DefId) -> bool {
+        self.run_scheduled(move |me| me.run_tests(root))
+    }
+
+    fn run_scheduled<T: Default + 'static>(
+        &'static self,
+        work: impl FnOnce(&'static Self) -> T + 'static,
+    ) -> T {
+        use loom_runtime::sched::{Mode, run};
+        let _ = self.this.set(self);
+        // The interpreter's values stay on one thread: always deterministic mode.
+        let mode = match Mode::from_env(Mode::Deterministic { seed: 0 }) {
+            Mode::Parallel { .. } => Mode::Deterministic { seed: 0 },
+            deterministic @ Mode::Deterministic { .. } => deterministic,
+        };
+        let result: Rc<RefCell<Option<T>>> = Rc::new(RefCell::new(None));
+        let out = Rc::clone(&result);
+        run(mode, 64 << 20, 1 << 30, move || {
+            *out.borrow_mut() = Some(work(self));
+        });
+        let value = result.borrow_mut().take();
+        value.unwrap_or_default()
+    }
+
+    /// The panic of a spawned task, if one ended the program.
+    pub fn take_task_panic(&self) -> Option<String> {
+        let (message, span) = self.task_panic.borrow_mut().take()?;
+        self.flush();
+        Some(self.panic_message(&message, span))
     }
 
     /// Runs every `@[test]` function of the root module and its inline modules, writing

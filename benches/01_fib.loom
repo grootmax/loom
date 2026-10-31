@@ -1,0 +1,19 @@
+# Recursive Fibonacci computation.
+
+def fib(n: Int) -> Int
+  if n <= 1
+    n
+  else
+    fib(n - 1) + fib(n - 2)
+  end
+end
+
+def main
+  var sum = 0
+  var i = 0
+  while i < 20
+    sum += fib(30)
+    i += 1
+  end
+  puts "checksum: #{sum}"
+end

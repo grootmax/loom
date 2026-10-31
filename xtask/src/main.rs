@@ -3,6 +3,7 @@
 //! This crate uses only the Rust standard library, so it builds anywhere the
 //! pinned toolchain does. See `CONTRIBUTING.md` for when to run each command.
 
+mod bench;
 mod conformance;
 mod core_tests;
 mod differential;
@@ -17,6 +18,7 @@ const HELP: &str = "\
 cargo xtask <command>
 
 COMMANDS:
+  bench       Run the benchmark suite
   ci          Run every check CI runs: fmt, clippy, test, doc, conformance, examples, core-tests, deny
   conformance Run spec/conformance against the implementation
   core-tests  Run loom test on every file in std/core/tests
@@ -30,6 +32,7 @@ COMMANDS:
 fn main() -> ExitCode {
     let command = std::env::args().nth(1);
     let result = match command.as_deref() {
+        Some("bench") => bench::run(&std::env::args().skip(2).collect::<Vec<_>>()),
         Some("ci") => ci(),
         Some("conformance") => conformance::run(),
         Some("core-tests") => core_tests::run(),

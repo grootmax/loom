@@ -1,0 +1,90 @@
+##! Tasks, scopes and channels (spec §11.1–§11.2, §11.6, ADR 0022).
+
+use core.io.panic
+use core.time.Duration
+
+extern "intrinsic"
+  def scope_run[T](deadline: Int, body: FnOnce(Scope) -> T) -> T
+  def scope_spawn[T](scope: Scope, own work: FnOnce() -> T) -> Task[T]
+  def scope_cancel(scope: Scope)
+  def scope_cancelled(scope: Scope) -> Bool
+  def task_join[T](own task: Task[T]) -> T
+  def task_detach(own work: FnOnce())
+  def task_yield()
+  def chan_new[T](capacity: Int) -> Chan[T]
+  def chan_send[T](channel: Chan[T], own value: T) -> Bool
+  def chan_recv[T](channel: Chan[T]) -> Option[T]
+  def chan_try_recv[T](channel: Chan[T]) -> Option[T]
+  def chan_close[T](channel: Chan[T])
+end
+
+## Runs `body` with a new scope and returns its result once every task spawned in the
+## scope has finished. With a `deadline`, the scope is cancelled when it passes
+## (spec §11.1, §11.4).
+@[lang("scope")]
+pub def scope[T](deadline: Duration = Duration.forever, body: FnOnce(Scope) -> T) -> T = scope_run(deadline.nanos, body)
+
+## A scope of structured concurrency: the handle passed to the block of `scope`.
+@[lang("Scope")]
+pub struct Scope
+  ## Starts a task running `work` and returns its handle. Inside the block of `scope`,
+  ## `work` may borrow bindings declared outside the `scope` expression (spec §11.1 rule 3).
+  @[lang("scope_spawn")]
+  pub def spawn[T](own work: FnOnce() -> T) -> Task[T] = scope_spawn(self, work)
+
+  ## Cancels the scope and the scopes inside it (spec §11.4).
+  pub def cancel = scope_cancel(self)
+
+  ## Whether the scope has been cancelled.
+  pub def cancelled -> Bool = scope_cancelled(self)
+end
+
+## A running task whose result has type `T`.
+@[lang("Task")]
+pub struct Task[T]
+  ## Waits for the task to finish and returns its result.
+  pub def own join -> T = task_join(self)
+
+  ## Starts a task that belongs to no scope (spec §11.6).
+  pub def self.detach(own work: FnOnce()) = task_detach(work)
+end
+
+## Lets other tasks run.
+pub def yield_now = task_yield()
+
+## A channel carrying values of type `T` between tasks (spec §11.2).
+@[lang("Chan")]
+pub struct Chan[T]
+  ## A channel holding up to `capacity` values; `0` is a rendezvous channel.
+  pub def self.new(capacity: Int = 0) -> Chan[T]
+    if capacity < 0
+      panic("a channel capacity cannot be negative")
+    end
+    chan_new(capacity)
+  end
+
+  ## Adds `value`, waiting while the channel is full. Returns `false` if the task's scope
+  ## is cancelled first.
+  @[lang("chan_send")]
+  pub def send(own value: T) -> Bool = chan_send(self, value)
+
+  ## Takes the oldest value, waiting while the channel is empty and open; `None` once the
+  ## channel is closed and empty, or when the task's scope is cancelled.
+  @[lang("chan_recv")]
+  pub def recv -> Option[T] = chan_recv(self)
+
+  ## Takes a value if one is available now.
+  pub def try_recv -> Option[T] = chan_try_recv(self)
+
+  ## Closes the channel. Values already in it can still be received.
+  pub def close = chan_close(self)
+
+  ## Receives every value until the channel is closed and empty.
+  pub def to_array -> Array[T]
+    var out: Array[T] = []
+    while chan_recv(self) in Some(value)
+      out.push(value)
+    end
+    out
+  end
+end

@@ -22,7 +22,7 @@ use crate::workspace_root;
 const IMPLEMENTED_UP_TO: u32 = 599;
 
 /// The current roadmap phase.
-pub const CURRENT_PHASE: u32 = 3;
+pub const CURRENT_PHASE: u32 = 4;
 
 /// Runs the suite and fails if any case does not match.
 pub fn run() -> Result<(), String> {
