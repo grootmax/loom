@@ -1,0 +1,7 @@
+# spec: §7.5 rule 1
+def main
+  x: Int = 10
+  zero: Int = 0
+  puts "before"
+  puts x / zero
+end

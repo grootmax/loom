@@ -1,0 +1,6 @@
+# spec: §7.5 rule 2
+def main
+  x: U8 = 1
+  puts "before"
+  puts x << 8
+end
