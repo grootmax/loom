@@ -1,0 +1,49 @@
+# Prime sieve over Array[Bool].
+
+def prime_sieve(limit: Int) -> Int
+  var is_prime = Array[Bool].new
+  var i = 0
+  while i <= limit
+    is_prime.push(true)
+    i += 1
+  end
+
+  if limit >= 0
+    is_prime[0] = false
+  end
+  if limit >= 1
+    is_prime[1] = false
+  end
+
+  var p = 2
+  while p * p <= limit
+    if is_prime[p]
+      var multiple = p * p
+      while multiple <= limit
+        is_prime[multiple] = false
+        multiple += p
+      end
+    end
+    p += 1
+  end
+
+  var checksum = 0
+  var idx = 0
+  while idx <= limit
+    if is_prime[idx]
+      checksum += idx
+    end
+    idx += 1
+  end
+  checksum
+end
+
+def main
+  var total = 0
+  var rep = 0
+  while rep < 8
+    total += prime_sieve(500000)
+    rep += 1
+  end
+  puts "checksum: #{total}"
+end
