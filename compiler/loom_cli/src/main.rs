@@ -581,25 +581,34 @@ fn run_on_this_thread(path: &std::path::Path, options: RunOptions) -> u8 {
             }
         }
     }
-    let stdout = std::io::stdout();
-    let out = Box::new(std::io::BufWriter::new(stdout.lock()));
+    // Tasks of the interpreted program hold the interpreter for the rest of the run, so
+    // it lives as long as the process (ADR 0022 §9).
+    let session: &'static Session = Box::leak(Box::new(session));
+    let analysis: &'static loom_driver::Analysis = Box::leak(Box::new(analysis));
+    let out = Box::new(std::io::BufWriter::new(std::io::stdout().lock()));
     let mut interp =
         loom_interp::Interp::new(&analysis.hir, &analysis.checked, session.sources(), out);
     if let Some(mir) = analysis.mir.as_ref() {
         interp = interp.with_mir(mir);
     }
+    let interp: &'static loom_interp::Interp<'static> = Box::leak(Box::new(interp));
     if tests {
-        return if interp.run_tests(analysis.root) {
-            0
-        } else {
-            101
-        };
+        let passed = interp.run_tests_scheduled(analysis.root);
+        if let Some(message) = interp.take_task_panic() {
+            eprintln!("{message}");
+            return 101;
+        }
+        return if passed { 0 } else { 101 };
     }
     let Some(main) = analysis.main() else {
         return 1;
     };
-    let outcome = interp.run_main(main);
+    let outcome = interp.run_main_scheduled(main);
     interp.flush();
+    if let Some(message) = interp.take_task_panic() {
+        eprintln!("{message}");
+        return 101;
+    }
     match &outcome {
         loom_interp::Outcome::Error(message) | loom_interp::Outcome::Panicked(message) => {
             eprintln!("{message}");

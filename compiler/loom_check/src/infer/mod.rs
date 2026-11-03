@@ -82,6 +82,7 @@ pub(crate) struct InferCtxt<'a> {
     operator_checks: Vec<OperatorCheck>,
     int_literals: Vec<(ExprId, u128, bool)>,
     cases: Vec<ExprId>,
+    selects: HashMap<ExprId, Vec<crate::SelectOp>>,
     irrefutable: Vec<(PatId, &'static str)>,
     self_ty: Option<Ty>,
     receiver: Option<Mode>,
@@ -125,6 +126,7 @@ pub(crate) fn infer_body(cx: &Ctx<'_>, id: BodyId, diagnostics: &mut Vec<Diagnos
         operator_checks: Vec::new(),
         int_literals: Vec::new(),
         cases: Vec::new(),
+        selects: HashMap::new(),
         irrefutable: Vec::new(),
         self_ty: sig.and_then(|s| s.self_ty),
         receiver: sig.and_then(|s| s.receiver),
@@ -640,6 +642,7 @@ impl<'a> InferCtxt<'a> {
             coercions: std::mem::take(&mut self.coercions),
             assignments: self.res.assignments.clone(),
             aliases: self.res.aliases.clone(),
+            selects: std::mem::take(&mut self.selects),
         };
         (typed, self.diagnostics)
     }

@@ -336,6 +336,9 @@ impl InferCtxt<'_> {
             (VariantTy::Unit, PayloadPat::None)
             | (VariantTy::Named(_) | VariantTy::Positional(_), PayloadPat::Positional([], true)) => {
             }
+            // A struct or variant without fields matches by its name alone (`Err(Cancelled)`).
+            (VariantTy::Named(f), PayloadPat::None) if f.is_empty() => {}
+            (VariantTy::Positional(t), PayloadPat::None) if t.is_empty() => {}
             (VariantTy::Positional(types), PayloadPat::Positional(pats, rest)) => {
                 if pats.len() > types.len() || (!rest && pats.len() != types.len()) {
                     self.shape_error(

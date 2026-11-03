@@ -1,10 +1,17 @@
 # spec: §11.3
-# phase: 4
 def main
-  ch = Ok(42)
-  res = select
-  when Ok(v) = ch then v
-  else 0
+  ch = Chan[Int].new(capacity: 1)
+  ch.send(42)
+  select
+  when Some(v) = ch.recv then puts v
+  else puts 0
   end
-  puts res
+  select
+  when Some(v) = ch.recv then puts v
+  else puts "empty"
+  end
+  ch.close
+  select
+  when result = ch.recv then puts "closed: #{result.is_none}"
+  end
 end

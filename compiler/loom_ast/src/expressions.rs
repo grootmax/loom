@@ -530,6 +530,12 @@ impl SelectExpr {
     pub fn arms(&self) -> impl Iterator<Item = SelectArm> + use<> {
         children(&self.0)
     }
+
+    /// The `else` arm.
+    #[must_use]
+    pub fn else_branch(&self) -> Option<ElseBranch> {
+        child(&self.0)
+    }
 }
 
 ast_node!(

@@ -1,0 +1,64 @@
+##! Synchronization and shared ownership: `Mutex`, `AtomicInt`, `Shared` (spec §8.5,
+##! §11.7).
+
+extern "intrinsic"
+  def mutex_new[T](own value: T) -> Mutex[T]
+  def mutex_lock[T, R](mutex: Mutex[T], f: FnOnce(T) -> R) -> R
+  def atomic_new(value: Int) -> AtomicInt
+  def atomic_op(atomic: AtomicInt, operation: Int, a: Int, b: Int) -> Int
+  def shared_new[T](own value: T) -> Shared[T]
+  def shared_clone[T](shared: Shared[T]) -> Shared[T]
+  def shared_get[T](shared: Shared[T]) -> ref T
+  def shared_count[T](shared: Shared[T]) -> Int
+end
+
+## A value that tasks take turns to access (spec §11.7 rule 2).
+@[lang("Mutex")]
+pub struct Mutex[T]
+  ## A mutex owning `value`.
+  pub def self.new(own value: T) -> Mutex[T] = mutex_new(value)
+
+  ## Waits until no other task holds the lock, then calls `f` with exclusive access to
+  ## the value and returns its result.
+  pub def lock[R](f: FnOnce(T) -> R) -> R = mutex_lock(self, f)
+end
+
+## An integer that tasks update atomically.
+@[lang("AtomicInt")]
+pub struct AtomicInt
+  ## An atomic integer holding `value`.
+  pub def self.new(value: Int) -> AtomicInt = atomic_new(value)
+
+  ## The current value.
+  pub def load -> Int = atomic_op(self, 0, 0, 0)
+
+  ## Replaces the value.
+  pub def store(value: Int) = atomic_op(self, 1, value, 0)
+
+  ## Adds `amount` and returns the previous value.
+  pub def add(amount: Int) -> Int = atomic_op(self, 2, amount, 0)
+
+  ## Replaces the value with `new` if it is `old`; returns whether it did.
+  pub def compare_exchange(old: Int, new: Int) -> Bool = atomic_op(self, 3, old, new) == 1
+end
+
+## A value with several owners, counted atomically (spec §8.5).
+@[lang("Shared")]
+pub struct Shared[T]
+  ## The first owner of `value`.
+  pub def self.new(own value: T) -> Shared[T] = shared_new(value)
+
+  ## The number of owners of the value.
+  pub def self.count(shared: Shared[T]) -> Int = shared_count(shared)
+end
+
+impl[T] Clone for Shared[T]
+  ## Another owner of the same value.
+  def clone -> Shared[T] = shared_clone(self)
+end
+
+impl[T] Deref for Shared[T]
+  type Target = T
+
+  def deref -> ref T = shared_get(self)
+end

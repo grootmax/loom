@@ -1,0 +1,98 @@
+# spec: §7.5 rule 1
+def print_opt[T: Display](opt: Option[T])
+  case opt
+  in Some(v) then puts "Some(#{v})"
+  in None then puts "None"
+  end
+end
+
+def main
+  min: I32 = I32.min_value
+  max: I32 = I32.max_value
+  puts min
+  puts max
+
+  a: I32 = 100
+  b: I32 = 20
+  c: I32 = 3
+  d: I32 = 12
+  neg_a: I32 = -100
+  neg_ten: I32 = -10
+  zero: I32 = 0
+  one: I32 = 1
+  two: I32 = 2
+  four: I32 = 4
+  six: I32 = 6
+  ten: I32 = 10
+  sixty_four: I32 = 64
+  neg_sixty_four: I32 = -64
+  v120: I32 = 120
+  v85: I32 = 85
+  v15: I32 = 15
+  v80: I32 = 80
+  v5: I32 = 5
+
+  # + - * / % near bounds
+  puts(max - one)
+  puts(min + one)
+  puts(a + b)
+  puts(a - b)
+  puts(ten * d)
+  puts(a / c)
+  puts(neg_a / c)
+  puts(a % c)
+  puts(neg_a % c)
+  puts(neg_ten)
+
+  # checked_*
+  print_opt(a.checked_add(b))
+  print_opt(max.checked_add(one))
+  print_opt(a.checked_sub(b))
+  print_opt(min.checked_sub(one))
+  print_opt(ten.checked_mul(d))
+  print_opt(max.checked_mul(two))
+  print_opt(a.checked_div(c))
+  print_opt(a.checked_div(zero))
+  print_opt(min.checked_div(-one))
+
+  # wrapping_*
+  puts max.wrapping_add(one)
+  puts min.wrapping_sub(one)
+  puts b.wrapping_mul(ten)
+
+  # saturating_*
+  puts max.saturating_add(ten)
+  puts min.saturating_sub(ten)
+
+  # bit operators
+  puts(v85 & v15)
+  puts(v80 | v5)
+  puts(v85 ^ v15)
+  puts(~zero)
+
+  # << and >> (including negative >>)
+  puts(one << six)
+  puts(sixty_four >> two)
+  puts(neg_sixty_four >> two)
+
+  # comparisons
+  puts(ten == ten)
+  puts(ten != ten)
+  puts(ten < b)
+  puts(ten <= ten)
+  puts(b > ten)
+  puts(ten >= b)
+
+  # min and max methods
+  puts(ten.min(b))
+  puts(ten.max(b))
+
+  # abs and pow
+  neg_42: I32 = -42
+  pos_42: I32 = 42
+  three: I32 = 3
+  exp_4: U32 = 4
+  puts(neg_42.abs)
+  puts(pos_42.abs)
+  puts(three.pow(exp_4))
+end

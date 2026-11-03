@@ -378,6 +378,10 @@ pub(crate) static EXPLANATIONS: &[(&str, &str)] = &[
         "E0504",
         include_str!("../../loom_diagnostics/explanations/E0504.md"),
     ),
+    (
+        "E0603",
+        include_str!("../../loom_diagnostics/explanations/E0603.md"),
+    ),
 ];
 
 /// Looks up an explanation by error code ID (case-insensitive).

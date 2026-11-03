@@ -116,3 +116,27 @@ What we learned:
 4. **Repository access is a single point of failure.** A personal access token without
    `contents: write` blocked every push and merge while agents kept producing PRs. Check
    push access at the start of each session.
+
+### Phases 2–3 (2026-10-29): tasks 0014–0023
+
+| Task | Result |
+|---|---|
+| 0014 items/statements conformance | First run completed without publishing a branch; re-dispatched, PR #31, clean |
+| 0015–0018 Phase 2 conformance and core tests | PRs #19–#22; phase-3 rule updates applied by the maintainer |
+| 0019 §8 ownership conformance | PR #27 |
+| 0020 explanations E02xx–E05xx | PR #26; needed a line in `explain.rs` outside its paths (the spec's omission) |
+| 0021 rich CLI diagnostics | PR #25 |
+| 0022 runtime tests under Miri | PR #30, closed after taking its test commit: it added `#![allow(clippy::pedantic)]` to a forbidden file; its ignored test found a real aliasing bug |
+| 0023 nightly fuzz workflow | PR #29; maintainer hardened input handling but missed a YAML error that made the file invalid (fixed in #34) |
+
+What we learned:
+
+1. **Task specs must name code that is on `main`.** Task 0022 tested a runtime that only
+   existed on an unmerged branch; Jules found the branch on its own. Dispatch tasks only
+   against merged code, or say which branch to start from.
+2. **"Completed" is not "published".** Check for the PR, not just the task state.
+3. **Lint workflow files.** A workflow that does not parse fails silently (no jobs, just
+   a failed run on every push). Run `actionlint` on every workflow change before merging.
+4. **Blanket lint allows hide real bugs.** AGENTS.md learned rule 5.
+5. **Strict up-to-date branch protection serializes merges.** Several green PRs wait
+   on each other; merge them one at a time (update branch, wait for CI, merge).

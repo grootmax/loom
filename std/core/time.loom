@@ -1,0 +1,76 @@
+##! Time: durations, sleeping, timeouts and the monotonic clock (spec §11.7).
+
+extern "intrinsic"
+  def time_sleep(nanos: Int) -> Bool
+  def time_now -> Int
+end
+
+## A span of time, in nanoseconds.
+@[derive(Copy, Clone, Eq, Ord, Hash)]
+pub struct Duration
+  pub nanos: Int
+
+  ## No limit (a scope without a deadline).
+  pub def self.forever -> Duration = Duration(nanos: -1)
+
+  ## The duration in whole milliseconds.
+  pub def as_milliseconds -> Int = @nanos / 1_000_000
+end
+
+## `n.seconds`, `n.milliseconds`, … on `Int`.
+pub trait DurationLiterals
+  def seconds -> Duration
+  def milliseconds -> Duration
+  def microseconds -> Duration
+  def nanoseconds -> Duration
+end
+
+impl DurationLiterals for Int
+  def seconds -> Duration = Duration(nanos: self * 1_000_000_000)
+  def milliseconds -> Duration = Duration(nanos: self * 1_000_000)
+  def microseconds -> Duration = Duration(nanos: self * 1_000)
+  def nanoseconds -> Duration = Duration(nanos: self)
+end
+
+## The error of an operation that ended because its scope was cancelled (spec §11.4).
+@[derive(Copy, Clone, Eq)]
+pub struct Cancelled
+end
+
+impl Error for Cancelled
+  def message -> String = "cancelled"
+end
+
+impl Display for Cancelled
+  def to_string -> String = "cancelled"
+end
+
+## A point on the monotonic clock.
+@[derive(Copy, Clone, Eq, Ord)]
+pub struct Instant
+  nanos: Int
+
+  ## The time since this instant.
+  pub def elapsed -> Duration = Duration(nanos: time_now() - @nanos)
+end
+
+## A timer arm of `select` (spec §11.3).
+@[lang("Timeout")]
+pub struct Timeout
+  pub nanos: Int
+end
+
+## Sleeping and the clock.
+pub struct Time
+  ## Waits at least `duration`; `Err(Cancelled)` if the task's scope is cancelled first.
+  pub def self.sleep(duration: Duration) -> Result[Unit, Cancelled]
+    if time_sleep(duration.nanos) then Ok(()) else Err(Cancelled()) end
+  end
+
+  ## A `select` arm that becomes ready once `duration` has passed.
+  @[lang("time_after")]
+  pub def self.after(duration: Duration) -> Timeout = Timeout(nanos: duration.nanos)
+
+  ## The current instant of the monotonic clock.
+  pub def self.now -> Instant = Instant(nanos: time_now())
+end

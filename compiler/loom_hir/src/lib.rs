@@ -919,6 +919,17 @@ pub struct CaseArm {
     pub body: ExprId,
 }
 
+/// An arm of `select`: `when [pat =] operation …`.
+#[derive(Clone, Debug)]
+pub struct SelectArm {
+    /// The pattern a received value is matched against.
+    pub pat: Option<PatId>,
+    /// The operation: `ch.recv`, `ch.send(v)` or `Time.after(d)`.
+    pub operation: ExprId,
+    /// The arm's body.
+    pub body: ExprId,
+}
+
 /// A closure parameter.
 #[derive(Clone, Debug)]
 pub struct ClosureParam {
@@ -1058,6 +1069,13 @@ pub enum Expr {
         /// The arms.
         arms: Vec<CaseArm>,
         /// The `else` branch.
+        else_branch: Option<ExprId>,
+    },
+    /// `select … end` (spec §11.3).
+    Select {
+        /// The arms.
+        arms: Vec<SelectArm>,
+        /// The `else` arm.
         else_branch: Option<ExprId>,
     },
     /// `loop do … end`.

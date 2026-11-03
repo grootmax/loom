@@ -17,6 +17,7 @@ All notable changes to the Loom toolchain are recorded here. The format follows
   `Result` and `Range` are `Copy` when their contents are.
 
 ### Fixed
+- A tail expression whose value was discarded leaked what it owned in native code.
 - The interpreter now copies the captures of escaping closures (spec §8.4 rule 1); an
   assignment inside such a closure no longer changes the outer binding.
 - MIR: a borrow returned by a call and passed on in a borrow position is reborrowed, not

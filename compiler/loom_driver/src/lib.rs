@@ -33,6 +33,9 @@ pub const CORE_FILES: &[(&str, &str)] = &[
     ("map", include_str!("../../../std/core/map.loom")),
     ("iter", include_str!("../../../std/core/iter.loom")),
     ("io", include_str!("../../../std/core/io.loom")),
+    ("time", include_str!("../../../std/core/time.loom")),
+    ("task", include_str!("../../../std/core/task.loom")),
+    ("sync", include_str!("../../../std/core/sync.loom")),
     ("prelude", include_str!("../../../std/core/prelude.loom")),
 ];
 

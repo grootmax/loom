@@ -8,6 +8,10 @@ use loom_hir::{DefId, Mode};
 use loom_mir::{Constant, Operand, Place};
 use loom_types::{FloatTy, IntTy, Subst, Ty, TyKind};
 
+/// One arm of a native `select`: kind, channel handle, value buffer, timer nanoseconds,
+/// and for a receive arm its output `Option` and that type.
+type SelectArmCode = (i64, Value, Value, Value, Option<(Value, Ty)>);
+
 impl BodyTx<'_, '_, '_, '_, '_> {
     /// The address of intrinsic argument `i`: an owned copy for an `own` parameter, the
     /// borrowed value's address otherwise.
@@ -626,6 +630,125 @@ impl BodyTx<'_, '_, '_, '_, '_> {
                     .rt("loom_map_update", &[m, key, default, code, env])?;
             }
             "range_next" => self.range_next(def, args, ret, ret_ty, t0)?,
+            "scope_run" => {
+                let deadline = self.arg_value(def, args, 0, types::I64)?;
+                let (pair, _) = self.arg(def, args, 1)?;
+                let code = self.fx.load(ptr, pair, 0);
+                let env = self.fx.load(ptr, pair, self.fx.word());
+                self.fx.rt("loom_scope_run", &[deadline, code, env, ret])?;
+            }
+            "scope_spawn" => {
+                let scope = self.handle_arg(def, args, 0)?;
+                let (work, _) = self.arg(def, args, 1)?;
+                let code = self.fx.load(ptr, work, 0);
+                let env = self.fx.load(ptr, work, self.fx.word());
+                let info = self.fx.type_info(t0)?;
+                let task = self.fx.rt1("loom_scope_spawn", &[scope, code, env, info])?;
+                self.fx.store(task, ret, 0);
+            }
+            "scope_cancel" => {
+                let scope = self.handle_arg(def, args, 0)?;
+                self.fx.rt("loom_scope_cancel", &[scope])?;
+            }
+            "scope_cancelled" => {
+                let scope = self.handle_arg(def, args, 0)?;
+                let r = self.fx.rt1("loom_scope_cancelled", &[scope])?;
+                self.fx.store(r, ret, 0);
+            }
+            "task_join" => {
+                let task = self.handle_arg(def, args, 0)?;
+                self.fx.rt("loom_task_join", &[task, ret])?;
+            }
+            "task_detach" => {
+                let (work, _) = self.arg(def, args, 0)?;
+                let code = self.fx.load(ptr, work, 0);
+                let env = self.fx.load(ptr, work, self.fx.word());
+                self.fx.rt("loom_task_detach", &[code, env])?;
+            }
+            "task_yield" => {
+                self.fx.rt("loom_task_yield", &[])?;
+            }
+            "chan_new" => {
+                let info = self.fx.type_info(t0)?;
+                let capacity = self.arg_value(def, args, 0, types::I64)?;
+                let ch = self.fx.rt1("loom_chan_new", &[info, capacity])?;
+                self.fx.store(ch, ret, 0);
+            }
+            "chan_send" => {
+                let ch = self.handle_arg(def, args, 0)?;
+                let (value, _) = self.arg(def, args, 1)?;
+                let [file, len, line, column] = self.fx.position(span)?;
+                let r = self
+                    .fx
+                    .rt1("loom_chan_send", &[ch, value, file, len, line, column])?;
+                self.fx.store(r, ret, 0);
+            }
+            "chan_recv" | "chan_try_recv" => {
+                let ch = self.handle_arg(def, args, 0)?;
+                let some = self.fx.lang_tag("Option", "Some")?;
+                let payload = self.fx.offset(ret, self.fx.payload_offset(ret_ty, some));
+                let wait = self
+                    .fx
+                    .b
+                    .ins()
+                    .iconst(types::I8, i64::from(name == "chan_recv"));
+                let got = self.fx.rt1("loom_chan_recv", &[ch, payload, wait])?;
+                self.fx.set_option(ret, got)?;
+            }
+            "chan_close" => {
+                let ch = self.handle_arg(def, args, 0)?;
+                self.fx.rt("loom_chan_close", &[ch])?;
+            }
+            "time_sleep" => {
+                let nanos = self.arg_value(def, args, 0, types::I64)?;
+                let r = self.fx.rt1("loom_sleep", &[nanos])?;
+                self.fx.store(r, ret, 0);
+            }
+            "time_now" => {
+                let r = self.fx.rt1("loom_time_now", &[])?;
+                self.fx.store(r, ret, 0);
+            }
+            "mutex_new" | "shared_new" => {
+                let info = self.fx.type_info(t0)?;
+                let (value, _) = self.arg(def, args, 0)?;
+                let f = if name == "mutex_new" {
+                    "loom_mutex_new"
+                } else {
+                    "loom_shared_new"
+                };
+                let h = self.fx.rt1(f, &[info, value])?;
+                self.fx.store(h, ret, 0);
+            }
+            "mutex_lock" => {
+                let m = self.handle_arg(def, args, 0)?;
+                let (pair, _) = self.arg(def, args, 1)?;
+                let code = self.fx.load(ptr, pair, 0);
+                let env = self.fx.load(ptr, pair, self.fx.word());
+                self.fx.rt("loom_mutex_lock", &[m, code, env, ret])?;
+            }
+            "shared_clone" | "shared_get" | "shared_count" => {
+                let h = self.handle_arg(def, args, 0)?;
+                let f = match name {
+                    "shared_clone" => "loom_shared_clone",
+                    "shared_get" => "loom_shared_get",
+                    _ => "loom_shared_count",
+                };
+                let r = self.fx.rt1(f, &[h])?;
+                self.fx.store(r, ret, 0);
+            }
+            "atomic_new" => {
+                let v = self.arg_value(def, args, 0, types::I64)?;
+                let h = self.fx.rt1("loom_atomic_new", &[v])?;
+                self.fx.store(h, ret, 0);
+            }
+            "atomic_op" => {
+                let h = self.handle_arg(def, args, 0)?;
+                let op = self.arg_value(def, args, 1, types::I64)?;
+                let a = self.arg_value(def, args, 2, types::I64)?;
+                let b = self.arg_value(def, args, 3, types::I64)?;
+                let r = self.fx.rt1("loom_atomic_op", &[h, op, a, b])?;
+                self.fx.store(r, ret, 0);
+            }
             other => return unsupported(format!("intrinsic `{other}`")),
         }
         self.assign_from(dest, ret)
@@ -753,8 +876,109 @@ impl BodyTx<'_, '_, '_, '_, '_> {
                 }
                 let _ = map_ty;
             }
+            "select" => self.select(args, ret)?,
             other => return unsupported(format!("built-in `{other}`")),
         }
         self.assign_from(dest, ret)
+    }
+
+    /// The built-in `select` (spec §11.3; the arguments are described at its lowering in
+    /// `loom_mir`): fills an array of runtime arms, calls `loom_select`, and completes the
+    /// chosen receive arm's `Option`. Writes the chosen arm's index to `ret`.
+    fn select(&mut self, args: &[Operand], ret: Value) -> Result<()> {
+        let ptr = self.fx.ptr();
+        let word = self.fx.word();
+        let span = self.span;
+        let constant = |op: &Operand| match op {
+            Operand::Const(Constant::Int(v, _), _) => *v,
+            _ => -1,
+        };
+        let has_else = constant(&args[0]) != 0;
+        let mut arms: Vec<SelectArmCode> = Vec::new();
+        let mut i = 1;
+        while i < args.len() {
+            let kind = constant(&args[i]);
+            match kind {
+                0 => {
+                    let (ch_ptr, _) = self.arg_ptr(&args[i + 1])?;
+                    let ch = self.fx.load(ptr, ch_ptr, 0);
+                    let (out, option_ty) = self.arg_ptr(&args[i + 2])?;
+                    let elem = match self.fx.cx().interner().kind(option_ty) {
+                        TyKind::Adt(_, a) if !a.is_empty() => a[0],
+                        _ => return unsupported("a receive arm without an `Option`"),
+                    };
+                    let buf = self.fx.slot_for(elem);
+                    let zero = self.fx.b.ins().iconst(types::I64, 0);
+                    arms.push((0, ch, buf, zero, Some((out, option_ty))));
+                    i += 3;
+                }
+                1 => {
+                    let (ch_ptr, _) = self.arg_ptr(&args[i + 1])?;
+                    let ch = self.fx.load(ptr, ch_ptr, 0);
+                    let (value, _) = self.owned_temp(&args[i + 2])?;
+                    let zero = self.fx.b.ins().iconst(types::I64, 0);
+                    arms.push((1, ch, value, zero, None));
+                    i += 3;
+                }
+                _ => {
+                    let (timeout, _) = self.arg_ptr(&args[i + 1])?;
+                    let nanos = self.fx.load(types::I64, timeout, 0);
+                    let null = self.fx.pconst(0);
+                    arms.push((2, null, null, nanos, None));
+                    i += 2;
+                }
+            }
+        }
+        let stride = 4 * word;
+        let count = u32::try_from(arms.len()).unwrap_or(0);
+        let table = self.fx.slot(stride * count.max(1), word);
+        for (k, (kind, ch, data, nanos, _)) in arms.iter().enumerate() {
+            let base = u32::try_from(k).unwrap_or(0) * stride;
+            let kind_v = self.fx.b.ins().iconst(types::I32, *kind);
+            self.fx.store(kind_v, table, base);
+            self.fx.store(*ch, table, base + word);
+            self.fx.store(*data, table, base + 2 * word);
+            self.fx.store(*nanos, table, base + 3 * word);
+        }
+        let received = self.fx.slot(1, 1);
+        let count_v = self.fx.pconst(i64::from(count));
+        let else_v = self.fx.b.ins().iconst(types::I8, i64::from(has_else));
+        let [file, len, line, column] = self.fx.position(span)?;
+        let chosen = self.fx.rt1(
+            "loom_select",
+            &[table, count_v, else_v, received, file, len, line, column],
+        )?;
+        self.fx.store(chosen, ret, 0);
+        // Complete the chosen receive arm: `Some(value)` if a value arrived.
+        for (k, (_, _, buf, _, out)) in arms.iter().enumerate() {
+            let Some((out, option_ty)) = out else {
+                continue;
+            };
+            let is_this = self.fx.b.ins().icmp_imm_s(
+                cranelift_codegen::ir::condcodes::IntCC::Equal,
+                chosen,
+                i64::try_from(k).unwrap_or(0),
+            );
+            let value_arrived = self.fx.load(types::I8, received, 0);
+            let both = self.fx.b.ins().band(is_this, value_arrived);
+            let fill_block = self.fx.b.create_block();
+            let next_block = self.fx.b.create_block();
+            self.fx.b.ins().brif(both, fill_block, &[], next_block, &[]);
+            self.fx.b.switch_to_block(fill_block);
+            let some = self.fx.lang_tag("Option", "Some")?;
+            let payload = self
+                .fx
+                .offset(*out, self.fx.payload_offset(*option_ty, some));
+            let elem = match self.fx.cx().interner().kind(*option_ty) {
+                TyKind::Adt(_, a) => a[0],
+                _ => *option_ty,
+            };
+            self.fx.copy_ty(payload, *buf, elem);
+            let tag = self.fx.b.ins().iconst(types::I32, i64::from(some));
+            self.fx.store(tag, *out, 0);
+            self.fx.b.ins().jump(next_block, &[]);
+            self.fx.b.switch_to_block(next_block);
+        }
+        Ok(())
     }
 }

@@ -238,6 +238,11 @@ impl<'a> Fx<'_, 'a, '_, '_> {
             TyKind::Adt(def, _) => match self.cx().hir.def(def).lang() {
                 Some("Array") => Some("loom_array_drop"),
                 Some("Map") => Some("loom_map_drop"),
+                Some("Chan") => Some("loom_chan_drop"),
+                Some("Task") => Some("loom_task_drop"),
+                Some("Mutex") => Some("loom_mutex_drop"),
+                Some("Shared") => Some("loom_shared_drop"),
+                Some("AtomicInt") => Some("loom_atomic_drop"),
                 _ => None,
             },
             _ => None,
@@ -371,6 +376,10 @@ impl Cx<'_> {
             TyKind::String | TyKind::Bytes | TyKind::Callable { .. } | TyKind::Dyn(..) => true,
             TyKind::Tuple(elements) => elements.iter().any(|&e| self.needs_drop(e)),
             TyKind::Adt(def, _) => {
+                if self.concurrency_handle(ty) == Some("scope") {
+                    // A scope handle is borrowed from `scope_run` and never owned.
+                    return false;
+                }
                 if self.is_handle(ty) {
                     return true;
                 }
@@ -2006,8 +2015,17 @@ pub(crate) fn define_c_main(module: &mut dyn Module, entry: FuncId) -> Result<()
         let block = b.create_block();
         b.append_block_params_for_function_params(block);
         b.switch_to_block(block);
-        let r = module.declare_func_in_func(entry, b.func);
-        let inst = b.ins().call(r, &[]);
+        // `loom_run_main(loom_main)` runs the program on the task scheduler.
+        let mut run_sig = module.make_signature();
+        run_sig.params.push(AbiParam::new(ptr));
+        run_sig.returns.push(AbiParam::new(types::I32));
+        let run = module
+            .declare_function("loom_run_main", Linkage::Import, &run_sig)
+            .map_err(internal)?;
+        let run_ref = module.declare_func_in_func(run, b.func);
+        let entry_ref = module.declare_func_in_func(entry, b.func);
+        let entry_addr = b.ins().func_addr(ptr, entry_ref);
+        let inst = b.ins().call(run_ref, &[entry_addr]);
         let status = b.inst_results(inst)[0];
         b.ins().return_(&[status]);
         b.seal_all_blocks();

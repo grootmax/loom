@@ -1010,6 +1010,37 @@ impl InferCtxt<'_> {
 
     // ----- methods ---------------------------------------------------------------------------
 
+    /// The `Target` of `ty`'s `Deref` implementation, if it has one.
+    fn deref_target(&mut self, ty: Ty) -> Option<Ty> {
+        let interner = self.cx.interner;
+        let deref = self.cx.items.lang.get("Deref")?;
+        let assoc = *self
+            .cx
+            .items
+            .traits
+            .get(&deref)?
+            .assoc_types
+            .get(&loom_hir::Name::new("Target"))?;
+        let trait_ref = TraitRef {
+            trait_: deref,
+            args: Vec::new(),
+        };
+        if !self.implements(ty, &trait_ref) {
+            return None;
+        }
+        let projection = interner.intern(TyKind::Projection {
+            trait_: deref,
+            args: vec![ty],
+            assoc,
+        });
+        let target = self.normalize(projection);
+        (!matches!(
+            interner.kind(target),
+            TyKind::Projection { .. } | TyKind::Error
+        ))
+        .then_some(target)
+    }
+
     fn lookup_method(&mut self, receiver_ty: Ty, name: &Name, span: Span) -> Option<MethodPick> {
         let interner = self.cx.interner;
         if let Some(def) = self.type_def(receiver_ty)
@@ -1097,7 +1128,24 @@ impl InferCtxt<'_> {
             }
             _ => {}
         }
-        let Some(pick) = self.lookup_method(receiver_ty, name, span) else {
+        let mut receiver_ty = receiver_ty;
+        let mut pick = self.lookup_method(receiver_ty, name, span);
+        if pick.is_none()
+            && let Some(target) = self.deref_target(receiver_ty)
+            && let Some(found) = self.lookup_method(target, name, span)
+        {
+            // Through `Deref` (spec §7.4 rule 6).
+            self.coercions.insert(
+                receiver,
+                crate::Coercion::Overloaded {
+                    from: receiver_ty,
+                    target,
+                },
+            );
+            receiver_ty = target;
+            pick = Some(found);
+        }
+        let Some(pick) = pick else {
             self.infer_args(args);
             let text = self.show(receiver_ty);
             let mut diagnostic = Diagnostic::error(

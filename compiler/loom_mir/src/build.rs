@@ -107,6 +107,9 @@ struct Builder<'a> {
     owning_uses: HashSet<BindingId>,
     /// Closure expressions in owning positions (escaping, spec §8.4).
     escaping_closures: HashSet<ExprId>,
+    /// Closures passed to `spawn` on the parameter of a `scope` block (spec §11.1 rule 3):
+    /// they capture bindings from outside the block by reference, the others by move.
+    scoped_spawns: HashSet<ExprId>,
     /// Closures found while building, to build next.
     closures: Vec<Job>,
     env: Env,
@@ -174,6 +177,7 @@ impl<'a> Builder<'a> {
             loops: Vec::new(),
             owning_uses: HashSet::new(),
             escaping_closures: HashSet::new(),
+            scoped_spawns: HashSet::new(),
             closures: Vec::new(),
             env,
             stmt_temps: vec![Vec::new()],
@@ -483,9 +487,63 @@ impl<'a> Builder<'a> {
                 mutable: false,
                 inner: ty,
             }),
-            Some(Coercion::Unsize(target)) => *target,
+            Some(Coercion::Unsize(target) | Coercion::Overloaded { target, .. }) => *target,
             None => ty,
         }
+    }
+
+    /// The place behind `Deref.deref` of `expr` (spec §7.4 rule 6): borrows the value,
+    /// calls `deref`, and returns the place its result points to.
+    fn overloaded_place(&mut self, expr: ExprId, from: Ty, target: Ty) -> Place {
+        let span = self.span(expr);
+        let base = if let Some(p) = self.place_of(expr) {
+            p
+        } else {
+            let tmp = self.temp(self.ty(expr), span);
+            let p = Place::local(tmp);
+            self.expr_value_into(&p, expr);
+            p
+        };
+        let base = self.deref_all(base, self.ty(expr));
+        let from_ref = self.interner().intern(TyKind::Ref {
+            mutable: false,
+            inner: from,
+        });
+        let r = self.new_local(from_ref, LocalKind::Temp, true, span);
+        self.assign(
+            &Place::local(r),
+            Rvalue::Ref {
+                mutable: false,
+                place: base,
+            },
+            span,
+        );
+        let target_ref = self.interner().intern(TyKind::Ref {
+            mutable: false,
+            inner: target,
+        });
+        let out = self.new_local(target_ref, LocalKind::Temp, true, span);
+        let method = self.lang_method("Deref", "deref").unwrap_or(DefId(0));
+        let mut subst = Subst::new();
+        if let Some(deref) = self.items().lang.get("Deref") {
+            subst.insert(Items::self_param(deref), from);
+        }
+        let next = self.new_block();
+        self.terminate(
+            TerminatorKind::Call {
+                callee: Callee::Trait {
+                    method,
+                    self_ty: from,
+                    subst,
+                },
+                args: vec![Operand::Copy(Place::local(r))],
+                dest: Place::local(out),
+                target: Some(next),
+            },
+            span,
+        );
+        self.current = next;
+        Place::local(out).project(Proj::Deref)
     }
 
     fn push_scope(&mut self) {
@@ -610,6 +668,7 @@ impl<'a> Builder<'a> {
     /// Records which bindings are used in owning positions and which closures escape
     /// (spec §8.1 rule 2, §8.4 rule 1).
     fn analyze_owning(&mut self) {
+        self.find_scoped_spawns();
         let roots: Vec<ExprId> = self
             .body
             .root
@@ -618,6 +677,63 @@ impl<'a> Builder<'a> {
             .collect();
         for root in roots {
             self.walk_owning(root, true);
+        }
+    }
+
+    /// The lang name of the function a call expression calls, if any.
+    fn call_lang(&self, expr: ExprId) -> Option<&'a str> {
+        match self.typed.exprs.get(&expr) {
+            Some(ExprInfo::Call {
+                target: CallTarget::Fn { def, .. } | CallTarget::Trait { method: def, .. },
+                ..
+            }) => self.cx.hir.def(*def).lang(),
+            _ => None,
+        }
+    }
+
+    /// Finds the closures passed to `s.spawn` where `s` is the parameter of a closure
+    /// passed to `scope` (spec §11.1 rule 3).
+    fn find_scoped_spawns(&mut self) {
+        let body = self.body;
+        let mut scope_params: HashSet<BindingId> = HashSet::new();
+        for (index, expr) in body.exprs.iter().enumerate() {
+            let id = ExprId(u32::try_from(index).unwrap_or(0));
+            let (Expr::Call { args, .. } | Expr::MethodCall { args, .. }) = expr else {
+                continue;
+            };
+            if self.call_lang(id) != Some("scope") {
+                continue;
+            }
+            for arg in args {
+                if let Expr::Closure { params, .. } = body.expr(arg.value) {
+                    for param in params.iter().flatten() {
+                        let mut bound = HashSet::new();
+                        collect_pattern_bindings(body, param.pat, &mut bound);
+                        scope_params.extend(bound.into_iter().map(|b| self.typed.canonical(b)));
+                    }
+                }
+            }
+        }
+        for (index, expr) in body.exprs.iter().enumerate() {
+            let id = ExprId(u32::try_from(index).unwrap_or(0));
+            let Expr::MethodCall { receiver, args, .. } = expr else {
+                continue;
+            };
+            if self.call_lang(id) != Some("scope_spawn") {
+                continue;
+            }
+            let on_scope_param = matches!(
+                self.typed.exprs.get(receiver),
+                Some(ExprInfo::Local(b)) if scope_params.contains(&self.typed.canonical(*b))
+            );
+            if !on_scope_param {
+                continue;
+            }
+            for arg in args {
+                if matches!(body.expr(arg.value), Expr::Closure { .. }) {
+                    self.scoped_spawns.insert(arg.value);
+                }
+            }
         }
     }
 
@@ -649,7 +765,7 @@ impl<'a> Builder<'a> {
             Expr::Closure {
                 body: closure_body, ..
             } => {
-                if owning {
+                if owning && !self.scoped_spawns.contains(&expr) {
                     self.escaping_closures.insert(expr);
                 }
                 self.walk_owning(*closure_body, true);
@@ -760,6 +876,23 @@ impl<'a> Builder<'a> {
                     self.walk_owning(*e, owning);
                 }
             }
+            Expr::Select { arms, else_branch } => {
+                let ops = self.typed.selects.get(&expr).cloned().unwrap_or_default();
+                for (arm, op) in arms.iter().zip(ops) {
+                    match op {
+                        loom_check::SelectOp::Recv { channel } => self.walk_owning(channel, false),
+                        loom_check::SelectOp::Send { channel, value } => {
+                            self.walk_owning(channel, false);
+                            self.walk_owning(value, true);
+                        }
+                        loom_check::SelectOp::Timer => self.walk_owning(arm.operation, false),
+                    }
+                    self.walk_owning(arm.body, false);
+                }
+                if let Some(e) = else_branch {
+                    self.walk_owning(*e, false);
+                }
+            }
             Expr::Case {
                 scrutinee,
                 arms,
@@ -858,6 +991,9 @@ impl<'a> Builder<'a> {
     /// The place holding `expr`'s value after its coercion: the place itself for a place
     /// expression, or a temporary.
     fn as_place(&mut self, expr: ExprId) -> Place {
+        if let Some(&Coercion::Overloaded { from, target }) = self.typed.coercions.get(&expr) {
+            return self.overloaded_place(expr, from, target);
+        }
         if !matches!(
             self.typed.coercions.get(&expr),
             Some(Coercion::Autoref | Coercion::Unsize(_))
@@ -983,6 +1119,17 @@ impl<'a> Builder<'a> {
     /// A borrow of `expr`'s place, for a borrow-mode or `mut` argument.
     fn borrow_operand(&mut self, expr: ExprId, mutable: bool) -> Operand {
         let span = self.span(expr);
+        if let Some(&Coercion::Overloaded { from, target }) = self.typed.coercions.get(&expr) {
+            let place = self.overloaded_place(expr, from, target);
+            let ref_ty = self.interner().intern(TyKind::Ref {
+                mutable,
+                inner: target,
+            });
+            let tmp = self.new_local(ref_ty, LocalKind::Temp, true, span);
+            self.push(StatementKind::StorageLive(tmp), span);
+            self.assign(&Place::local(tmp), Rvalue::Ref { mutable, place }, span);
+            return Operand::Copy(Place::local(tmp));
+        }
         let ty = self.coerced_ty(expr);
         let place = self.as_place(expr);
         // An argument that is already a borrow of the parameter's type is passed on.
@@ -1052,8 +1199,33 @@ impl<'a> Builder<'a> {
     // ----- expressions -----------------------------------------------------------------------
 
     /// Evaluates `expr` (with its coercion) into `dest`, for an owning position.
+    /// Whether `expr`'s value must be discarded because it flows into a `()` place (the
+    /// last expression of a function or block whose value is not used).
+    fn discards(&self, dest: &Place, expr: ExprId) -> bool {
+        let interner = self.interner();
+        let dest_ty = crate::place_ty(self.cx.hir, self.items(), interner, &self.mir, dest);
+        let ty = self.coerced_ty(expr);
+        matches!(interner.kind(dest_ty), TyKind::Unit)
+            && !matches!(
+                interner.kind(ty),
+                TyKind::Unit | TyKind::Never | TyKind::Error
+            )
+    }
+
+    /// Evaluates `expr` into a temporary that is dropped, and stores `()` in `dest`.
+    fn discard_into(&mut self, dest: &Place, expr: ExprId) {
+        let span = self.span(expr);
+        let tmp = self.temp(self.coerced_ty(expr), span);
+        self.expr_into_owning(&Place::local(tmp), expr);
+        let unit = self.unit_operand();
+        self.assign(dest, Rvalue::Use(unit), span);
+    }
+
     fn expr_into_owning(&mut self, dest: &Place, expr: ExprId) {
         let span = self.span(expr);
+        if self.discards(dest, expr) {
+            return self.discard_into(dest, expr);
+        }
         if self.typed.coercions.contains_key(&expr) || self.place_of_is_simple(expr) {
             let op = self.as_operand(expr);
             self.assign(dest, Rvalue::Use(op), span);
@@ -1259,6 +1431,9 @@ impl<'a> Builder<'a> {
                 }
                 self.goto(join, span);
                 self.current = join;
+            }
+            Expr::Select { arms, else_branch } => {
+                self.select(dest, expr, arms, *else_branch, span);
             }
             Expr::Case {
                 scrutinee,
@@ -1606,6 +1781,141 @@ impl<'a> Builder<'a> {
                 }
             }
         }
+    }
+
+    /// Lowers `select` (spec §11.3) to a call of the built-in `select` and a switch on the
+    /// chosen arm. The built-in's arguments are `has_else`, then per arm a kind (0 recv,
+    /// 1 send, 2 timer) and its operands: the borrowed channel and a `mut ref` to an
+    /// `Option` the received value is written to; the borrowed channel and the owned value;
+    /// or the `Timeout`. It returns the chosen arm, `arms.len()` for `else`, and
+    /// `arms.len() + 1` when no arm runs.
+    fn select(
+        &mut self,
+        dest: &Place,
+        expr: ExprId,
+        arms: &[loom_hir::SelectArm],
+        else_branch: Option<ExprId>,
+        span: Span,
+    ) {
+        let int = self.interner().int();
+        let ops = self.typed.selects.get(&expr).cloned().unwrap_or_default();
+        let mut args = vec![Operand::Const(
+            Constant::Int(i128::from(else_branch.is_some()), loom_types::IntTy::I64),
+            int,
+        )];
+        let mut outs: Vec<Option<Place>> = Vec::new();
+        for (arm, op) in arms.iter().zip(&ops) {
+            let kind = |k: i128| Operand::Const(Constant::Int(k, loom_types::IntTy::I64), int);
+            match *op {
+                loom_check::SelectOp::Recv { channel } => {
+                    let ch = self.borrow_operand(channel, false);
+                    let option_ty = self.ty(arm.operation);
+                    let out = Place::local(self.temp(option_ty, span));
+                    // Start from `None`, so the temporary always holds a value to drop.
+                    let none = self.option_none(option_ty);
+                    self.assign(&out, none, span);
+                    let ref_ty = self.interner().intern(TyKind::Ref {
+                        mutable: true,
+                        inner: option_ty,
+                    });
+                    let r = self.new_local(ref_ty, LocalKind::Temp, true, span);
+                    self.assign(
+                        &Place::local(r),
+                        Rvalue::Ref {
+                            mutable: true,
+                            place: out.clone(),
+                        },
+                        span,
+                    );
+                    args.extend([kind(0), ch, Operand::Copy(Place::local(r))]);
+                    outs.push(Some(out));
+                }
+                loom_check::SelectOp::Send { channel, value } => {
+                    let ch = self.borrow_operand(channel, false);
+                    let v = self.as_operand(value);
+                    args.extend([kind(1), ch, v]);
+                    outs.push(None);
+                }
+                loom_check::SelectOp::Timer => {
+                    let t = self.as_operand(arm.operation);
+                    args.extend([kind(2), t]);
+                    outs.push(None);
+                }
+            }
+        }
+        let chosen = self.temp(int, span);
+        let next = self.new_block();
+        self.terminate(
+            TerminatorKind::Call {
+                callee: Callee::Builtin("select"),
+                args,
+                dest: Place::local(chosen),
+                target: Some(next),
+            },
+            span,
+        );
+        self.current = next;
+        let join = self.new_block();
+        let mut targets = Vec::new();
+        let blocks: Vec<BlockId> = arms.iter().map(|_| self.new_block()).collect();
+        for (i, &b) in blocks.iter().enumerate() {
+            targets.push((i as u128, b));
+        }
+        let else_block = else_branch.map(|_| self.new_block());
+        if let Some(b) = else_block {
+            targets.push((arms.len() as u128, b));
+        }
+        self.terminate(
+            TerminatorKind::SwitchInt {
+                discr: Operand::Copy(Place::local(chosen)),
+                targets,
+                otherwise: join,
+            },
+            span,
+        );
+        for ((arm, out), block) in arms.iter().zip(&outs).zip(&blocks) {
+            self.current = *block;
+            self.push_scope();
+            if let (Some(pat), Some(place)) = (arm.pat, out) {
+                self.test_pattern(pat, place, join);
+                self.bind_pattern(pat, place, false);
+            }
+            let unit = self.unit_temp(span);
+            self.expr_value_into(&unit, arm.body);
+            self.pop_scope(span);
+            self.goto(join, span);
+        }
+        if let (Some(e), Some(block)) = (else_branch, else_block) {
+            self.current = block;
+            let unit = self.unit_temp(span);
+            self.expr_value_into(&unit, e);
+            self.goto(join, span);
+        }
+        self.current = join;
+        let unit = self.unit_operand();
+        self.assign(dest, Rvalue::Use(unit), span);
+    }
+
+    /// `None` of the `Option` type `ty`.
+    fn option_none(&self, ty: Ty) -> Rvalue {
+        let none = self
+            .items()
+            .lang
+            .get("Option")
+            .and_then(|o| match &self.cx.hir.def(o).kind {
+                DefKind::Enum(data) => data
+                    .variants
+                    .iter()
+                    .copied()
+                    .find(|&v| self.cx.hir.def(v).name.as_str() == "None"),
+                _ => None,
+            })
+            .unwrap_or(DefId(0));
+        let subst = match self.interner().kind(ty) {
+            TyKind::Adt(def, args) => self.items().adt_subst(def, &args),
+            _ => Subst::new(),
+        };
+        Rvalue::Aggregate(AggregateKind::Variant(none, subst), Vec::new())
     }
 
     fn interpolate(&mut self, dest: &Place, parts: &[InterpolationPart], span: Span) {
@@ -2414,7 +2724,15 @@ impl<'a> Builder<'a> {
                 continue;
             }
             let ty = self.typed.binding_tys[b.index()];
-            let by_ref = if escaping {
+            let by_ref = if self.scoped_spawns.contains(&expr) {
+                // Bindings from outside the `scope` block (captures of the block's closure)
+                // by reference; those declared in the block by move (spec §11.1 rule 3).
+                self.mir
+                    .captures
+                    .iter()
+                    .any(|c| c.binding == b)
+                    .then(|| mutated.contains(&b))
+            } else if escaping {
                 None
             } else {
                 Some(mutated.contains(&b))
@@ -2850,6 +3168,13 @@ fn collect_declared(body: &Body, expr: ExprId, out: &mut HashSet<BindingId>) {
                 collect_pattern_bindings(body, arm.pat, out);
             }
         }
+        Expr::Select { arms, .. } => {
+            for arm in arms {
+                if let Some(p) = arm.pat {
+                    collect_pattern_bindings(body, p, out);
+                }
+            }
+        }
         Expr::For { pat, .. } | Expr::In { pat, .. } => collect_pattern_bindings(body, *pat, out),
         Expr::Closure { params, .. } => {
             for p in params.iter().flatten() {
@@ -3009,6 +3334,13 @@ fn walk_exprs(body: &Body, expr: ExprId, f: &mut impl FnMut(ExprId)) {
             children.push(*scrutinee);
             for arm in arms {
                 children.extend(arm.guard.iter().copied());
+                children.push(arm.body);
+            }
+            children.extend(else_branch.iter().copied());
+        }
+        Expr::Select { arms, else_branch } => {
+            for arm in arms {
+                children.push(arm.operation);
                 children.push(arm.body);
             }
             children.extend(else_branch.iter().copied());

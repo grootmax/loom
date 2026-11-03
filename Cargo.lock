@@ -440,6 +440,7 @@ dependencies = [
  "loom_hir",
  "loom_mir",
  "loom_resolve",
+ "loom_runtime",
  "loom_span",
  "loom_types",
 ]

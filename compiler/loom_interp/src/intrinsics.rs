@@ -574,6 +574,9 @@ impl Interp<'_> {
                 })));
                 Ok(self.lang_variant("Option", "Some", vec![elem_ty], vec![start]))
             }
+            name if crate::tasks::is_task_intrinsic(name) => {
+                self.task_intrinsic(def, name, subst, &args, span)
+            }
             other => panic(format!("internal error: unknown intrinsic `{other}`")),
         }
     }

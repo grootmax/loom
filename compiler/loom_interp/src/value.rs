@@ -39,6 +39,9 @@ pub enum Value {
     Map(Rc<MapValue>),
     /// A closure.
     Closure(Rc<Closure>),
+    /// A runtime object of the concurrency library (spec §11): a channel, scope, task,
+    /// mutex, shared value or atomic integer.
+    Handle(Rc<Handle>),
     /// A function or variant constructor used as a value.
     Function {
         /// The function or variant.
@@ -46,6 +49,46 @@ pub enum Value {
         /// Its generic arguments (concrete).
         subst: Rc<Subst>,
     },
+}
+
+/// A runtime object of the concurrency library.
+pub enum Handle {
+    /// `Chan[T]`.
+    Chan(loom_runtime::sched::chan::Chan<Value>),
+    /// The scope handle passed to the block of `scope`.
+    Scope(std::sync::Arc<loom_runtime::sched::Scope>),
+    /// `Task[T]`: the task and the cell its result is written to.
+    Task(
+        std::sync::Arc<loom_runtime::sched::Task>,
+        Rc<RefCell<Option<Value>>>,
+    ),
+    /// `Mutex[T]`.
+    Mutex(Place, loom_runtime::sched::Lock),
+    /// `Shared[T]`: the value and the number of owners.
+    Shared(Value, std::cell::Cell<usize>),
+    /// `AtomicInt`.
+    Atomic(std::cell::Cell<i64>),
+}
+
+impl std::fmt::Debug for Handle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.lang())
+    }
+}
+
+impl Handle {
+    /// The lang name of the handle's type.
+    #[must_use]
+    pub fn lang(&self) -> &'static str {
+        match self {
+            Self::Chan(_) => "Chan",
+            Self::Scope(_) => "Scope",
+            Self::Task(..) => "Task",
+            Self::Mutex(..) => "Mutex",
+            Self::Shared(..) => "Shared",
+            Self::Atomic(_) => "AtomicInt",
+        }
+    }
 }
 
 /// A struct value. `ty` is its concrete type, used for dynamic dispatch.

@@ -494,6 +494,7 @@ impl Interp<'_> {
             }
             Value::Map(m) => m.entries.len().hash(hasher),
             Value::Closure(_) | Value::Function { .. } => 1u8.hash(hasher),
+            Value::Handle(h) => std::ptr::from_ref::<crate::value::Handle>(h).hash(hasher),
         }
     }
 
@@ -610,6 +611,7 @@ impl Interp<'_> {
                 }
             }
             Value::Closure(_) | Value::Function { .. } => "<function>".to_owned(),
+            Value::Handle(h) => format!("<{}>", h.lang()),
             other => primitive_text(other),
         }
     }

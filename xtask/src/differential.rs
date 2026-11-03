@@ -186,9 +186,11 @@ fn compare(
         } else {
             Command::new(exe)
         };
+        command.current_dir(root).env("LOOM_LEAK_CHECK", "1");
+        if options.valgrind {
+            command.env("LOOM_SCHED", "deterministic");
+        }
         let output = command
-            .current_dir(root)
-            .env("LOOM_LEAK_CHECK", "1")
             .output()
             .map_err(|e| format!("cannot run the executable: {e}"))?;
         let _ = std::fs::remove_file(exe);

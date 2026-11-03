@@ -304,7 +304,8 @@ impl DefMap {
         {
             return Some(entry.def);
         }
-        if ns == Namespace::Types && name.as_str() == "core" {
+        // Until packages arrive (Phase 5), `std` names the embedded library (ADR 0022 §5).
+        if ns == Namespace::Types && matches!(name.as_str(), "core" | "std") {
             return hir.root(Package::Core);
         }
         None

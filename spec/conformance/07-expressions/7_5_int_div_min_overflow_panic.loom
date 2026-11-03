@@ -1,0 +1,7 @@
+# spec: §7.5 rule 1
+def main
+  x: I8 = I8.min_value
+  neg_one: I8 = -1
+  puts "before"
+  puts x / neg_one
+end

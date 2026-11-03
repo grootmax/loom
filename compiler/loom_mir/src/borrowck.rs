@@ -637,6 +637,7 @@ impl Checker<'_> {
                     ..
                 } = &t.kind
                 && let Some(sig) = self.items.fns.get(def)
+                && !self.is_spawn(*def)
             {
                 // A closure that captures by reference passed to `own` (spec §8.4 rule 3).
                 let offset = usize::from(sig.receiver.is_some());
@@ -683,8 +684,34 @@ impl Checker<'_> {
 
     // ----- 3. liveness -----------------------------------------------------------------------
 
+    /// Whether `def` is `Scope.spawn`.
+    fn is_spawn(&self, def: loom_hir::DefId) -> bool {
+        self.hir.def(def).lang() == Some("scope_spawn")
+    }
+
+    /// Locals passed to `Scope.spawn`: the task may run until the `scope` ends, so the
+    /// loans they carry stay in force until the body returns (spec §11.1 rule 3).
+    fn spawned(&self) -> HashSet<Local> {
+        let mut out = HashSet::new();
+        for block in &self.body.blocks {
+            if let Some(TerminatorKind::Call {
+                callee: Callee::Fn { def, .. },
+                args,
+                ..
+            }) = block.terminator.as_ref().map(|t| &t.kind)
+                && self.is_spawn(*def)
+            {
+                for a in args {
+                    operand_locals(a, &mut out);
+                }
+            }
+        }
+        out
+    }
+
     /// The locals live before each point.
     fn liveness(&self) -> HashMap<Point, HashSet<Local>> {
+        let spawned = self.spawned();
         let blocks = &self.body.blocks;
         let mut live_in: Vec<HashSet<Local>> = vec![HashSet::new(); blocks.len()];
         let mut result: HashMap<Point, HashSet<Local>> = HashMap::new();
@@ -719,6 +746,7 @@ impl Checker<'_> {
                         TerminatorKind::SwitchInt { discr, .. } => operand_locals(discr, &mut live),
                         TerminatorKind::Return => {
                             live.insert(Local(0));
+                            live.extend(spawned.iter().copied());
                         }
                         TerminatorKind::Drop { place, .. } => {
                             // Dropping a value that holds borrows does not use them.

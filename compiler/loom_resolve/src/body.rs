@@ -301,6 +301,20 @@ impl Walker<'_> {
                     self.expr(e);
                 }
             }
+            Expr::Select { arms, else_branch } => {
+                for arm in arms {
+                    self.expr(arm.operation);
+                    let mut bindings = Vec::new();
+                    if let Some(p) = arm.pat {
+                        self.pat(p, &mut bindings);
+                    }
+                    let body = arm.body;
+                    self.with_scope(bindings, |w| w.expr(body));
+                }
+                if let Some(e) = else_branch {
+                    self.expr(*e);
+                }
+            }
             Expr::Case {
                 scrutinee,
                 arms,

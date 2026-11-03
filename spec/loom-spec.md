@@ -671,6 +671,10 @@ The callee may be a function, an associated function, a struct or variant constr
 5. **Indexing** `expr[i]` reads an element: for `Array[T]`, `i` is an `Int`, and an index
    outside `0 ≤ i < length` panics; for `Map[K, V]`, `i` is a `K`, and a missing key
    panics. `expr[i] = v` writes an `Array` element or inserts or replaces a `Map` entry.
+6. **Deref.** If a type `R` implements the core trait `Deref` (`type Target`,
+   `def deref -> ref Self.Target`) and has no field or method named `name`, then
+   `expr.name` and `expr.name(args)` look `name` up on `Target` with the receiver
+   `expr.deref`, repeatedly (`Shared[T]`, §8.5). The access is in borrow mode.
 
 ### 7.5 Operators and precedence
 
@@ -871,7 +875,15 @@ owner. These rules are checked at compile time; a program that violates one is r
 
 ### 8.5 Shared ownership (`Shared[T]`)
 
-*TODO(Phase 4):* `Shared[T]`, `Weak[T]` and `Mutex[T]` with the concurrency runtime.
+1. `Shared[T]` holds a value with several owners, counted atomically
+   ([ADR 0005](../docs/adr/0005-ownership-and-borrowing.md) §4). `Shared.new(own value)`
+   creates the first owner, `s.clone` another, and `Shared.count(s)` returns the number of
+   owners. The value is dropped when the last owner is dropped.
+2. A `Shared[T]` gives shared (borrow-mode) access to its value only. Members of `T`
+   are reachable through it: method calls and field reads on a `Shared[T]` continue to
+   `T` through the core trait `Deref` when `Shared` has no member of that name (§7.4).
+   Mutating shared state needs `Mutex[T]` or `AtomicInt` (§11.7).
+3. `Shared[T]` is `Send` and `Sync` when `T` is (§11.5).
 
 ### 8.6 Drop order
 
@@ -990,18 +1002,118 @@ the `unused_result` warning.
 
 ## 11. Concurrency
 
-*TODO(Phase 4).* Summary of [ADR 0006](../docs/adr/0006-concurrency-model.md):
+A program runs as a set of **tasks**: lightweight threads of execution scheduled by the
+implementation onto operating-system threads ([ADR 0006](../docs/adr/0006-concurrency-model.md),
+[ADR 0022](../docs/adr/0022-concurrency-runtime.md)). `main` runs as the first task. Any
+function may block; blocking suspends only the calling task. There is no `async` or
+`await`.
 
 ### 11.1 Tasks and `scope`
+
+1. `scope do |s| … end` calls the block with a **scope** `s` and evaluates to the block's
+   value. `scope(deadline: d) do |s| … end` also sets a deadline (§11.4).
+2. `s.spawn { … }` starts a new task running the closure, a child of `s`, and returns a
+   `Task[T]` where `T` is the closure's result type. `t.join` waits for the child to
+   finish and returns its result; joining twice is an error at run time (a panic).
+3. A scope does not finish until every child has finished: leaving the block waits for
+   the children that are still running. A child may therefore borrow bindings declared
+   outside the `scope` expression: a closure literal passed to `s.spawn`, where `s` is
+   the block's own parameter, captures those bindings by reference, and for the borrow
+   checker (§8.3) the borrows last until the end of the block. It captures bindings
+   declared inside the block (such as loop variables) by move, or by copy for Copy types,
+   as an escaping closure does (§8.4 rule 1). A closure passed to `spawn` on any other
+   receiver (a scope handed to another function) is escaping.
+4. Tasks of the same scope may run in parallel. Their effects on standard output appear
+   in some interleaving of whole `print`/`puts` calls.
+5. A panic in any task ends the program as described in §10.4 (exit status 101). A
+   program ends when `main` finishes; detached tasks still running are abandoned.
+6. `yield_now()` lets other tasks run.
+
 ### 11.2 Channels
+
+1. `Chan[T].new(capacity: n)` creates a channel holding up to `n` values; `n` defaults to
+   `0`, a rendezvous channel. A negative capacity panics.
+2. `ch.send(own value) -> Bool` adds a value, waiting while the channel is full (for
+   capacity 0, until a receiver takes it). It returns `true` once the value is in the
+   channel, and `false` if the calling task's scope is cancelled first (§11.4), in which
+   case the value is dropped. Sending on a closed channel panics.
+3. `ch.recv -> Option[T]` takes the oldest value, waiting while the channel is empty and
+   open. It returns `None` once the channel is closed and empty, or when the calling
+   task's scope is cancelled while it waits. `ch.try_recv -> Option[T]` never waits.
+4. `ch.close` closes the channel; closing a closed channel does nothing. Values already
+   in the channel can still be received. `ch.to_array` receives every value until the
+   channel is closed and empty.
+5. Values sent on a channel must be `Send` (§11.5). A channel is shared between tasks by
+   borrowing it; `Chan[T]` is `Send` and `Sync` when `T` is `Send`.
+
 ### 11.3 `select`
 
-An arm `when P = e` receives into the pattern `P`, and an arm `when e` waits on `e`. The
-parser tells them apart by looking for a `=` at bracket depth 0 before `then` or the end of
-the line.
+1. `select` waits until one of its arms can proceed, then runs that arm only:
+   - `when P = ch.recv` can proceed when `ch` has a value or is closed; the result of
+     `recv` (an `Option[T]`) is matched against the pattern `P` (§9). If it does not
+     match, the arm's body is skipped and the `select` ends.
+   - `when ch.send(e)` can proceed when the send would not wait. If another arm is
+     chosen, the value of `e` is dropped.
+   - `when Time.after(d)` can proceed once the duration `d` has passed since the `select`
+     started.
+2. The channel, value and duration expressions of all arms are evaluated once, in
+   order, when the `select` starts.
+3. If several arms can proceed, one is chosen uniformly at random.
+4. An `else` arm runs at once if no other arm can proceed; a `select` with an `else` arm
+   never waits.
+5. In a cancelled scope, a `select` without an `else` arm that would wait instead chooses
+   a `recv` arm with the result `None`; if it has no `recv` arm, it ends without running
+   any arm.
+6. A `select` expression has type `()`; the values of its arms are discarded.
+7. An arm `when P = e` receives into the pattern `P`, and an arm `when e` waits on `e`. The
+   parser tells them apart by looking for a `=` at bracket depth 0 before `then` or the end
+   of the line.
+
 ### 11.4 Cancellation and deadlines
+
+1. A scope is **cancelled** when `s.cancel` is called, when its deadline passes, or when
+   the scope that contains it is cancelled. `s.cancelled -> Bool` reports it.
+2. Cancellation is cooperative: it does not stop a running task. Operations that wait —
+   `Time.sleep`, `recv`, `send`, `select`, I/O — return early in a task whose
+   scope is cancelled: `Time.sleep` returns `Err(Cancelled)`, `recv` returns `None`,
+   `send` returns `false`, `select` behaves as in §11.3 rule 5, and I/O returns an error.
+   They return early also when the task is already in a cancelled scope when they start.
+3. A cancelled scope still waits for its children (§11.1 rule 3).
+4. A deadline is a `Duration` from the moment the `scope` expression starts.
+
 ### 11.5 `Send` and `Sync`
+
+1. `Send` and `Sync` are core marker traits implemented automatically: a type is `Send`
+   (`Sync`) when all its fields, payloads and element types are. Primitive types,
+   `String`, `Bytes`, `Duration`, `Chan[T]` (for `Send` `T`), `Mutex[T]` and `Shared[T]`
+   (for `Send` `T`) are `Send` and `Sync`. `ref T` is `Send` when `T` is `Sync`. A
+   closure is `Send` when its captures are.
+2. A value sent on a channel or moved into a spawned or detached closure must be `Send`,
+   and a binding a spawned closure borrows must be `Sync`; the error names the field whose
+   type breaks the bound. Every type of this edition is `Send` and `Sync`, so these checks
+   take effect with the first types that are not (foreign handles); the codes E0600 and
+   E0601 are reserved for them.
+
 ### 11.6 Detached tasks
+
+1. `Task.detach { … }` starts a task that belongs to no scope. Its closure is escaping
+   (§8.4 rule 1), so it cannot borrow (E0503), and it must be `Send`.
+2. A detached task is abandoned when `main` finishes (§11.1 rule 5).
+
+### 11.7 Time and synchronization
+
+1. The module `std.time` provides `Duration` (constructed with `n.seconds`,
+   `n.milliseconds`, `n.microseconds` and `n.nanoseconds` on `Int`, through the trait
+   `DurationLiterals`), `Time.sleep(d) -> Result[Unit, Cancelled]`, `Time.after(d)` (for
+   `select`), `Time.now -> Instant`, `i.elapsed -> Duration`, and the error type
+   `Cancelled`. `Time.sleep` waits at least `d`.
+2. The module `std.sync` provides `Mutex[T]`: `Mutex.new(value)`, and `m.lock { |mut v| … }`,
+   which waits until no other task holds the lock (cancellation does not interrupt the
+   wait), runs the closure with exclusive access to the value, and returns the closure's
+   result. `AtomicInt.new(n)` with `load`,
+   `store(n)`, `add(n) -> Int` (the previous value) and `compare_exchange(old, new) ->
+   Bool`.
+3. `Shared[T]` (§8.5) is shared ownership with atomic reference counting.
 
 ## 12. Modules and packages
 
@@ -1240,3 +1352,9 @@ implement yet (`select`, `unsafe`, `extern "C"`); it disappears as the phases la
 | E0502 | Conflicting borrow, or use of a borrowed place | the conflicting use | §8.2, §8.3 |
 | E0503 | Borrow escapes: stored, moved to `own`, or captured by an escaping closure | the escaping value | §8.3, §8.4 |
 | E0504 | `ref` return type without an elided source | the return type | §8.3 |
+
+### C.7 Concurrency errors (§11)
+
+| Code | Error | At | Rule |
+|---|---|---|---|
+| E0603 | A `select` arm is not a channel operation or timer, or a non-`recv` arm has a pattern | the operation or pattern | §11.3 |

@@ -102,3 +102,12 @@ pub trait Sum
   ## `self + other`.
   def add(other: Self) -> Self
 end
+
+## Access to a value through a handle (spec §7.4 rule 6): members of `Target` are
+## reachable on the handle.
+@[lang("Deref")]
+pub trait Deref
+  type Target
+
+  def deref -> ref Self.Target
+end
