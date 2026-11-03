@@ -1,0 +1,24 @@
+# Race: Check-then-act on a Mutex split across two lock calls (fixed with single lock).
+
+use std.sync.Mutex
+
+def main
+  balance = Mutex.new(1)
+  scope do |s|
+    s.spawn do
+      balance.lock do |mut b|
+        if b > 0
+          b -= 1
+        end
+      end
+    end
+    s.spawn do
+      balance.lock do |mut b|
+        if b > 0
+          b -= 1
+        end
+      end
+    end
+  end
+  puts balance.lock { |b| b }
+end

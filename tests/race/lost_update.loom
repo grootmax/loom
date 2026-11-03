@@ -1,0 +1,24 @@
+# Race: Lost update on AtomicInt through load, yield_now, and store.
+
+use std.sync.AtomicInt
+
+def main
+  counter = AtomicInt.new(0)
+  scope do |s|
+    s.spawn do
+      for _ in 0..2
+        v = counter.load
+        yield_now()
+        counter.store(v + 1)
+      end
+    end
+    s.spawn do
+      for _ in 0..2
+        v = counter.load
+        yield_now()
+        counter.store(v + 1)
+      end
+    end
+  end
+  puts counter.load
+end

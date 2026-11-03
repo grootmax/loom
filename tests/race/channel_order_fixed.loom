@@ -1,0 +1,16 @@
+# Race: Two producers on one channel whose arrival order is printed (fixed by joining first task).
+
+def main
+  ch = Chan[String].new(capacity: 2)
+  scope do |s|
+    t1 = s.spawn do
+      ch.send("A")
+    end
+    _ = t1.join
+    s.spawn do
+      ch.send("B")
+    end
+  end
+  ch.close
+  puts ch.to_array.join("")
+end

@@ -1,0 +1,14 @@
+# Race: A scope that reads a value a child writes without joining.
+
+use std.sync.AtomicInt
+
+def main
+  flag = AtomicInt.new(0)
+  scope do |s|
+    s.spawn do
+      flag.store(1)
+    end
+    yield_now()
+    puts flag.load
+  end
+end
