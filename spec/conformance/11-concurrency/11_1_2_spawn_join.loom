@@ -1,0 +1,10 @@
+# spec: §11.1 rule 2
+def main
+  result = scope do |s|
+    t = s.spawn do
+      10 + 20
+    end
+    t.join
+  end
+  puts result
+end

@@ -1,0 +1,10 @@
+# spec: §11.6 rule 1
+use std.time.{Time, DurationLiterals}
+
+def main
+  Task[Unit].detach do
+    puts "detached task running"
+  end
+  _ = Time.sleep(50.milliseconds)
+  puts "main finished"
+end

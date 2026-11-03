@@ -1,0 +1,8 @@
+# spec: §11.3 rule 1
+def main
+  ch = Chan[Int].new
+  ch.close
+  select
+  when None = ch.recv then puts "ready because closed"
+  end
+end

@@ -1,0 +1,13 @@
+# spec: §11.4 rule 3
+use std.sync.Mutex
+
+def main
+  m = Mutex.new(0)
+  scope do |s|
+    s.spawn do
+      m.lock { |mut v| v += 42 }
+    end
+    s.cancel
+  end
+  puts m.lock { |v| v }
+end

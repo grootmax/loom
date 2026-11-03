@@ -1,0 +1,14 @@
+# spec: §11.1 rule 1
+def main
+  val = scope do |s|
+    42
+  end
+  puts val
+
+  nested = scope do |s1|
+    scope do |s2|
+      "nested scope value"
+    end
+  end
+  puts nested
+end

@@ -1,0 +1,13 @@
+# spec: §11.2 rule 3
+def main
+  ch = Chan[Int].new(capacity: 2)
+  ch.send(10)
+  ch.send(20)
+  ch.close
+  puts ch.recv.unwrap
+  puts ch.recv.unwrap
+  case ch.recv
+  in None then puts "drained: None"
+  in Some(_) then puts "unexpected"
+  end
+end

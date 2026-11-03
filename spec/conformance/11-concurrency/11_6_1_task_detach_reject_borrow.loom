@@ -1,0 +1,10 @@
+# spec: §11.6 rule 1
+def get_ref(s: String) -> ref String = s
+
+def main
+  s = "hello"
+  r = get_ref(s)
+  Task[Unit].detach do
+    puts r
+  end
+end

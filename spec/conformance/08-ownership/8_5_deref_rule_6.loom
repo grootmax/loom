@@ -1,0 +1,21 @@
+# spec: §7.4 rule 6
+struct Wrapper[T]
+  val: T
+end
+
+impl[T] Deref for Wrapper[T]
+  type Target = T
+
+  def deref -> ref T = @val
+end
+
+struct Target
+  value: Int
+
+  def get_value -> Int = @value
+end
+
+def main
+  w = Wrapper(val: Target(value: 42))
+  puts w.get_value()
+end

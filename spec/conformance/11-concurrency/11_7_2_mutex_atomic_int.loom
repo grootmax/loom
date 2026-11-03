@@ -1,0 +1,25 @@
+# spec: §11.7 rule 2
+use std.sync.{Mutex, AtomicInt}
+
+def main
+  m = Mutex.new(10)
+  val = m.lock do |mut v|
+    v += 5
+    v * 2
+  end
+  puts val
+
+  a = AtomicInt.new(100)
+  puts a.load
+  a.store(200)
+  puts a.load
+  old = a.add(50)
+  puts old
+  puts a.load
+  swapped = a.compare_exchange(250, 300)
+  puts swapped
+  puts a.load
+  failed = a.compare_exchange(999, 400)
+  puts failed
+  puts a.load
+end

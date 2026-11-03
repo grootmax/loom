@@ -1,0 +1,21 @@
+# spec: §11.4 rule 2
+use std.time.{Time, DurationLiterals, Cancelled}
+
+def main
+  scope do |s|
+    s.cancel
+    case Time.sleep(1.seconds)
+    in Err(Cancelled) then puts "sleep cancelled"
+    in Ok(_) then puts "unexpected sleep ok"
+    end
+
+    ch = Chan[Int].new
+    case ch.recv
+    in None then puts "recv None"
+    in Some(_) then puts "unexpected recv some"
+    end
+
+    sent = ch.send(42)
+    puts "send: #{sent}"
+  end
+end

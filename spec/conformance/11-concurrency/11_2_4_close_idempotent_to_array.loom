@@ -1,0 +1,12 @@
+# spec: §11.2 rule 4
+def main
+  ch = Chan[Int].new(capacity: 3)
+  ch.send(1)
+  ch.send(2)
+  ch.close
+  ch.close
+  arr = ch.to_array
+  for x in arr
+    puts x
+  end
+end

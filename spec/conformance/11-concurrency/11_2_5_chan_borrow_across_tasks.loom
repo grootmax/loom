@@ -1,0 +1,14 @@
+# spec: §11.2 rule 5
+def producer(ch: Chan[Int])
+  ch.send(100)
+end
+
+def main
+  ch = Chan[Int].new(capacity: 1)
+  scope do |s|
+    s.spawn do
+      producer(ch)
+    end
+  end
+  puts ch.recv.unwrap
+end

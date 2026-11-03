@@ -1,0 +1,8 @@
+# spec: §11.3 rule 1
+def main
+  ch = Chan[Int].new(capacity: 1)
+  ch.send(42)
+  select
+  when Some(x) = ch.recv then puts "recv: #{x}"
+  end
+end

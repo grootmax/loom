@@ -1,0 +1,12 @@
+# spec: §8.5 rule 2
+struct Point
+  x: Int
+  y: Int
+
+  def sum -> Int = @x + @y
+end
+
+def main
+  p = Shared.new(Point(x: 10, y: 20))
+  puts p.sum()
+end

@@ -1,0 +1,12 @@
+# spec: §11.3 rule 5
+use std.time.{Time, DurationLiterals}
+
+def main
+  scope do |s|
+    s.cancel
+    select
+    when Time.after(1.seconds) then puts "timer ran"
+    end
+    puts "ended without running arm"
+  end
+end

@@ -1,0 +1,12 @@
+# spec: §11.4 rule 4
+use std.time.{Time, DurationLiterals, Cancelled}
+
+def main
+  outcome = scope(deadline: 50.milliseconds) do |s|
+    case Time.sleep(200.milliseconds)
+    in Err(Cancelled) then "deadline cancelled"
+    in Ok(_) then "not cancelled"
+    end
+  end
+  puts outcome
+end

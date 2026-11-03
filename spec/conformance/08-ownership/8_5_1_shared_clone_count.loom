@@ -1,0 +1,11 @@
+# spec: §8.5 rule 1
+def main
+  s = Shared.new(42)
+  puts Shared.count(s)
+  s2 = s.clone
+  puts Shared.count(s)
+  s3 = s2.clone
+  puts Shared.count(s)
+  puts Shared.count(s2)
+  puts Shared.count(s3)
+end

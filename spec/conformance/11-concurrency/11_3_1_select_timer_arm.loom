@@ -1,0 +1,8 @@
+# spec: §11.3 rule 1
+use std.time.{Time, DurationLiterals}
+
+def main
+  select
+  when Time.after(10.milliseconds) then puts "timer fired"
+  end
+end

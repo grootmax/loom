@@ -1,0 +1,10 @@
+# spec: §11.3 rule 5
+def main
+  scope do |s|
+    s.cancel
+    ch = Chan[Int].new
+    select
+    when None = ch.recv then puts "cancelled recv None"
+    end
+  end
+end

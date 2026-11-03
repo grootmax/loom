@@ -1,0 +1,8 @@
+# spec: §11.2 rule 2
+def main
+  ch = Chan[Int].new(capacity: 1)
+  ch.close
+  puts "before send closed"
+  ch.send(42)
+  puts "after send closed"
+end

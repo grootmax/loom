@@ -1,0 +1,14 @@
+# spec: §11.2 rule 3
+def main
+  ch = Chan[Int].new(capacity: 1)
+  case ch.try_recv
+  in None then puts "empty: None"
+  in Some(_) then puts "unexpected"
+  end
+
+  ch.send(99)
+  case ch.try_recv
+  in Some(v) then puts "try_recv: #{v}"
+  in None then puts "unexpected"
+  end
+end

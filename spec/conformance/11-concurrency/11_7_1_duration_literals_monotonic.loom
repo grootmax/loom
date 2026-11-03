@@ -1,0 +1,14 @@
+# spec: §11.7 rule 1
+use std.time.{Time, DurationLiterals}
+
+def main
+  t1 = Time.now
+  _ = Time.sleep(10.milliseconds)
+  t2 = Time.now
+  puts t2 >= t1
+  e = t1.elapsed
+  puts e.nanos >= 0
+
+  d = 5.seconds
+  puts d.as_milliseconds
+end

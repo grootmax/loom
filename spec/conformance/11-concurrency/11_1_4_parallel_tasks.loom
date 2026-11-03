@@ -1,0 +1,13 @@
+# spec: §11.1 rule 4
+def main
+  scope do |s|
+    t1 = s.spawn do
+      "parallel task 1"
+    end
+    t2 = s.spawn do
+      "parallel task 2"
+    end
+    puts t1.join
+    puts t2.join
+  end
+end

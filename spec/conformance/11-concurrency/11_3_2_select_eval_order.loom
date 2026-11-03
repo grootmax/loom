@@ -1,0 +1,15 @@
+# spec: §11.3 rule 2
+def log_eval(n: Int) -> Int
+  puts "arm #{n} evaluated"
+  n
+end
+
+def main
+  ready = Chan[Int].new(capacity: 1)
+  empty = Chan[Int].new
+  select
+  when ready.send(log_eval(1)) then puts "sent ready"
+  when empty.send(log_eval(2)) then puts "sent empty"
+  end
+  puts ready.recv.unwrap
+end

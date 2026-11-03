@@ -1,0 +1,11 @@
+# spec: §11.1 rule 3
+def main
+  msg = "hello from outer"
+  scope do |s|
+    t = s.spawn do
+      msg.length
+    end
+    puts t.join
+  end
+  puts msg
+end

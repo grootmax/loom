@@ -1,0 +1,6 @@
+# spec: §11.3 rule 7
+def main
+  select
+  when 1 + 2
+  end
+end

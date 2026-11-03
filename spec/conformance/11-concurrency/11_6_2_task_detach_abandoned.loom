@@ -1,0 +1,11 @@
+# spec: §11.6 rule 2
+# phase: 5
+use std.time.{Time, DurationLiterals}
+
+def main
+  Task[Unit].detach do
+    _ = Time.sleep(10.seconds)
+    puts "should not print"
+  end
+  puts "main finished"
+end
