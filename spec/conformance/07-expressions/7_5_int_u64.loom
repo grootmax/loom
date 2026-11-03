@@ -1,0 +1,88 @@
+# spec: §7.5 rule 1
+def print_opt[T: Display](opt: Option[T])
+  case opt
+  in Some(v) then puts "Some(#{v})"
+  in None then puts "None"
+  end
+end
+
+def main
+  min: U64 = U64.min_value
+  max: U64 = U64.max_value
+  puts min
+  puts max
+
+  a: U64 = 100
+  b: U64 = 20
+  c: U64 = 3
+  d: U64 = 12
+  zero: U64 = 0
+  one: U64 = 1
+  two: U64 = 2
+  four: U64 = 4
+  six: U64 = 6
+  ten: U64 = 10
+  sixty_four: U64 = 64
+  v120: U64 = 120
+  v85: U64 = 85
+  v15: U64 = 15
+  v80: U64 = 80
+  v5: U64 = 5
+
+  # + - * / % near bounds
+  puts(max - one)
+  puts(min + one)
+  puts(a + b)
+  puts(a - b)
+  puts(ten * d)
+  puts(a / c)
+  puts(a % c)
+
+  # checked_*
+  print_opt(a.checked_add(b))
+  print_opt(max.checked_add(one))
+  print_opt(a.checked_sub(b))
+  print_opt(zero.checked_sub(one))
+  print_opt(ten.checked_mul(d))
+  print_opt(max.checked_mul(two))
+  print_opt(a.checked_div(c))
+  print_opt(a.checked_div(zero))
+
+  # wrapping_*
+  puts max.wrapping_add(one)
+  puts min.wrapping_sub(one)
+  puts b.wrapping_mul(ten)
+
+  # saturating_*
+  puts max.saturating_add(ten)
+  puts min.saturating_sub(ten)
+
+  # bit operators
+  puts(v85 & v15)
+  puts(v80 | v5)
+  puts(v85 ^ v15)
+  puts(~zero)
+
+  # << and >>
+  puts(one << six)
+  puts(sixty_four >> two)
+
+  # comparisons
+  puts(ten == ten)
+  puts(ten != ten)
+  puts(ten < b)
+  puts(ten <= ten)
+  puts(b > ten)
+  puts(ten >= b)
+
+  # min and max methods
+  puts(ten.min(b))
+  puts(ten.max(b))
+
+  # abs and pow
+  pos_42: U64 = 42
+  three: U64 = 3
+  exp_4: U32 = 4
+  puts(pos_42.abs)
+  puts(three.pow(exp_4))
+end

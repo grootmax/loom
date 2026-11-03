@@ -1,0 +1,42 @@
+# spec: §7.12 rule 2
+def main
+  # Integral values
+  puts 7.0
+  puts 0.0
+  puts(-0.0)
+
+  # Small and large magnitudes
+  puts 1e-7
+  puts 1e16
+  puts 1.5e300
+
+  # Positional boundary cases (1e-4 <= |x| < 1e16)
+  puts 1e-4
+  puts 1e-5
+  puts 1e15
+
+  # 0.1 + 0.2
+  puts(0.1 + 0.2)
+
+  # Negative zero
+  neg_zero: Float = -0.0
+  puts neg_zero
+
+  # NaN and infinities from 0.0 / 0.0 and 1.0 / 0.0
+  nan: Float = 0.0 / 0.0
+  puts nan
+  inf: Float = 1.0 / 0.0
+  puts inf
+  neg_inf: Float = -1.0 / 0.0
+  puts neg_inf
+
+  # F32 values
+  f32_int: F32 = 7.0
+  puts f32_int
+  f32_small: F32 = 1e-7
+  puts f32_small
+  f32_large: F32 = 1e16
+  puts f32_large
+  f32_val: F32 = 2.5
+  puts f32_val
+end

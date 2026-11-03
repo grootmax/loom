@@ -20,6 +20,7 @@ use crate::workspace_root;
 
 /// The highest error code the current phase implements.
 const IMPLEMENTED_UP_TO: u32 = 599;
+const CHECK_BATCH_SIZE: usize = 64;
 
 /// The current roadmap phase.
 pub const CURRENT_PHASE: u32 = 4;
@@ -33,19 +34,21 @@ pub fn run() -> Result<(), String> {
         return Ok(());
     }
     let binary = build_loom(&root)?;
-    let cases: Vec<PathBuf> = cases;
-    let mut command = Command::new(&binary);
-    command
-        .arg("check")
-        .arg("--message-format=short")
-        .current_dir(&root);
-    for case in &cases {
-        command.arg(case);
+    let mut reported = BTreeMap::new();
+    for batch in cases.chunks(CHECK_BATCH_SIZE) {
+        let mut command = Command::new(&binary);
+        command
+            .arg("check")
+            .arg("--message-format=short")
+            .current_dir(&root);
+        for case in batch {
+            command.arg(case);
+        }
+        let output = command
+            .output()
+            .map_err(|error| format!("could not run `{}`: {error}", binary.display()))?;
+        merge_report(&mut reported, &String::from_utf8_lossy(&output.stderr));
     }
-    let output = command
-        .output()
-        .map_err(|error| format!("could not run `{}`: {error}", binary.display()))?;
-    let reported = parse_report(&String::from_utf8_lossy(&output.stderr));
     let runner = Runner {
         root: &root,
         binary: &binary,
@@ -74,6 +77,12 @@ pub fn run() -> Result<(), String> {
             eprintln!("  {failure}");
         }
         Err("conformance failed".to_owned())
+    }
+}
+
+fn merge_report(reported: &mut BTreeMap<String, Vec<String>>, stderr: &str) {
+    for (path, diagnostics) in parse_report(stderr) {
+        reported.entry(path).or_default().extend(diagnostics);
     }
 }
 
@@ -243,7 +252,9 @@ fn code_number(line: &str) -> Option<u32> {
 
 #[cfg(test)]
 mod tests {
-    use super::{code_number, parse_report};
+    use std::collections::BTreeMap;
+
+    use super::{code_number, merge_report, parse_report};
 
     #[test]
     fn report_lines_are_grouped_by_path() {
@@ -265,5 +276,22 @@ loom: some other message
         assert_eq!(code_number("3:5 E0012"), Some(12));
         assert_eq!(code_number("3:5 E0301"), Some(301));
         assert_eq!(code_number("garbage"), None);
+    }
+
+    #[test]
+    fn merge_report_appends_diagnostics_across_batches() {
+        let mut report = BTreeMap::new();
+        merge_report(
+            &mut report,
+            "spec/a.loom:2:5: error[E0007]: first\nspec/b.loom:1:1: error[E0100]: only\n",
+        );
+        merge_report(
+            &mut report,
+            "spec/a.loom:3:4: error[E0008]: second\nspec/c.loom:9:9: error[E0200]: new\n",
+        );
+
+        assert_eq!(report["spec/a.loom"], ["2:5 E0007", "3:4 E0008"]);
+        assert_eq!(report["spec/b.loom"], ["1:1 E0100"]);
+        assert_eq!(report["spec/c.loom"], ["9:9 E0200"]);
     }
 }
