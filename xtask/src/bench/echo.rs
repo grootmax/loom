@@ -716,6 +716,10 @@ mod tests {
             while !stop_clone.load(Ordering::Relaxed) {
                 match listener.accept() {
                     Ok((mut stream, _)) => {
+                        // On macOS (BSD) and Windows, accepted sockets inherit O_NONBLOCK
+                        // from the listening socket. Explicitly restore blocking mode for
+                        // the worker thread.
+                        let _ = stream.set_nonblocking(false);
                         let handle = std::thread::spawn(move || {
                             let _ = stream.set_nodelay(true);
                             let mut buf = [0u8; 1024];
