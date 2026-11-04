@@ -9,6 +9,7 @@ mod core_tests;
 mod differential;
 mod examples;
 mod gen_unicode;
+mod race;
 mod spec_check;
 
 use std::path::{Path, PathBuf};
@@ -25,6 +26,7 @@ COMMANDS:
   differential Compare the native backend with the interpreter [--aot] [--valgrind]
   examples    Run the examples whose phase has been reached
   gen-unicode Generate Unicode tables from UCD 17.0.0
+  race        Run deterministic-scheduler race tests [--seeds N] [--native] [--filter NAME]
   spec-check  Check that grammar rules cite existing spec sections
   help        Print this help
 ";
@@ -42,6 +44,7 @@ fn main() -> ExitCode {
             Some(ucd_dir) => gen_unicode::run(Path::new(&ucd_dir)),
             None => Err("usage: cargo xtask gen-unicode <UCD_DIR>".to_string()),
         },
+        Some("race") => race::run(&std::env::args().skip(2).collect::<Vec<_>>()),
         Some("spec-check") => spec_check::run(),
         None | Some("help" | "-h" | "--help") => {
             print!("{HELP}");
@@ -88,6 +91,7 @@ fn ci() -> Result<(), String> {
     examples::run()?;
     core_tests::run()?;
     differential::run(&[])?;
+    race::run(&[])?;
     if has_cargo_subcommand("deny") {
         run(&root, "cargo", &["deny", "--locked", "check"], &[])?;
     } else if std::env::var_os("CI").is_some() {

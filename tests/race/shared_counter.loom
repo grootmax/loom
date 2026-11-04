@@ -1,0 +1,22 @@
+# Race: A Shared counter updated outside the lock.
+
+use std.sync.Mutex
+
+def main
+  counter: Shared[Mutex[Int]] = Shared.new(Mutex.new(0))
+  scope do |s|
+    c1: Shared[Mutex[Int]] = counter.clone
+    s.spawn do
+      v = c1.lock { |n| n }
+      yield_now()
+      c1.lock { |mut n| n = v + 1 }
+    end
+    c2: Shared[Mutex[Int]] = counter.clone
+    s.spawn do
+      v = c2.lock { |n| n }
+      yield_now()
+      c2.lock { |mut n| n = v + 1 }
+    end
+  end
+  puts counter.lock { |n| n }
+end
