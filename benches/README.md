@@ -34,3 +34,21 @@ cargo xtask bench --filter fib
 - Native wall-clock execution time in a release build should take between 0.1s and 2s per benchmark.
 - Standard output printed by native executables and the reference interpreter must match identically.
 - Only valid Loom syntax from `spec/grammar.ebnf` and `examples/` may be used.
+
+## TCP Echo Benchmark
+
+`cargo xtask bench echo` measures TCP echo throughput and latency across echo servers:
+
+```sh
+# Benchmark all available servers:
+cargo xtask bench echo
+
+# Benchmark only the Rust reference server:
+cargo xtask bench echo --server rust-threads
+
+# Benchmark with custom connection count and message parameters:
+cargo xtask bench echo --conns 50 --msgs 500 --size 128
+```
+
+See [`benches/echo/README.md`](echo/README.md) for further details.
+
