@@ -3,12 +3,30 @@
 //! Builds `loom` in release mode, compiles each `.loom` file in `benches/` to a native
 //! executable using `loom build`, runs it multiple times, and prints a Markdown table
 //! of wall-clock timing statistics. Optionally times `loom run --interp` with a timeout.
+//!
+//! Subcommands:
+//! - `cargo xtask bench echo`: measures TCP echo throughput and latency.
+
+mod echo;
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 
 use crate::workspace_root;
+
+const HELP: &str = "\
+cargo xtask bench [SUBCOMMAND] [OPTIONS]
+
+SUBCOMMANDS:
+  echo        Measure TCP echo throughput and latency
+
+OPTIONS:
+  --runs N    Number of runs per benchmark (default: 5)
+  --interp    Include interpreter timing
+  --filter S  Filter benchmarks by name
+  --help      Print this help
+";
 
 /// Options for `cargo xtask bench`.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -36,6 +54,18 @@ struct BenchResult {
 /// Returns an error if building `loom`, compiling a benchmark, executing a benchmark,
 /// or verifying checksums fails.
 pub fn run(args: &[String]) -> Result<(), String> {
+    if args.first().is_some_and(|first| first == "echo") {
+        return echo::run(&args[1..]);
+    }
+
+    if args
+        .iter()
+        .any(|a| a == "--help" || a == "-h" || a == "help")
+    {
+        print!("{HELP}");
+        return Ok(());
+    }
+
     let options = parse_args(args)?;
     let root = workspace_root();
     let binary = build_loom_release(&root)?;
@@ -221,7 +251,7 @@ fn parse_args(args: &[String]) -> Result<Options, String> {
     })
 }
 
-fn build_loom_release(root: &Path) -> Result<PathBuf, String> {
+pub(crate) fn build_loom_release(root: &Path) -> Result<PathBuf, String> {
     crate::run(
         root,
         "cargo",
