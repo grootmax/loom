@@ -1,0 +1,6 @@
+# spec: §11.2 rule 1
+def main
+  puts "before negative capacity"
+  _ = Chan[Int].new(capacity: -1)
+  puts "after negative capacity"
+end

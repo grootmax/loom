@@ -1,0 +1,18 @@
+# spec: §8.5 rule 3
+struct Point
+  x: Int
+  y: Int
+
+  def sum -> Int = @x + @y
+end
+
+def main
+  val = Shared.new(Point(x: 10, y: 20))
+  scope do |s|
+    t = s.spawn do
+      val.sum()
+    end
+    puts t.join
+  end
+  puts val.sum()
+end

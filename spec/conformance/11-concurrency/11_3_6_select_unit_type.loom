@@ -1,0 +1,9 @@
+# spec: §11.3 rule 6
+def main
+  ch = Chan[Int].new(capacity: 1)
+  ch.send(1)
+  res: Unit = select
+  when Some(_) = ch.recv then "discarded string value"
+  end
+  puts "type is Unit"
+end

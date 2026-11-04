@@ -1,0 +1,16 @@
+# spec: §11.7 rule 3
+struct Data
+  val: Int
+
+  def value -> Int = @val
+end
+
+def main
+  d = Shared.new(Data(val: 42))
+  scope do |s|
+    t = s.spawn do
+      d.value()
+    end
+    puts t.join
+  end
+end

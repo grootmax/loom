@@ -1,0 +1,11 @@
+# spec: §8.5 rule 2
+# phase: 5
+struct Point
+  x: Int
+  y: Int
+end
+
+def main
+  p = Shared.new(Point(x: 10, y: 20))
+  puts p.x
+end

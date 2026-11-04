@@ -1,0 +1,13 @@
+# spec: §8.5 rule 2
+struct Counter
+  count: Int
+
+  def mut increment
+    @count += 1
+  end
+end
+
+def main
+  c = Shared.new(Counter(count: 0))
+  c.increment()
+end

@@ -1,0 +1,5 @@
+# spec: §11.1 rule 6
+def main
+  yield_now()
+  puts "yielded"
+end

@@ -1,0 +1,10 @@
+# spec: §11.1 rule 3
+def main
+  var x = 0
+  scope do |s|
+    s.spawn do
+      _ = x
+    end
+    x = 1
+  end
+end

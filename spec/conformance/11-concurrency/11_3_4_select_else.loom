@@ -1,0 +1,9 @@
+# spec: §11.3 rule 4
+def main
+  ch = Chan[Int].new
+  select
+  when Some(_) = ch.recv then puts "recv"
+  else
+    puts "else arm ran"
+  end
+end

@@ -1,0 +1,8 @@
+# spec: §11.3 rule 1
+def main
+  ch = Chan[Int].new(capacity: 1)
+  select
+  when ch.send(100) then puts "sent: 100"
+  end
+  puts ch.recv.unwrap
+end

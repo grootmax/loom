@@ -1,0 +1,12 @@
+# spec: §11.5 rule 1
+struct Item
+  id: Int
+  title: String
+end
+
+def main
+  ch = Chan[Item].new(capacity: 1)
+  ch.send(Item(id: 7, title: "loom"))
+  val = ch.recv.unwrap
+  puts "#{val.id}: #{val.title}"
+end

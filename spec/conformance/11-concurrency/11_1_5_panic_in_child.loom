@@ -1,0 +1,11 @@
+# spec: §11.1 rule 5
+def main
+  puts "before spawn"
+  scope do |s|
+    s.spawn do
+      panic("panic in child task")
+      ()
+    end
+  end
+  puts "after scope"
+end

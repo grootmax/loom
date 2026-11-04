@@ -1,0 +1,9 @@
+# spec: §11.2 rule 1
+def main
+  c0 = Chan[Int].new
+  c5 = Chan[Int].new(capacity: 5)
+  c5.send(1)
+  c5.send(2)
+  puts c5.recv.unwrap
+  puts c5.recv.unwrap
+end

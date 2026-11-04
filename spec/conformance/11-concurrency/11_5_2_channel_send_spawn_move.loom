@@ -1,0 +1,12 @@
+# spec: §11.5 rule 2
+use std.sync.Mutex
+
+def main
+  m = Mutex.new(10)
+  scope do |s|
+    s.spawn do
+      m.lock { |mut v| v += 5 }
+    end
+  end
+  puts m.lock { |v| v }
+end

@@ -1,0 +1,8 @@
+# spec: §11.4 rule 1
+def main
+  scope do |s|
+    puts s.cancelled
+    s.cancel
+    puts s.cancelled
+  end
+end

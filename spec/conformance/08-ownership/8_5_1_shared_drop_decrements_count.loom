@@ -1,0 +1,13 @@
+# spec: §8.5 rule 1
+# phase: 5
+def drop_clone(s: Shared[Int])
+  s2 = s.clone
+  puts Shared.count(s)
+end
+
+def main
+  s = Shared.new(42)
+  puts Shared.count(s)
+  drop_clone(s)
+  puts Shared.count(s)
+end

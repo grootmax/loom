@@ -1,0 +1,10 @@
+# spec: §11.2 rule 2
+def main
+  ch = Chan[String].new
+  scope do |s|
+    s.spawn do
+      ch.send("rendezvous")
+    end
+    puts ch.recv.unwrap
+  end
+end
