@@ -1,0 +1,12 @@
+# Race: A select expression with two ready arms.
+
+def main
+  ch1 = Chan[Int].new(capacity: 1)
+  ch2 = Chan[Int].new(capacity: 1)
+  ch1.send(1)
+  ch2.send(2)
+  select
+  when Some(v) = ch1.recv then puts v
+  when Some(v) = ch2.recv then puts v
+  end
+end
