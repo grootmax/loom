@@ -16,7 +16,7 @@ loom_resolve = { path = "../loom_resolve" }
 loom_span = { path = "../loom_span" }
 loom_types = { path = "../loom_types" }
 loom_runtime = { path = "../../runtime" }
-cranelift-codegen = "=0.137.0"
+cranelift-codegen = "=0.138.0"
 cranelift-frontend = "=0.137.0"
 cranelift-module = "=0.137.0"
 cranelift-jit = "=0.137.0"
